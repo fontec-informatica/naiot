@@ -5,7 +5,7 @@ define('DB_USER', 'naiotc09_claude');
 define('DB_PASS', 'Claude@2026');
 define('DB_CHARSET', 'utf8mb4');
 
-function db(): PDO {
+function db() {
     static $pdo = null;
     if ($pdo === null) {
         $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
