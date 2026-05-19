@@ -370,15 +370,14 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 }
 
 /* ── Carrossel de eventos (imagens) ── */
-.evt-slide  { padding: 0; background: transparent; display: flex; justify-content: center; align-items: flex-start; }
-.evt-inner  { display: flex; flex-direction: column; max-width: 100%; }
-.evt-inner > img { max-height: 500px; width: auto; max-width: 100%; display: block; }
+.evt-slide  { padding: 0; background: transparent; }
+.evt-inner  { width: 100%; }
+.evt-inner > img { width: 100%; height: auto; display: block; }
 .evt-carousel .carousel-viewport { background: var(--off); border-color: transparent; box-shadow: none; }
 .evt-caption {
   padding: 14px 24px 18px; background: var(--white);
   border-top: 1px solid var(--border);
   display: flex; align-items: center; gap: 20px;
-  margin: 0 -16px; width: calc(100% + 32px);
 }
 .evt-info   { flex-shrink: 0; }
 .evt-titulo { font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600; color: var(--text); display: block; }
