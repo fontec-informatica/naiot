@@ -1,11 +1,12 @@
-# Bloqueia acesso direto a arquivos de suporte
-<FilesMatch "^(_layout|_layout_end|auth|config)\.php$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Impede listagem de diretório
 Options -Indexes
-
-# Força UTF-8
 AddDefaultCharset UTF-8
+
+<FilesMatch "^(_layout|_layout_end|auth|config)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
