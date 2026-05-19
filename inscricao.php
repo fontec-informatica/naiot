@@ -226,7 +226,10 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ── Event card ── */
 .ev-card  { background: var(--white); border-radius: var(--rl); overflow: hidden; box-shadow: var(--sh); margin-bottom: 28px; }
-.ev-img   { width: 100%; height: auto; display: block; }   /* natural — sem corte */
+.ev-img   { width: 100%; height: auto; display: block; }
+@media (min-width: 769px) {
+  .ev-card { max-width: 50%; margin-left: auto; margin-right: auto; }
+}
 .ev-body  { padding: 24px 28px 26px; }
 .ev-title {
   font-family: 'Cinzel', serif;
