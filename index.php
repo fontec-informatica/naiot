@@ -371,6 +371,7 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 
 /* ── Carrossel de eventos (imagens) ── */
 #eventos .sec-head { margin-bottom: clamp(16px, 2vw, 24px); }
+#inicio, #eventos, #programacao, #oracao, #testemunhos { scroll-margin-top: var(--hdr-h); }
 .evt-slide  { padding: 0; background: transparent; }
 .evt-inner  { width: 100%; }
 .evt-inner > img { width: 100%; height: auto; display: block; }
