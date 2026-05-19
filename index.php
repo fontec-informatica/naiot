@@ -419,12 +419,48 @@ textarea:focus {
 /* ╔══════════════════════════════╗
    ║  MAPA                        ║
    ╚══════════════════════════════╝ */
-.map-box {
-  height: clamp(280px, 45vw, 480px);
+.loc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+@media(max-width:640px){ .loc-grid { grid-template-columns: 1fr; } }
+
+.map-card {
   border-radius: var(--rl); overflow: hidden;
   box-shadow: var(--sh); border: 1px solid var(--border);
+  display: flex; flex-direction: column;
 }
-.map-box iframe { width: 100%; height: 100%; border: none; display: block; }
+.map-card-label {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .6rem 1rem; background: var(--white);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--ff-head); font-size: .78rem;
+  letter-spacing: .06em; color: var(--muted);
+}
+.map-card-label svg { width: 16px; height: 16px; flex-shrink: 0; }
+.map-card iframe { width: 100%; height: clamp(220px, 28vw, 320px); border: none; display: block; flex: 1; }
+
+.loc-btns {
+  display: flex; gap: .75rem; justify-content: center;
+  flex-wrap: wrap; margin-top: 1.5rem;
+}
+.loc-btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .7rem 1.4rem; border-radius: 2rem;
+  font-family: var(--ff-head); font-size: .82rem; font-weight: 600;
+  letter-spacing: .06em; text-decoration: none; transition: opacity .2s, transform .15s;
+  cursor: pointer; border: none;
+}
+.loc-btn:hover { opacity: .85; transform: translateY(-1px); }
+.loc-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+.loc-btn-gmaps { background: var(--green); color: var(--white); }
+.loc-btn-waze  { background: #33ccff; color: #1a1a2e; }
+
+.loc-addr {
+  text-align: center; margin-top: 1.25rem;
+  font-size: .85rem; color: var(--muted); line-height: 1.6;
+}
 
 /* ╔══════════════════════════════╗
    ║  FOOTER                      ║
@@ -754,17 +790,49 @@ footer {
 </section>
 
 <!-- ═══ MAPA ═══ -->
-<section class="sec alt" id="mapa" style="padding-bottom:0">
+<section class="sec alt" id="mapa">
   <div class="wrap">
     <div class="sec-head" data-a>
       <div class="deco"><span class="deco-icon">✝</span></div>
       <h2 class="sec-title">Como Chegar</h2>
       <p class="sec-sub">Comunidade NAIOT &mdash; Campo Limpo de Goiás, GO</p>
     </div>
-    <div class="map-box" data-a>
-      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3830.1820033058525!2d-49.14189992509153!3d-16.26243988444542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935c276d0e8c03cf%3A0x7bfd94fb797d6e1b!2sComunidade%20NAIOT%20(Novo%20Acesso)!5e0!3m2!1spt-BR!2sbr!4v1754773032917!5m2!1spt-BR!2sbr"
-              allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+    <div class="loc-grid" data-a>
+      <!-- Google Maps -->
+      <div class="map-card">
+        <div class="map-card-label">
+          <svg viewBox="0 0 24 24" fill="var(--green)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Google Maps
+        </div>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3830.1820033058525!2d-49.14189992509153!3d-16.26243988444542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935c276d0e8c03cf%3A0x7bfd94fb797d6e1b!2sComunidade%20NAIOT%20(Novo%20Acesso)!5e0!3m2!1spt-BR!2sbr!4v1754773032917!5m2!1spt-BR!2sbr"
+                allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+
+      <!-- Waze -->
+      <div class="map-card">
+        <div class="map-card-label">
+          <svg viewBox="0 0 24 24" fill="#33ccff"><path d="M20.54 6.63C19.18 3.19 15.87 1 12.18 1c-.27 0-.55.01-.82.04C6.4 1.47 2.5 5.38 2.04 10.33c-.24 2.65.54 5.23 2.15 7.26l.01.02.01.01c.2.26.31.58.31.9v1.48c0 .55.44.99.99.99h.45c.04 0 .08 0 .12-.01l.48-.07c.67-.09 1.27.38 1.35 1.04l.11.86c.07.55.54.95 1.1.95h5.77c.56 0 1.03-.41 1.1-.96l.11-.85c.08-.67.68-1.14 1.35-1.04l.48.07c.04 0 .08.01.12.01h.45c.55 0 .99-.44.99-.99v-1.48c0-.33.11-.64.31-.9 1.66-2.09 2.42-4.73 2.09-7.47-.1-.77-.28-1.52-.54-2.23zM8.5 13c-.83 0-1.5-.67-1.5-1.5S7.67 10 8.5 10s1.5.67 1.5 1.5S9.33 13 8.5 13zm7 0c-.83 0-1.5-.67-1.5-1.5S14.67 10 15.5 10s1.5.67 1.5 1.5S16.33 13 15.5 13z"/></svg>
+          Waze
+        </div>
+        <iframe src="https://embed.waze.com/iframe?zoom=15&lat=-16.26243988444542&lon=-49.14189992509153&pin=1"
+                allowfullscreen="" loading="lazy"></iframe>
+      </div>
     </div>
+
+    <!-- Botões de navegação -->
+    <div class="loc-btns" data-a>
+      <button class="loc-btn loc-btn-gmaps" onclick="abrirGoogleMaps()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        Abrir no Google Maps
+      </button>
+      <button class="loc-btn loc-btn-waze" onclick="abrirWaze()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.54 6.63C19.18 3.19 15.87 1 12.18 1c-.27 0-.55.01-.82.04C6.4 1.47 2.5 5.38 2.04 10.33c-.24 2.65.54 5.23 2.15 7.26l.01.02.01.01c.2.26.31.58.31.9v1.48c0 .55.44.99.99.99h.45c.04 0 .08 0 .12-.01l.48-.07c.67-.09 1.27.38 1.35 1.04l.11.86c.07.55.54.95 1.1.95h5.77c.56 0 1.03-.41 1.1-.96l.11-.85c.08-.67.68-1.14 1.35-1.04l.48.07c.04 0 .08.01.12.01h.45c.55 0 .99-.44.99-.99v-1.48c0-.33.11-.64.31-.9 1.66-2.09 2.42-4.73 2.09-7.47-.1-.77-.28-1.52-.54-2.23zM8.5 13c-.83 0-1.5-.67-1.5-1.5S7.67 10 8.5 10s1.5.67 1.5 1.5S9.33 13 8.5 13zm7 0c-.83 0-1.5-.67-1.5-1.5S14.67 10 15.5 10s1.5.67 1.5 1.5S16.33 13 15.5 13z"/></svg>
+        Abrir no Waze
+      </button>
+    </div>
+
+    <p class="loc-addr">Rua dos Pioneiros, s/n &mdash; Setor Novo Acesso<br>Campo Limpo de Goiás &mdash; GO &mdash; CEP 76390-000</p>
   </div>
 </section>
 
@@ -897,6 +965,28 @@ class Carousel {
 
 new Carousel('co', 'dots-co', 5500);
 new Carousel('ct', 'dots-ct', 6800);
+
+/* ── Navegação com geolocalização ── */
+const LAT = -16.26243988444542;
+const LNG = -49.14189992509153;
+
+function abrirGoogleMaps() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const url = `https://www.google.com/maps/dir/${pos.coords.latitude},${pos.coords.longitude}/${LAT},${LNG}`;
+        window.open(url, '_blank');
+      },
+      () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${LAT},${LNG}`, '_blank')
+    );
+  } else {
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${LAT},${LNG}`, '_blank');
+  }
+}
+
+function abrirWaze() {
+  window.open(`https://waze.com/ul?ll=${LAT},${LNG}&navigate=yes`, '_blank');
+}
 </script>
 </body>
 </html>
