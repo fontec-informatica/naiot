@@ -90,7 +90,7 @@ function formatar_periodo(string $inicio, ?string $fim): string {
 @media (max-width: 768px) { :root { --hdr-h: 90px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--hdr-h) - 40px); }
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--hdr-h) - clamp(60px, 8vw, 100px) + 16px); }
 body {
   font-family: 'EB Garamond', Georgia, serif;
   font-size: clamp(16px, 2vw, 18px);
