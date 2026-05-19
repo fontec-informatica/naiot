@@ -134,7 +134,7 @@ button { cursor: pointer; font: inherit; }
 
 /* Logo — dentro da barra, sem padding desperdiçado */
 .hdr-logo { flex-shrink: 0; display: flex; align-items: center; }
-.hdr-logo img { height: clamp(74px, 9vw, 110px); width: auto; mix-blend-mode: multiply; }
+.hdr-logo img { height: clamp(52px, 6.3vw, 77px); width: auto; mix-blend-mode: multiply; }
 .hdr-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
