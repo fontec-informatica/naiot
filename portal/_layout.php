@@ -92,11 +92,6 @@ $menu = [
             <path d="M3 12h18M3 6h18M3 18h18"/>
           </svg>
         </button>
-        <a href="/portal/" class="topbar-logo-wrap">
-          <img src="/assets/img/logo.png" alt="NAIOT" class="topbar-logo"
-               onerror="this.style.display='none';document.querySelector('.topbar-logo-txt').style.display='block'">
-          <span class="topbar-logo-txt">NAIOT</span>
-        </a>
         <div class="topbar-bc">
           <span class="bc-sep">›</span>
           <span class="topbar-title"><?= htmlspecialchars($titulo ?? 'Portal') ?></span>

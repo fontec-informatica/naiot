@@ -215,20 +215,6 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 .topbar-burger:hover{background:var(--bg);color:var(--txt)}
 .topbar-burger svg{width:16px;height:16px;display:block;stroke:currentColor;fill:none;stroke-width:2px;stroke-linecap:round}
 
-/* Logo no topbar */
-.topbar-logo-wrap{
-  display:flex;align-items:center;flex-shrink:0;
-  margin-right:2px;
-}
-.topbar-logo{
-  height:38px;width:auto;
-  mix-blend-mode:multiply;
-  display:block;
-}
-.topbar-logo-txt{
-  display:none;font-family:'Cinzel',serif;font-size:.95rem;
-  font-weight:700;color:var(--g-dk);letter-spacing:.12em;
-}
 
 .topbar-bc{display:flex;align-items:center;gap:5px}
 .topbar-bc .bc-sep{color:var(--muted);font-size:.75rem;margin:0 1px}

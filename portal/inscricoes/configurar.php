@@ -42,7 +42,7 @@ $inscritos = (int)$total_inscritos->fetchColumn();
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div class="form-wrap" style="max-width:600px">
+<div class="form-wrap">
   <div style="margin-bottom:20px">
     <a href="/portal/inscricoes/" style="color:var(--cinza3);font-size:.85rem;text-decoration:none">← Voltar para Inscrições</a>
   </div>
