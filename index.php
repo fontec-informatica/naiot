@@ -57,7 +57,7 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
   --hdr-h: 100px;
 }
 
-@media (max-width: 768px) { :root { --hdr-h: 110px; } }
+@media (max-width: 768px) { :root { --hdr-h: 130px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
@@ -96,7 +96,8 @@ button { cursor: pointer; font: inherit; }
   background: linear-gradient(90deg, transparent, var(--gold-lt));
 }
 .deco::after { background: linear-gradient(90deg, var(--gold-lt), transparent); }
-.deco-icon { font-size: clamp(.9rem, 1.5vw, 1.1rem); letter-spacing: .2em; }
+.deco-icon { font-size: clamp(.9rem, 1.5vw, 1.1rem); letter-spacing: .2em; font-variant-emoji: text; }
+.foot-deco span, .hero-deco span { font-variant-emoji: text; }
 .sec-title {
   font-family: 'Cinzel', serif;
   font-size: clamp(1.5rem, 3.5vw, 2.6rem);
@@ -133,7 +134,7 @@ button { cursor: pointer; font: inherit; }
 
 /* Logo */
 .hdr-logo { flex-shrink: 0; display: flex; align-items: center; }
-.hdr-logo img { height: clamp(100px, 12vw, 130px); width: auto; transition: height var(--ease); mix-blend-mode: multiply; }
+.hdr-logo img { height: clamp(120px, 12vw, 130px); width: auto; transition: height var(--ease); mix-blend-mode: multiply; }
 .hdr-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
@@ -429,12 +430,6 @@ footer {
   display: flex; flex-direction: column;
   align-items: center; gap: clamp(10px, 1.8vw, 16px); text-align: center;
 }
-.foot-logo img { height: clamp(68px, 9vw, 100px); margin: 0 auto; mix-blend-mode: multiply; }
-.foot-logo-txt {
-  display: none; font-family: 'Cinzel', serif;
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  font-weight: 700; color: var(--green-dk); letter-spacing: .12em;
-}
 .foot-deco {
   display: flex; align-items: center; gap: 14px;
   color: var(--gold); font-size: .9rem; letter-spacing: .2em;
@@ -560,7 +555,7 @@ footer {
 <!-- ═══ HERO ═══ -->
 <section class="hero" id="inicio">
   <div class="hero-inner">
-    <div class="hero-deco"><span>✝</span></div>
+    <div class="hero-deco"><span>&#x271D;&#xFE0E;</span></div>
     <h1>Nossa missão é estar<br>aos pés de <em>Jesus</em></h1>
     <p>Comunidade Católica Senhor Jesus &mdash; Campo Limpo de Goiás, GO</p>
   </div>
@@ -601,7 +596,7 @@ footer {
 <section class="sec alt" id="programacao">
   <div class="wrap">
     <div class="sec-head" data-a>
-      <div class="deco"><span class="deco-icon">✝</span></div>
+      <div class="deco"><span class="deco-icon">&#x271D;&#xFE0E;</span></div>
       <h2 class="sec-title">Programação</h2>
       <p class="sec-sub">Nossa agenda semanal de encontros e transmissões</p>
     </div>
@@ -649,7 +644,7 @@ footer {
 <section class="sec pale" id="oracao">
   <div class="wrap">
     <div class="sec-head" data-a>
-      <div class="deco"><span class="deco-icon">✝</span></div>
+      <div class="deco"><span class="deco-icon">&#x271D;&#xFE0E;</span></div>
       <h2 class="sec-title">Pedidos de Oração</h2>
       <p class="sec-sub">Confie suas intenções à nossa comunidade. Vamos orar por você.</p>
     </div>
@@ -698,7 +693,7 @@ footer {
 <section class="sec" id="testemunhos">
   <div class="wrap">
     <div class="sec-head" data-a>
-      <div class="deco"><span class="deco-icon">✝</span></div>
+      <div class="deco"><span class="deco-icon">&#x271D;&#xFE0E;</span></div>
       <h2 class="sec-title">Testemunhos</h2>
       <p class="sec-sub">Graças e milagres que edificam e fortalecem a fé de toda a comunidade.</p>
     </div>
@@ -748,12 +743,7 @@ footer {
 <!-- ═══ FOOTER ═══ -->
 <footer>
   <div class="wrap foot-inner">
-    <div class="foot-logo">
-      <img src="assets/img/logo.png" alt="NAIOT"
-           onerror="this.style.display='none';document.querySelector('.foot-logo-txt').style.display='block'">
-      <span class="foot-logo-txt">NAIOT</span>
-    </div>
-    <div class="foot-deco"><span>✝</span></div>
+    <div class="foot-deco"><span>&#x271D;&#xFE0E;</span></div>
     <div class="foot-redes" aria-label="Redes sociais">
       <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener" class="foot-rede" title="Instagram">
         <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
