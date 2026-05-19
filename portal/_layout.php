@@ -43,9 +43,8 @@ $menu = [
   <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-brand">
-      <img class="brand-logo-img" src="/assets/img/logo.png" alt="NAIOT"
-           onerror="this.style.display='none'">
-      <span class="sb-sub" style="margin-top:6px">Portal Administrativo</span>
+      <span class="sb-name">NAIOT</span>
+      <span class="sb-sub">Portal Administrativo</span>
     </div>
 
     <span class="nav-section">Menu</span>
@@ -93,8 +92,12 @@ $menu = [
             <path d="M3 12h18M3 6h18M3 18h18"/>
           </svg>
         </button>
+        <a href="/portal/" class="topbar-logo-wrap">
+          <img src="/assets/img/logo.png" alt="NAIOT" class="topbar-logo"
+               onerror="this.style.display='none';document.querySelector('.topbar-logo-txt').style.display='block'">
+          <span class="topbar-logo-txt">NAIOT</span>
+        </a>
         <div class="topbar-bc">
-          <span class="bc-org">NAIOT</span>
           <span class="bc-sep">›</span>
           <span class="topbar-title"><?= htmlspecialchars($titulo ?? 'Portal') ?></span>
         </div>

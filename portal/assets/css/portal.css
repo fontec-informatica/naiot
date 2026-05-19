@@ -107,23 +107,18 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 /* Brand */
 .sidebar-brand{
   display:flex;flex-direction:column;align-items:flex-start;
-  padding:16px 16px 14px;
-  border-bottom:1px solid rgba(255,255,255,.07);
-  flex-shrink:0;gap:0;
-}
-.brand-logo-img{
-  height:36px;width:auto;max-width:100%;
-  background:#fff;padding:4px 7px;border-radius:7px;
-  display:block;object-fit:contain;
-  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  padding:20px 18px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;
 }
 .sb-name{
-  font-family:'Cinzel',serif;font-size:.82rem;font-weight:700;
-  color:#fff;letter-spacing:.09em;display:block;line-height:1.2;
+  font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;
+  color:#fff;letter-spacing:.18em;display:block;line-height:1.1;
+  text-transform:uppercase;
 }
 .sb-sub{
-  font-size:.58rem;color:rgba(255,255,255,.32);
-  text-transform:uppercase;letter-spacing:.1em;display:block;
+  font-size:.56rem;color:rgba(255,255,255,.3);
+  text-transform:uppercase;letter-spacing:.14em;display:block;margin-top:4px;
 }
 
 /* Nav section label */
@@ -220,10 +215,27 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 .topbar-burger:hover{background:var(--bg);color:var(--txt)}
 .topbar-burger svg{width:16px;height:16px;display:block;stroke:currentColor;fill:none;stroke-width:2px;stroke-linecap:round}
 
-.topbar-bc{display:flex;align-items:center;gap:6px}
-.topbar-bc .bc-org{font-size:.72rem;color:var(--muted);font-weight:500}
-.topbar-bc .bc-sep{color:var(--border);font-size:.7rem;margin:0 2px}
-.topbar-title{font-family:'Cinzel',serif;font-size:.82rem;font-weight:700;color:var(--g-dk);letter-spacing:.04em}
+/* Logo no topbar */
+.topbar-logo-wrap{
+  display:flex;align-items:center;flex-shrink:0;
+  margin-right:2px;
+}
+.topbar-logo{
+  height:38px;width:auto;
+  mix-blend-mode:multiply;
+  display:block;
+}
+.topbar-logo-txt{
+  display:none;font-family:'Cinzel',serif;font-size:.95rem;
+  font-weight:700;color:var(--g-dk);letter-spacing:.12em;
+}
+
+.topbar-bc{display:flex;align-items:center;gap:5px}
+.topbar-bc .bc-sep{color:var(--muted);font-size:.75rem;margin:0 1px}
+.topbar-title{
+  font-family:'Cinzel',serif;font-size:.78rem;font-weight:700;
+  color:var(--g-dk);letter-spacing:.05em;text-transform:uppercase;
+}
 
 .topbar-right{display:flex;align-items:center;gap:8px}
 .t-user{
