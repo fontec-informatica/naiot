@@ -370,13 +370,15 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 }
 
 /* ── Carrossel de eventos (imagens) ── */
-.evt-slide { padding: 0; background: transparent; }
-.evt-slide img { width: 100%; max-height: 500px; object-fit: contain; display: block; margin: 0 auto; }
+.evt-slide  { padding: 0; background: transparent; display: flex; justify-content: center; align-items: flex-start; }
+.evt-inner  { display: flex; flex-direction: column; max-width: 100%; }
+.evt-inner > img { max-height: 500px; width: auto; max-width: 100%; display: block; }
 .evt-carousel .carousel-viewport { background: var(--off); border-color: transparent; box-shadow: none; }
 .evt-caption {
-  padding: 14px 20px 18px; background: var(--white);
+  padding: 14px 24px 18px; background: var(--white);
   border-top: 1px solid var(--border);
   display: flex; align-items: center; gap: 20px;
+  margin: 0 -16px; width: calc(100% + 32px);
 }
 .evt-info   { flex-shrink: 0; }
 .evt-titulo { font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600; color: var(--text); display: block; }
@@ -636,17 +638,19 @@ footer {
           <div class="carousel-track" id="ce">
             <?php foreach ($eventos as $ev): ?>
             <div class="carousel-slide evt-slide">
-              <img src="/assets/img/eventos/<?= htmlspecialchars($ev['imagem']) ?>"
-                   alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
-              <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao']): ?>
-              <div class="evt-caption">
-                <div class="evt-info">
-                  <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
-                  <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
+              <div class="evt-inner">
+                <img src="/assets/img/eventos/<?= htmlspecialchars($ev['imagem']) ?>"
+                     alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
+                <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao']): ?>
+                <div class="evt-caption">
+                  <div class="evt-info">
+                    <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
+                    <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
+                  </div>
+                  <?php if ($ev['descricao']): ?><span class="evt-desc"><?= htmlspecialchars($ev['descricao']) ?></span><?php endif; ?>
                 </div>
-                <?php if ($ev['descricao']): ?><span class="evt-desc"><?= htmlspecialchars($ev['descricao']) ?></span><?php endif; ?>
+                <?php endif; ?>
               </div>
-              <?php endif; ?>
             </div>
             <?php endforeach; ?>
           </div>
