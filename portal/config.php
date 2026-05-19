@@ -1,8 +1,8 @@
 <?php
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'naiot_db');
-define('DB_USER', 'naiot_user');
-define('DB_PASS', 'TROCAR_SENHA');
+define('DB_NAME', 'naiotc09_naiot');
+define('DB_USER', 'naiotc09_claude');
+define('DB_PASS', 'Claude@2026');
 define('DB_CHARSET', 'utf8mb4');
 
 function db(): PDO {
