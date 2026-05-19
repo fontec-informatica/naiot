@@ -138,9 +138,9 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
         .hdr-inner {
             display: flex; align-items: center;
             justify-content: space-between;
-            height: 70px;
+            height: 78px;
         }
-        .hdr-logo img  { height: 44px; }
+        .hdr-logo img  { height: 62px; }
         .hdr-logo-txt  {
             display: none;
             font-family: 'Cinzel', serif; font-size: 1.3rem;
@@ -156,6 +156,16 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             transition: color var(--ease), background var(--ease);
         }
         nav a:hover { color: var(--green); background: var(--green-pale); }
+
+        .hdr-social { display: flex; align-items: center; gap: 6px; margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--border); }
+        .hdr-social a {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--green-pale); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: .85rem;
+            transition: background var(--ease), transform var(--ease), border-color var(--ease);
+        }
+        .hdr-social a:hover { background: var(--green); border-color: var(--green); transform: translateY(-2px); }
 
         .btn-live {
             display: inline-flex !important; align-items: center; gap: 7px;
@@ -506,43 +516,43 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
            FOOTER
         ══════════════════════════════ */
         footer {
-            background: var(--green-dark);
-            border-top: 3px solid var(--gold);
-            padding: 60px 0 30px;
+            background: var(--white);
+            border-top: 3px solid var(--gold-light);
+            padding: 52px 0 28px;
         }
         .foot-inner {
             display: flex; flex-direction: column;
-            align-items: center; gap: 24px; text-align: center;
+            align-items: center; gap: 22px; text-align: center;
         }
-        .foot-logo img  { height: 54px; filter: brightness(0) invert(1); opacity: .9; margin: 0 auto; }
+        .foot-logo img  { height: 62px; margin: 0 auto; }
         .foot-logo-txt  {
             display: none; font-family: 'Cinzel', serif;
-            font-size: 1.7rem; font-weight: 700; color: #fff; letter-spacing: .12em;
+            font-size: 1.7rem; font-weight: 700; color: var(--green-dark); letter-spacing: .12em;
         }
         .foot-deco {
-            display: flex; align-items: center; gap: 14px; color: var(--gold-light);
+            display: flex; align-items: center; gap: 14px; color: var(--gold);
             font-size: .9rem; letter-spacing: .2em;
         }
         .foot-deco::before, .foot-deco::after {
             content: ''; width: 48px; height: 1px;
-            background: rgba(201,168,76,.3);
+            background: rgba(168,125,40,.3);
         }
-        .foot-redes { display: flex; gap: 12px; }
+        .foot-redes { display: flex; gap: 10px; }
         .foot-rede {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255,255,255,.08);
-            border: 1px solid rgba(255,255,255,.12);
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--green-pale);
+            border: 1px solid var(--border);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1rem;
-            transition: background var(--ease), transform var(--ease);
+            font-size: .95rem;
+            transition: background var(--ease), transform var(--ease), border-color var(--ease);
         }
-        .foot-rede:hover { background: var(--gold); transform: translateY(-3px); }
-        .foot-hr { width: 100%; height: 1px; background: rgba(255,255,255,.07); }
+        .foot-rede:hover { background: var(--green); border-color: var(--green); transform: translateY(-3px); }
+        .foot-hr { width: 100%; height: 1px; background: var(--border); }
         .foot-copy {
-            font-size: .8rem; color: rgba(255,255,255,.38);
+            font-size: .8rem; color: var(--muted);
             font-style: italic; letter-spacing: .03em;
         }
-        .foot-copy strong { color: var(--gold-light); font-style: normal; }
+        .foot-copy strong { color: var(--green-dark); font-style: normal; }
 
         /* ══════════════════════════════
            ANIMAÇÕES
@@ -565,6 +575,7 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             .redes-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
+            .hdr-social { display: none; }
             nav {
                 position: fixed; top: 70px; left: 0; right: 0;
                 background: var(--white); flex-direction: column;
@@ -612,14 +623,19 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             <a href="#oracao">Oração</a>
             <a href="#testemunhos">Testemunhos</a>
         </nav>
+
+        <div class="hdr-social">
+            <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener" title="Instagram">📷</a>
+            <a href="https://whatsapp.com/channel/0029VaVPbi15Ui2Y5f23h22i" target="_blank" rel="noopener" title="WhatsApp">💬</a>
+            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener" title="YouTube">▶️</a>
+            <a href="https://www.facebook.com/comunidadenaiot/" target="_blank" rel="noopener" title="Facebook">👥</a>
+        </div>
     </div>
 </header>
 
 <!-- ═══════════ HERO ═══════════ -->
 <section class="hero" id="inicio">
     <div class="hero-inner">
-        <img src="assets/img/logo.png" alt="NAIOT" class="hero-logo"
-             onerror="this.style.display='none'">
         <div class="hero-deco"><span>✝</span></div>
         <h1>Nossa missão é estar<br>aos pés de <em>Jesus</em></h1>
         <p>Comunidade Católica Senhor Jesus &mdash; Campo Limpo de Goiás, GO</p>
@@ -702,43 +718,6 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
                 <div class="prog-name">Conforme Calendário</div>
                 <p class="prog-desc">Acompanhe as redes sociais para eventos especiais.</p>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- ═══════════ REDES SOCIAIS ═══════════ -->
-<section class="sec" id="redes">
-    <div class="wrap">
-        <div class="sec-head" data-a>
-            <div class="deco"><span>✝</span></div>
-            <h2 class="sec-title">Nossas Redes</h2>
-            <p class="sec-sub">Siga-nos e compartilhe nossa missão</p>
-        </div>
-        <div class="redes-grid">
-            <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener"
-               class="rede-card instagram" data-a data-d="1">
-                <div class="rede-icon-wrap">📷</div>
-                <div class="rede-name">Instagram</div>
-                <div class="rede-handle">@naiot_oficial</div>
-            </a>
-            <a href="https://whatsapp.com/channel/0029VaVPbi15Ui2Y5f23h22i" target="_blank" rel="noopener"
-               class="rede-card whatsapp" data-a data-d="2">
-                <div class="rede-icon-wrap">💬</div>
-                <div class="rede-name">WhatsApp</div>
-                <div class="rede-handle">Canal Oficial</div>
-            </a>
-            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener"
-               class="rede-card youtube" data-a data-d="3">
-                <div class="rede-icon-wrap">▶️</div>
-                <div class="rede-name">YouTube</div>
-                <div class="rede-handle">@naiot_oficial4299</div>
-            </a>
-            <a href="https://www.facebook.com/comunidadenaiot/" target="_blank" rel="noopener"
-               class="rede-card facebook" data-a data-d="4">
-                <div class="rede-icon-wrap">👥</div>
-                <div class="rede-name">Facebook</div>
-                <div class="rede-handle">comunidadenaiot</div>
-            </a>
         </div>
     </div>
 </section>
