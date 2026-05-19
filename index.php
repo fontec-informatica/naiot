@@ -374,10 +374,8 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .evt-inner  { width: 100%; }
 .evt-inner > img { width: 100%; height: auto; display: block; }
 @media (min-width: 769px) {
-  .evt-slide  { text-align: center; }
-  .evt-inner  { display: inline-block; max-width: 100%; text-align: left; vertical-align: top; }
-  .evt-inner > img { max-height: 480px; width: auto; max-width: 100%; display: block; }
-  .evt-caption { width: calc(100% + 32px); margin: 0 -16px; padding-left: 32px; padding-right: 32px; }
+  .evt-slide  { display: flex; justify-content: center; align-items: flex-start; }
+  .evt-inner > img { max-height: 480px; width: auto; max-width: 100%; }
 }
 .evt-carousel .carousel-viewport { background: var(--off); border-color: transparent; box-shadow: none; }
 .evt-caption {
@@ -970,6 +968,21 @@ class Carousel {
 new Carousel('co', 'dots-co', 5500);
 new Carousel('ct', 'dots-ct', 6800);
 new Carousel('ce', 'dots-ce', 4500);
+
+/* ── Alinha barra de evento à largura real da imagem ── */
+function syncEvtCaptions() {
+  var mobile = window.innerWidth <= 768;
+  document.querySelectorAll('.evt-inner').forEach(function(el) {
+    var img = el.querySelector('img');
+    var cap = el.querySelector('.evt-caption');
+    if (!img || !cap) return;
+    cap.style.width = mobile ? '' : img.offsetWidth + 'px';
+  });
+}
+document.querySelectorAll('.evt-inner img').forEach(function(img) {
+  img.complete ? syncEvtCaptions() : img.addEventListener('load', syncEvtCaptions);
+});
+window.addEventListener('resize', syncEvtCaptions);
 
 </script>
 </body>
