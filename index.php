@@ -389,14 +389,16 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .evt-titulo { font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600; color: var(--text); display: block; }
 .evt-data   { font-size: .75rem; color: var(--muted); margin-top: 3px; display: block; }
 .evt-desc   { font-size: .85rem; color: var(--muted); font-style: italic; line-height: 1.5; border-left: 2px solid var(--border); padding-left: 16px; }
-.evt-btn-inscricao {
-  display: inline-flex; align-items: center; white-space: nowrap;
-  padding: 7px 18px; margin-left: auto; flex-shrink: 0;
-  background: var(--green-dk); color: #fff; border-radius: 6px;
-  font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  transition: background var(--ease), transform var(--ease);
+.evt-cta-bar {
+  display: block;
+  background: var(--green-dk); color: #fff !important;
+  text-align: center; padding: 13px 20px;
+  font-family: 'Cinzel', serif; font-size: .7rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  border-top: 1px solid rgba(255,255,255,.08);
+  transition: background var(--ease);
 }
-.evt-btn-inscricao:hover { background: var(--green); transform: translateY(-1px); }
+.evt-cta-bar:hover { background: var(--green); }
 
 .carousel-nav {
   display: flex; align-items: center;
@@ -654,17 +656,17 @@ footer {
               <div class="evt-inner">
                 <img src="/assets/img/eventos/<?= htmlspecialchars($ev['imagem']) ?>"
                      alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
-                <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao'] || !empty($ev['inscricoes_abertas'])): ?>
+                <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao']): ?>
                 <div class="evt-caption">
                   <div class="evt-info">
                     <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
                     <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
                   </div>
                   <?php if ($ev['descricao']): ?><span class="evt-desc"><?= htmlspecialchars($ev['descricao']) ?></span><?php endif; ?>
-                  <?php if (!empty($ev['inscricoes_abertas'])): ?>
-                  <a href="/inscricao.php?id=<?= $ev['id'] ?>" class="evt-btn-inscricao">Inscrever-se</a>
-                  <?php endif; ?>
                 </div>
+                <?php endif; ?>
+                <?php if (!empty($ev['inscricoes_abertas'])): ?>
+                <a href="/inscricao.php?id=<?= $ev['id'] ?>" class="evt-cta-bar">Inscrever-se neste evento &rarr;</a>
                 <?php endif; ?>
               </div>
             </div>
@@ -986,12 +988,18 @@ new Carousel('ce', 'dots-ce', 4500);
 function syncEvtCaptions() {
   var mobile = window.innerWidth <= 768;
   document.querySelectorAll('.evt-inner').forEach(function(el) {
-    var img = el.querySelector('img');
-    var cap = el.querySelector('.evt-caption');
-    if (!img || !cap) return;
-    if (mobile) { cap.style.width = ''; return; }
+    var img  = el.querySelector('img');
+    var cap  = el.querySelector('.evt-caption');
+    var cta  = el.querySelector('.evt-cta-bar');
+    if (!img) return;
+    if (mobile) {
+      if (cap) cap.style.width = '';
+      if (cta) cta.style.width = '';
+      return;
+    }
     var w = img.offsetWidth;
-    cap.style.width = w + 'px';
+    if (cap) cap.style.width = w + 'px';
+    if (cta) cta.style.width = w + 'px';
     var outer = el.closest('.carousel-outer');
     if (outer) {
       var gap = (outer.offsetWidth - w) / 2;

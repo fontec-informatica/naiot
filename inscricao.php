@@ -89,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pode_inscrever && !$inscricao_ok) 
         if ($dup->fetch()) {
             $erro = 'Este e-mail já possui inscrição ativa neste evento.';
         } else {
-            /* Determina lote e valor */
             $valor_pago    = 0.00;
             $lote_id_final = null;
 
@@ -157,155 +156,352 @@ function fmt_periodo_pub($ini, $fim) {
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --green:      #1e6b35; --green-dk: #163d22; --green-pale: #f0f7f2;
-  --gold:       #a87d28; --gold-lt:  #c9a84c;
-  --white:      #ffffff; --off:      #f8f8f6; --border: #e2ddd6;
-  --text:       #1f1f1f; --muted:    #6a6a6a; --red: #b83232;
-  --r: 10px; --rl: 18px; --sh-sm: 0 2px 14px rgba(0,0,0,.07); --sh: 0 4px 32px rgba(0,0,0,.10);
+  --green:     #1e6b35;
+  --green-dk:  #163d22;
+  --green-pale:#f0f7f2;
+  --gold:      #a87d28;
+  --gold-lt:   #c9a84c;
+  --white:     #ffffff;
+  --off:       #f8f8f6;
+  --border:    #e2ddd6;
+  --text:      #1f1f1f;
+  --muted:     #6a6a6a;
+  --red:       #b83232;
+  --r:  10px; --rl: 18px;
+  --sh-sm: 0 2px 14px rgba(0,0,0,.07);
+  --sh:    0 4px 32px rgba(0,0,0,.10);
   --ease: .28s ease;
 }
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'EB Garamond', Georgia, serif; font-size: clamp(15px,2vw,17px); line-height: 1.75; color: var(--text); background: var(--off); }
-a { text-decoration: none; color: inherit; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: clamp(15px, 2vw, 17px);
+  line-height: 1.75;
+  color: var(--text);
+  background: var(--off);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+a   { text-decoration: none; color: inherit; }
 img { max-width: 100%; height: auto; display: block; }
 
-/* Topbar */
-.topbar { background: var(--green-dk); padding: 10px 0; }
-.topbar .inner { max-width: 780px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 12px; }
-.topbar .logo  { height: 34px; width: auto; filter: brightness(5) saturate(0); }
-.topbar .nome  { font-family: 'Cinzel', serif; font-size: .72rem; font-weight: 700; letter-spacing: .12em; color: rgba(255,255,255,.85); text-transform: uppercase; }
-.topbar a:hover .nome { color: #fff; }
+/* ── Header ── */
+.insc-hdr {
+  background: var(--white);
+  border-top: 3px solid var(--green-dk);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  position: sticky; top: 0; z-index: 100;
+}
+.insc-hdr-inner {
+  max-width: 860px; margin: 0 auto; padding: 0 20px;
+  height: 66px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.insc-logo-wrap {
+  display: flex; align-items: center; gap: 10px;
+}
+.insc-logo { height: 46px; width: auto; mix-blend-mode: multiply; }
+.insc-logo-txt {
+  display: none;
+  font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700;
+  color: var(--green-dk); letter-spacing: .1em;
+}
+.insc-nome {
+  font-family: 'Cinzel', serif; font-size: .6rem; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+}
+@media (max-width: 420px) { .insc-nome { display: none; } }
+.insc-back {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Cinzel', serif; font-size: .66rem; font-weight: 600;
+  letter-spacing: .06em; color: var(--green); white-space: nowrap;
+  padding: 6px 13px; border: 1.5px solid rgba(30,107,53,.3);
+  border-radius: 6px; transition: all var(--ease);
+}
+.insc-back:hover { color: #fff; background: var(--green); border-color: var(--green); }
 
-/* Wrapper */
-.wrap { max-width: 780px; margin: 0 auto; padding: 28px 20px 64px; }
+/* ── Wrap ── */
+.wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; flex: 1; }
 
-/* Event card */
-.ev-card   { background: var(--white); border-radius: var(--rl); overflow: hidden; box-shadow: var(--sh); margin-bottom: 24px; }
-.ev-img    { width: 100%; max-height: 340px; object-fit: cover; display: block; }
-.ev-body   { padding: 22px 26px 24px; }
-.ev-title  { font-family: 'Cinzel', serif; font-size: clamp(1.15rem,3vw,1.65rem); font-weight: 700; color: var(--green-dk); margin-bottom: 14px; line-height: 1.3; }
-.ev-meta   { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 14px; }
-.ev-meta-i { display: flex; align-items: center; gap: 5px; font-size: .88rem; color: var(--muted); }
+/* ── Event card ── */
+.ev-card  { background: var(--white); border-radius: var(--rl); overflow: hidden; box-shadow: var(--sh); margin-bottom: 28px; }
+.ev-img   { width: 100%; height: auto; display: block; }   /* natural — sem corte */
+.ev-body  { padding: 24px 28px 26px; }
+.ev-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 700;
+  color: var(--green-dk); line-height: 1.3; margin-bottom: 14px;
+}
+.ev-meta  { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; }
+.ev-meta-i {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .88rem; color: var(--muted);
+}
 .ev-meta-i svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--green); }
-.ev-desc   { font-size: .9rem; color: var(--muted); font-style: italic; border-top: 1px solid var(--border); padding-top: 12px; }
+.ev-desc  { font-size: .9rem; color: var(--muted); font-style: italic; border-top: 1px solid var(--border); padding-top: 12px; }
 
-/* Badges */
-.badge-open   { display: inline-flex; align-items: center; gap: 5px; background: var(--green-pale); color: var(--green); border: 1px solid rgba(30,107,53,.25); padding: 4px 13px; border-radius: 20px; font-family: 'Cinzel', serif; font-size: .66rem; font-weight: 700; letter-spacing: .1em; margin-bottom: 12px; }
-.badge-open::before { content: ''; width: 7px; height: 7px; background: var(--green); border-radius: 50%; }
+/* ── Badges ── */
+.badge-open {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--green-pale); color: var(--green);
+  border: 1px solid rgba(30,107,53,.25);
+  padding: 4px 13px; border-radius: 20px;
+  font-family: 'Cinzel', serif; font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+  margin-bottom: 12px;
+}
+.badge-open::before {
+  content: ''; width: 7px; height: 7px;
+  background: var(--green); border-radius: 50%;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-/* Vagas progress */
-.vagas-wrap  { margin-top: 14px; }
-.vagas-label { font-size: .8rem; color: var(--muted); margin-bottom: 5px; }
-.vagas-track { height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; }
-.vagas-fill  { height: 100%; background: var(--green); border-radius: 4px; transition: width .6s; }
+/* ── Vagas ── */
+.vagas-wrap  { margin-top: 18px; background: var(--off); border-radius: 8px; padding: 12px 16px; }
+.vagas-label {
+  font-size: .8rem; color: var(--muted); margin-bottom: 6px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.vagas-label strong { color: var(--text); }
+.vagas-track { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.vagas-fill  {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--green-dk));
+  border-radius: 4px; transition: width .6s;
+}
 
-/* Lotes */
-.lotes-wrap  { margin-bottom: 20px; }
-.sec-label   { font-family: 'Cinzel', serif; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
-.lotes-grid  { display: grid; gap: 9px; }
-.lote-item   { display: flex; align-items: center; gap: 13px; background: var(--white); border: 2px solid var(--border); border-radius: var(--r); padding: 13px 16px; cursor: pointer; transition: border-color var(--ease), background var(--ease); }
-.lote-item:has(input:checked) { border-color: var(--green); background: var(--green-pale); }
-.lote-item input[type=radio]  { accent-color: var(--green); width: 17px; height: 17px; flex-shrink: 0; cursor: pointer; }
-.lote-info   { flex: 1; min-width: 0; }
-.lote-nome   { font-family: 'Cinzel', serif; font-size: .82rem; font-weight: 700; color: var(--green-dk); }
-.lote-desc   { font-size: .78rem; color: var(--muted); font-style: italic; margin-top: 1px; }
-.lote-sub    { font-size: .73rem; color: var(--muted); margin-top: 2px; }
-.lote-preco  { font-family: 'Cinzel', serif; font-weight: 700; color: var(--green-dk); white-space: nowrap; text-align: right; }
+/* ── Section label ── */
+.sec-label {
+  font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--gold);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+}
+.sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── Lotes ── */
+.lotes-wrap { margin-bottom: 24px; }
+.lotes-grid { display: grid; gap: 10px; }
+.lote-item  {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--white); border: 2px solid var(--border);
+  border-radius: var(--r); padding: 14px 18px; cursor: pointer;
+  transition: border-color var(--ease), background var(--ease), box-shadow var(--ease);
+}
+.lote-item:has(input:checked) {
+  border-color: var(--green); background: var(--green-pale);
+  box-shadow: 0 0 0 3px rgba(30,107,53,.08);
+}
+.lote-item input[type=radio] { accent-color: var(--green); width: 17px; height: 17px; flex-shrink: 0; cursor: pointer; }
+.lote-info  { flex: 1; min-width: 0; }
+.lote-nome  { font-family: 'Cinzel', serif; font-size: .82rem; font-weight: 700; color: var(--green-dk); }
+.lote-desc  { font-size: .78rem; color: var(--muted); font-style: italic; margin-top: 2px; }
+.lote-sub   { font-size: .73rem; color: var(--muted); margin-top: 2px; }
+.lote-preco { font-family: 'Cinzel', serif; font-weight: 700; color: var(--green-dk); white-space: nowrap; text-align: right; font-size: .92rem; }
 .lote-preco.free { color: var(--green); }
 
-/* Form */
-.form-box    { background: var(--white); border-radius: var(--rl); box-shadow: var(--sh-sm); padding: clamp(20px,4vw,34px); border-top: 3px solid var(--gold-lt); }
-.form-title  { font-family: 'Cinzel', serif; font-size: clamp(.88rem,2vw,1rem); font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--green-dk); margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-.form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* ── Form ── */
+.form-box {
+  background: var(--white); border-radius: var(--rl);
+  box-shadow: var(--sh-sm); padding: clamp(22px, 4vw, 36px);
+  border-top: 3px solid var(--gold-lt);
+}
+.form-title {
+  font-family: 'Cinzel', serif; font-size: clamp(.82rem, 2vw, .94rem);
+  font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--green-dk); margin-bottom: 22px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
-.fg          { margin-bottom: 4px; }
-.fg.full     { grid-column: 1 / -1; }
-.lbl         { display: block; font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--green-dk); margin-bottom: 5px; }
-.lbl .opt    { font-weight: 400; color: var(--muted); font-style: italic; }
-input[type=text],input[type=email],input[type=tel],input[type=date],textarea,select {
-  width: 100%; border: 1.5px solid var(--border); border-radius: var(--r); padding: 10px 13px;
-  font-family: 'EB Garamond', serif; font-size: 1rem; color: var(--text); background: var(--off);
+.fg      { margin-bottom: 0; }
+.fg.full { grid-column: 1 / -1; }
+.lbl {
+  display: block; font-family: 'Cinzel', serif; font-size: .64rem;
+  font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--green-dk); margin-bottom: 6px;
+}
+.lbl .opt { font-weight: 400; color: var(--muted); font-style: italic; text-transform: none; letter-spacing: 0; }
+input[type=text],
+input[type=email],
+input[type=tel],
+input[type=date],
+textarea {
+  width: 100%; border: 1.5px solid var(--border); border-radius: var(--r);
+  padding: 10px 13px; font-family: 'EB Garamond', serif; font-size: 1rem;
+  color: var(--text); background: var(--off);
   transition: border-color var(--ease), box-shadow var(--ease), background var(--ease);
 }
-input:focus,textarea:focus,select:focus {
-  outline: none; border-color: var(--green); background: var(--white);
+input:focus, textarea:focus {
+  outline: none; border-color: var(--green);
+  background: var(--white);
   box-shadow: 0 0 0 3px rgba(30,107,53,.09);
 }
 textarea { min-height: 88px; resize: vertical; }
 
-/* Pagamento */
-.pay-wrap    { margin: 20px 0 18px; border: 1.5px dashed var(--border); border-radius: var(--rl); padding: 18px; }
-.pay-grid    { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+/* ── Pagamento ── */
+.pay-wrap {
+  margin: 22px 0 18px; background: var(--off);
+  border: 1px solid var(--border); border-radius: var(--rl); padding: 20px;
+}
+.pay-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
 @media (max-width: 380px) { .pay-grid { grid-template-columns: 1fr 1fr; } }
-.pay-opt     { display: flex; flex-direction: column; align-items: center; gap: 6px; border: 2px solid var(--border); border-radius: var(--r); padding: 13px 8px; cursor: pointer; text-align: center; transition: border-color var(--ease), background var(--ease); }
-.pay-opt:has(input:checked) { border-color: var(--green); background: var(--green-pale); }
+.pay-opt {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  border: 2px solid var(--border); border-radius: var(--r);
+  padding: 14px 8px; cursor: pointer; text-align: center;
+  background: var(--white);
+  transition: border-color var(--ease), background var(--ease), box-shadow var(--ease);
+}
+.pay-opt:has(input:checked) {
+  border-color: var(--green); background: var(--green-pale);
+  box-shadow: 0 0 0 3px rgba(30,107,53,.08);
+}
 .pay-opt input { accent-color: var(--green); }
-.pay-icon    { font-size: 1.4rem; line-height: 1; }
-.pay-label   { font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--green-dk); }
-.pay-note    { margin-top: 10px; font-size: .8rem; color: var(--muted); font-style: italic; text-align: center; }
+.pay-icon  { font-size: 1.4rem; line-height: 1; }
+.pay-label {
+  font-family: 'Cinzel', serif; font-size: .66rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase; color: var(--green-dk);
+}
+.pay-note { margin-top: 12px; font-size: .8rem; color: var(--muted); font-style: italic; text-align: center; }
 
-/* Total */
-.total-row   { display: flex; justify-content: space-between; align-items: center; background: var(--green-pale); border-radius: var(--r); padding: 11px 15px; margin-bottom: 14px; border: 1px solid rgba(30,107,53,.15); }
-.total-row .tl  { font-family: 'Cinzel', serif; font-size: .7rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--green-dk); }
-.total-row .tp  { font-family: 'Cinzel', serif; font-size: 1.28rem; font-weight: 700; color: var(--green-dk); }
+/* ── Total ── */
+.total-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--green-pale); border-radius: var(--r);
+  padding: 12px 16px; margin: 18px 0 14px;
+  border: 1px solid rgba(30,107,53,.18);
+}
+.total-row .tl {
+  font-family: 'Cinzel', serif; font-size: .7rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--green-dk);
+}
+.total-row .tp { font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700; color: var(--green-dk); }
 .total-row .tp.free { color: var(--green); }
 
-/* Btn submit */
-.btn-sub { width: 100%; padding: 15px; background: var(--green-dk); color: #fff; border: none; border-radius: var(--r); font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: background var(--ease), transform var(--ease), box-shadow var(--ease); margin-top: 6px; }
+/* ── Botão principal ── */
+.btn-sub {
+  width: 100%; padding: 15px; background: var(--green-dk); color: #fff;
+  border: none; border-radius: var(--r); cursor: pointer;
+  font-family: 'Cinzel', serif; font-size: .78rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; margin-top: 6px;
+  transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
+}
 .btn-sub:hover  { background: var(--green); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(22,61,34,.22); }
 .btn-sub:active { transform: none; }
 
-/* Alert */
-.alert-err { background: #fee2e2; color: var(--red); border: 1px solid rgba(184,50,50,.3); border-left: 3px solid var(--red); padding: 11px 14px; border-radius: var(--r); margin-bottom: 14px; font-size: .9rem; }
+/* ── Alerta de erro ── */
+.alert-err {
+  background: #fee2e2; color: var(--red);
+  border: 1px solid rgba(184,50,50,.3); border-left: 3px solid var(--red);
+  padding: 12px 15px; border-radius: var(--r); margin-bottom: 16px; font-size: .9rem;
+}
 
-/* Success */
-.suc-card    { background: var(--white); border-radius: var(--rl); box-shadow: var(--sh); overflow: hidden; }
-.suc-head    { background: var(--green-dk); padding: 34px 26px; color: #fff; text-align: center; }
-.suc-icon    { font-size: 2.8rem; margin-bottom: 10px; line-height: 1; }
-.suc-title   { font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 7px; }
-.suc-sub     { font-size: .92rem; opacity: .8; font-style: italic; }
-.suc-body    { padding: 26px; }
-.suc-num-l   { font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.suc-num     { font-family: 'Cinzel', serif; font-size: 2.2rem; font-weight: 700; color: var(--green-dk); margin-bottom: 20px; }
-.suc-rows    { display: grid; gap: 8px; margin-bottom: 22px; }
-.suc-row     { display: flex; gap: 10px; align-items: baseline; background: var(--off); border-radius: 8px; padding: 9px 12px; font-size: .9rem; }
-.suc-key     { font-family: 'Cinzel', serif; font-size: .66rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
-.suc-val     { color: var(--text); }
-.sb-pend     { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; border-radius: var(--r); padding: 12px 14px; font-size: .86rem; margin-bottom: 18px; }
-.st-badge    { display: inline-flex; align-items: center; gap: 4px; padding: 3px 12px; border-radius: 20px; font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700; letter-spacing: .08em; }
+/* ── Página de sucesso ── */
+.suc-card { background: var(--white); border-radius: var(--rl); box-shadow: var(--sh); overflow: hidden; }
+.suc-head {
+  background: var(--green-dk); padding: 36px 28px; color: #fff; text-align: center;
+  position: relative; overflow: hidden;
+}
+.suc-head::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 120%, rgba(201,168,76,.18) 0%, transparent 70%);
+}
+.suc-icon  { font-size: 2.6rem; margin-bottom: 12px; line-height: 1; position: relative; }
+.suc-title {
+  font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; position: relative;
+}
+.suc-sub   { font-size: .92rem; opacity: .75; font-style: italic; position: relative; }
+.suc-body  { padding: 28px; }
+.suc-num-l {
+  font-family: 'Cinzel', serif; font-size: .64rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+}
+.suc-num   { font-family: 'Cinzel', serif; font-size: 2.2rem; font-weight: 700; color: var(--green-dk); margin-bottom: 22px; line-height: 1; }
+.suc-rows  { display: grid; gap: 8px; margin-bottom: 22px; }
+.suc-row   {
+  display: flex; gap: 10px; align-items: baseline;
+  background: var(--off); border-radius: 8px; padding: 10px 14px; font-size: .9rem;
+}
+.suc-key   {
+  font-family: 'Cinzel', serif; font-size: .62rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+  white-space: nowrap; flex-shrink: 0; min-width: 72px;
+}
+.suc-val   { color: var(--text); }
+.sb-pend   {
+  background: #fef9ec; color: #92400e;
+  border: 1px solid #fcd34d; border-left: 3px solid var(--gold);
+  border-radius: var(--r); padding: 13px 16px; font-size: .86rem; margin-bottom: 18px;
+}
+.st-badge  {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 12px; border-radius: 20px;
+  font-family: 'Cinzel', serif; font-size: .66rem; font-weight: 700; letter-spacing: .08em;
+}
 .st-confirmado { background: #dcfce7; color: #166534; }
 .st-pendente   { background: #fef3c7; color: #92400e; }
-.suc-btns    { display: flex; flex-direction: column; gap: 10px; }
-.btn-wpp     { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; background: #25d366; color: #fff; border-radius: var(--r); font-family: 'Cinzel', serif; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; transition: opacity .2s; }
-.btn-wpp:hover { opacity: .88; }
-.btn-home    { display: block; text-align: center; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--r); color: var(--muted); font-family: 'Cinzel', serif; font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; transition: border-color var(--ease), color var(--ease); }
+.suc-btns  { display: flex; flex-direction: column; gap: 10px; }
+.btn-wpp   {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px; background: #25d366; color: #fff; border-radius: var(--r);
+  font-family: 'Cinzel', serif; font-size: .72rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  transition: opacity .2s, transform .2s;
+}
+.btn-wpp:hover { opacity: .88; transform: translateY(-1px); }
+.btn-home  {
+  display: block; text-align: center; padding: 12px;
+  border: 1.5px solid var(--border); border-radius: var(--r);
+  color: var(--muted); font-family: 'Cinzel', serif; font-size: .7rem;
+  font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  transition: border-color var(--ease), color var(--ease);
+}
 .btn-home:hover { border-color: var(--green); color: var(--green); }
 
-/* Info box (fechado/lotado) */
-.info-box    { background: var(--white); border-radius: var(--rl); box-shadow: var(--sh-sm); padding: 36px; text-align: center; }
+/* ── Info box (fechado/lotado/não encontrado) ── */
+.info-box { background: var(--white); border-radius: var(--rl); box-shadow: var(--sh-sm); padding: 44px; text-align: center; }
+.info-box .info-icon { font-size: 2.2rem; margin-bottom: 16px; }
 .info-box h2 { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--green-dk); margin-bottom: 10px; }
 .info-box p  { color: var(--muted); font-style: italic; }
+.info-box a  { display: inline-flex; align-items: center; gap: 5px; margin-top: 20px; color: var(--green); font-family: 'Cinzel', serif; font-size: .72rem; font-weight: 600; letter-spacing: .06em; }
+.info-box a:hover { color: var(--green-dk); }
+
+/* ── Footer ── */
+.insc-footer {
+  background: var(--white); border-top: 1px solid var(--border);
+  padding: 18px 20px; text-align: center;
+}
+.insc-footer p { font-family: 'Cinzel', serif; font-size: .64rem; letter-spacing: .06em; color: var(--muted); }
+.insc-footer strong { color: var(--green-dk); font-style: normal; }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="inner">
-    <a href="/" style="display:flex;align-items:center;gap:10px">
-      <img src="/assets/img/logo.png" alt="NAIOT" class="logo" onerror="this.style.display='none'">
-      <span class="nome">NAIOT — Comunidade Católica Senhor Jesus</span>
+<!-- ═══ HEADER ═══ -->
+<header class="insc-hdr">
+  <div class="insc-hdr-inner">
+    <a href="/" class="insc-logo-wrap">
+      <img src="/assets/img/logo.png" alt="NAIOT" class="insc-logo"
+           onerror="this.style.display='none';document.querySelector('.insc-logo-txt').style.display='block'">
+      <span class="insc-logo-txt">NAIOT</span>
+      <span class="insc-nome">Comunidade Católica Senhor Jesus</span>
     </a>
+    <a href="/" class="insc-back">&#8592; Voltar ao site</a>
   </div>
-</div>
+</header>
 
 <div class="wrap">
 
 <?php if (!$evento): ?>
 <!-- ═══ Evento não encontrado ═══ -->
 <div class="info-box">
+  <div class="info-icon">&#x271D;&#xFE0E;</div>
   <h2>Evento não encontrado</h2>
   <p>O evento que você procura não está disponível.</p>
-  <a href="/" style="display:inline-block;margin-top:16px;color:var(--green)">← Voltar ao site</a>
+  <a href="/">&#8592; Voltar ao site da NAIOT</a>
 </div>
 
 <?php elseif ($inscricao_ok): ?>
@@ -347,7 +543,7 @@ textarea { min-height: 88px; resize: vertical; }
         <span class="suc-key">Status</span>
         <span class="suc-val">
           <span class="st-badge st-<?= $inscricao_ok['status'] ?>">
-            <?= ['pendente'=>'Aguardando confirmação','confirmado'=>'Confirmado','checkin'=>'Check-in'][$inscricao_ok['status']] ?? $inscricao_ok['status'] ?>
+            <?= ['pendente'=>'Aguardando confirmação','confirmado'=>'Confirmado','checkin'=>'Check-in realizado'][$inscricao_ok['status']] ?? $inscricao_ok['status'] ?>
           </span>
         </span>
       </div>
@@ -368,22 +564,26 @@ textarea { min-height: 88px; resize: vertical; }
         <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         Compartilhar no WhatsApp
       </a>
-      <a href="/" class="btn-home">← Voltar ao site da NAIOT</a>
+      <a href="/" class="btn-home">&#8592; Voltar ao site da NAIOT</a>
     </div>
   </div>
 </div>
 
 <?php elseif (!$pode_inscrever): ?>
 <!-- ═══ Fechado / Lotado ═══ -->
-<div class="ev-card">
-  <?php if ($evento['imagem']): ?>
-  <img src="/assets/img/eventos/<?= htmlspecialchars($evento['imagem']) ?>" alt="<?= htmlspecialchars($evento['titulo']) ?>" class="ev-img">
-  <?php endif; ?>
-  <div class="ev-body">
-    <div class="ev-title"><?= htmlspecialchars($evento['titulo']) ?></div>
-  </div>
+<?php if ($evento['imagem']): ?>
+<div class="ev-card" style="margin-bottom:20px">
+  <img src="/assets/img/eventos/<?= htmlspecialchars($evento['imagem']) ?>"
+       alt="<?= htmlspecialchars($evento['titulo']) ?>" class="ev-img">
 </div>
+<?php endif; ?>
 <div class="info-box">
+  <div class="info-icon">
+    <?php if ($evento_lotado): ?>🚫
+    <?php elseif ($encerrado): ?>⏰
+    <?php else: ?>🔒
+    <?php endif; ?>
+  </div>
   <h2>
     <?php if ($evento_lotado): ?>Vagas esgotadas
     <?php elseif ($encerrado): ?>Inscrições encerradas
@@ -391,12 +591,12 @@ textarea { min-height: 88px; resize: vertical; }
     <?php endif; ?>
   </h2>
   <p>
-    <?php if ($evento_lotado): ?>Todas as vagas foram preenchidas.
-    <?php elseif ($encerrado): ?>O prazo para inscrições já encerrou.
+    <?php if ($evento_lotado): ?>Todas as vagas foram preenchidas. Fique atento a novas turmas.
+    <?php elseif ($encerrado): ?>O prazo para inscrições neste evento já encerrou.
     <?php else: ?>As inscrições para este evento ainda não foram abertas.
     <?php endif; ?>
   </p>
-  <a href="/" style="display:inline-block;margin-top:16px;color:var(--green)">← Voltar ao site</a>
+  <a href="/">&#8592; Voltar ao site</a>
 </div>
 
 <?php else: ?>
@@ -405,7 +605,8 @@ textarea { min-height: 88px; resize: vertical; }
 <!-- Card do evento -->
 <div class="ev-card">
   <?php if ($evento['imagem']): ?>
-  <img src="/assets/img/eventos/<?= htmlspecialchars($evento['imagem']) ?>" alt="<?= htmlspecialchars($evento['titulo']) ?>" class="ev-img">
+  <img src="/assets/img/eventos/<?= htmlspecialchars($evento['imagem']) ?>"
+       alt="<?= htmlspecialchars($evento['titulo']) ?>" class="ev-img">
   <?php endif; ?>
   <div class="ev-body">
     <span class="badge-open">Inscrições abertas</span>
@@ -442,7 +643,10 @@ textarea { min-height: 88px; resize: vertical; }
     <?php if ($evento['vagas']): ?>
     <div class="vagas-wrap">
       <?php $pct = min(100, round($total_inscritos / $evento['vagas'] * 100)); ?>
-      <div class="vagas-label"><?= $total_inscritos ?> de <?= $evento['vagas'] ?> vagas preenchidas</div>
+      <div class="vagas-label">
+        <span><?= $total_inscritos ?> de <?= $evento['vagas'] ?> vagas preenchidas</span>
+        <strong><?= $evento['vagas'] - $total_inscritos ?> disponíveis</strong>
+      </div>
       <div class="vagas-track"><div class="vagas-fill" style="width:<?= $pct ?>%"></div></div>
     </div>
     <?php endif; ?>
@@ -454,19 +658,20 @@ textarea { min-height: 88px; resize: vertical; }
   <!-- Lotes -->
   <?php if (!empty($lotes)): ?>
   <div class="lotes-wrap">
-    <div class="sec-label">&#x271D; Selecione uma categoria</div>
+    <div class="sec-label">Selecione uma categoria</div>
     <div class="lotes-grid">
       <?php foreach ($lotes as $idx => $l): ?>
       <label class="lote-item">
-        <input type="radio" name="lote_id" value="<?= $l['id'] ?>" <?= ($idx===0||($lote_id_selecionado??0)===$l['id'])?'checked':'' ?> required onchange="atualizarTotal()">
+        <input type="radio" name="lote_id" value="<?= $l['id'] ?>"
+               <?= ($idx === 0 ? 'checked' : '') ?> required onchange="atualizarTotal()">
         <div class="lote-info">
           <div class="lote-nome"><?= htmlspecialchars($l['nome']) ?></div>
           <?php if ($l['descricao']): ?><div class="lote-desc"><?= htmlspecialchars($l['descricao']) ?></div><?php endif; ?>
           <?php if ($l['data_fim']): ?><div class="lote-sub">até <?= date('d/m/Y', strtotime($l['data_fim'])) ?></div><?php endif; ?>
           <?php if ($l['vagas']): ?><div class="lote-sub"><?= $l['vagas'] - $l['inscritos'] ?> vagas disponíveis</div><?php endif; ?>
         </div>
-        <div class="lote-preco <?= $l['valor']==0?'free':'' ?>" data-valor="<?= $l['valor'] ?>">
-          <?= $l['valor'] > 0 ? 'R$ '.number_format($l['valor'],2,',','.') : 'Gratuito' ?>
+        <div class="lote-preco <?= $l['valor'] == 0 ? 'free' : '' ?>" data-valor="<?= $l['valor'] ?>">
+          <?= $l['valor'] > 0 ? 'R$ ' . number_format($l['valor'], 2, ',', '.') : 'Gratuito' ?>
         </div>
       </label>
       <?php endforeach; ?>
@@ -476,7 +681,7 @@ textarea { min-height: 88px; resize: vertical; }
 
   <!-- Dados pessoais -->
   <div class="form-box">
-    <div class="form-title">&#x271D; Dados do participante</div>
+    <div class="form-title">Dados do participante</div>
 
     <?php if ($erro): ?>
     <div class="alert-err"><?= htmlspecialchars($erro) ?></div>
@@ -510,24 +715,25 @@ textarea { min-height: 88px; resize: vertical; }
       </div>
       <div class="fg full">
         <label class="lbl" for="observacoes">Observações <span class="opt">(opcional)</span></label>
-        <textarea id="observacoes" name="observacoes" placeholder="Necessidades especiais, dúvidas, recados..."><?= htmlspecialchars($_POST['observacoes'] ?? '') ?></textarea>
+        <textarea id="observacoes" name="observacoes"
+                  placeholder="Necessidades especiais, dúvidas, recados..."><?= htmlspecialchars($_POST['observacoes'] ?? '') ?></textarea>
       </div>
     </div>
 
-    <!-- Pagamento (visível apenas se evento for pago) -->
+    <!-- Pagamento -->
     <div id="pay-box" class="pay-wrap" style="<?= $tem_valor ? '' : 'display:none' ?>">
-      <div class="sec-label" style="margin-bottom:12px">&#x271D; Forma de pagamento</div>
+      <div class="sec-label" style="margin-bottom:0">Forma de pagamento</div>
       <div class="pay-grid">
         <label class="pay-opt">
-          <input type="radio" name="forma_pagamento" value="pix" <?= ($_POST['forma_pagamento']??'')==='pix'?'checked':'' ?>>
+          <input type="radio" name="forma_pagamento" value="pix" <?= (($_POST['forma_pagamento'] ?? '') === 'pix' ? 'checked' : '') ?>>
           <span class="pay-icon">⚡</span><span class="pay-label">PIX</span>
         </label>
         <label class="pay-opt">
-          <input type="radio" name="forma_pagamento" value="cartao" <?= ($_POST['forma_pagamento']??'')==='cartao'?'checked':'' ?>>
+          <input type="radio" name="forma_pagamento" value="cartao" <?= (($_POST['forma_pagamento'] ?? '') === 'cartao' ? 'checked' : '') ?>>
           <span class="pay-icon">💳</span><span class="pay-label">Cartão</span>
         </label>
         <label class="pay-opt">
-          <input type="radio" name="forma_pagamento" value="boleto" <?= ($_POST['forma_pagamento']??'')==='boleto'?'checked':'' ?>>
+          <input type="radio" name="forma_pagamento" value="boleto" <?= (($_POST['forma_pagamento'] ?? '') === 'boleto' ? 'checked' : '') ?>>
           <span class="pay-icon">🎫</span><span class="pay-label">Boleto</span>
         </label>
       </div>
@@ -535,11 +741,11 @@ textarea { min-height: 88px; resize: vertical; }
     </div>
 
     <!-- Total -->
-    <?php $val_base = empty($lotes) ? $evento['valor'] : ($lotes[0]['valor'] ?? 0); ?>
+    <?php $val_base = empty($lotes) ? ($evento['valor'] ?? 0) : ($lotes[0]['valor'] ?? 0); ?>
     <div id="total-box" class="total-row" <?= ($val_base == 0 && empty($lotes)) ? 'style="display:none"' : '' ?>>
       <span class="tl">Total</span>
-      <span class="tp <?= $val_base==0?'free':'' ?>" id="total-val">
-        <?= $val_base > 0 ? 'R$ '.number_format($val_base,2,',','.') : 'Gratuito' ?>
+      <span class="tp <?= $val_base == 0 ? 'free' : '' ?>" id="total-val">
+        <?= $val_base > 0 ? 'R$ ' . number_format($val_base, 2, ',', '.') : 'Gratuito' ?>
       </span>
     </div>
 
@@ -553,6 +759,10 @@ textarea { min-height: 88px; resize: vertical; }
 <?php endif; ?>
 
 </div><!-- /wrap -->
+
+<footer class="insc-footer">
+  <p>© 2026 <strong>NAIOT</strong> — Comunidade Católica Senhor Jesus. Todos os direitos reservados.</p>
+</footer>
 
 <script>
 /* Máscara CPF */
