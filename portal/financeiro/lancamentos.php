@@ -77,6 +77,29 @@ include dirname(__DIR__) . '/_layout.php';
 .periodo a{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);color:var(--muted);text-decoration:none;transition:.15s}
 .periodo a:hover{border-color:var(--green);color:var(--green)}
 .periodo strong{font-family:'Cinzel',serif;font-size:.88rem;font-weight:700;color:var(--green-dk);min-width:160px;text-align:center}
+
+/* ── Cards mobile ─────────────────────────────────────────────────────────── */
+.lanc-cards{display:none;flex-direction:column;gap:10px;padding:12px}
+.lc{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden;transition:.15s}
+.lc:hover{border-color:var(--green);box-shadow:0 2px 10px rgba(30,107,53,.08)}
+.lc-top{display:flex;align-items:flex-start;gap:10px;padding:13px 14px 10px}
+.lc-bar{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:40px}
+.lc-main{flex:1;min-width:0}
+.lc-desc{font-weight:700;font-size:.9rem;color:var(--text);line-height:1.3;margin-bottom:3px}
+.lc-meta{font-size:.72rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lc-val{font-family:'Cinzel',serif;font-weight:700;font-size:1rem;white-space:nowrap;text-align:right}
+.lc-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:0 14px 10px 28px}
+.lc-obs{font-size:.72rem;color:var(--muted);padding:0 14px 10px 28px;font-style:italic}
+.lc-actions{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);background:var(--off)}
+.lc-actions a,.lc-actions button{flex:1;justify-content:center;font-size:.82rem;padding:9px 0}
+.lc-anx{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.66rem;font-weight:700;background:#f0fdf4;color:#166534;text-decoration:none;border:1px solid #bbf7d0}
+
+@media(max-width:767px){
+  .tabela-wrap table,.tabela-wrap thead,.tabela-wrap tbody{display:none!important}
+  .lanc-cards{display:flex}
+  .fin-nav{gap:6px}
+  .fin-nav a,.fin-nav span{padding:5px 10px;font-size:.73rem}
+}
 </style>
 
 <div class="fin-nav">
@@ -216,6 +239,59 @@ include dirname(__DIR__) . '/_layout.php';
     <?php endforeach; ?>
     </tbody>
   </table>
+
+  <!-- ── Cards mobile ───────────────────────────────────────────────────── -->
+  <div class="lanc-cards">
+  <?php foreach ($lancamentos as $l):
+    $cor     = $l['tipo']==='receita' ? '#16a34a' : '#dc2626';
+    $forma_l = ['dinheiro'=>'Dinheiro','pix'=>'PIX','transferencia'=>'Transf.','boleto'=>'Boleto','cartao'=>'Cartão','cheque'=>'Cheque','outro'=>'Outro'];
+  ?>
+  <div class="lc">
+    <div class="lc-top">
+      <span class="lc-bar" style="background:<?= $cor ?>"></span>
+      <div class="lc-main">
+        <div class="lc-desc"><?= htmlspecialchars($l['descricao']) ?></div>
+        <div class="lc-meta">
+          <span style="display:inline-flex;align-items:center;gap:4px">
+            <span style="width:7px;height:7px;border-radius:50%;background:<?= htmlspecialchars($l['cat_cor']??'#999') ?>;flex-shrink:0"></span>
+            <?= htmlspecialchars($l['cat_nome']??'—') ?>
+          </span>
+          <span>·</span>
+          <span><?= date('d/m/Y', strtotime($l['data_lancamento'])) ?></span>
+          <span>·</span>
+          <span><?= $forma_l[$l['forma_pagamento']] ?? ucfirst($l['forma_pagamento']) ?></span>
+        </div>
+      </div>
+      <div class="lc-val" style="color:<?= $cor ?>">
+        <?= $l['tipo']==='receita'?'↑':'↓' ?><br>
+        R$&nbsp;<?= number_format($l['valor'],2,',','.') ?>
+      </div>
+    </div>
+
+    <div class="lc-tags">
+      <span class="st st-<?= $l['status'] ?>"><?= ucfirst($l['status']) ?></span>
+      <?php if ($l['n_anexos'] > 0): ?>
+        <a href="/portal/financeiro/editar.php?id=<?= $l['id'] ?>" class="lc-anx">📎 <?= $l['n_anexos'] ?> anexo(s)</a>
+      <?php endif; ?>
+    </div>
+
+    <?php if ($l['observacoes']): ?>
+    <div class="lc-obs"><?= htmlspecialchars(mb_substr($l['observacoes'],0,80)) ?><?= mb_strlen($l['observacoes'])>80?'…':'' ?></div>
+    <?php endif; ?>
+
+    <div class="lc-actions">
+      <a href="/portal/financeiro/editar.php?id=<?= $l['id'] ?>" class="btn btn-ghost btn-sm">✏️ Editar / Anexos</a>
+      <form method="post" onsubmit="return confirm('Excluir este lançamento?')" style="display:contents">
+        <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+        <input type="hidden" name="acao" value="deletar">
+        <input type="hidden" name="id" value="<?= $l['id'] ?>">
+        <button type="submit" class="btn btn-danger btn-sm">✕ Excluir</button>
+      </form>
+    </div>
+  </div>
+  <?php endforeach; ?>
+  </div>
+
   <?php endif; ?>
 </div>
 
