@@ -70,7 +70,7 @@ include dirname(__DIR__) . '/_layout.php';
       </label>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="form-row">
       <div class="form-group">
         <label for="vagas">Vagas totais <span style="font-weight:400;color:var(--cinza3)">(vazio = ilimitado)</span></label>
         <input type="number" id="vagas" name="vagas" min="1"

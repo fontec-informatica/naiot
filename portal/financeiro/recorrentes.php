@@ -95,8 +95,7 @@ include dirname(__DIR__) . '/_layout.php';
 .cats-rec,.cats-desp{display:none}
 .cats-rec.show,.cats-desp.show{display:block}
 .origem-wrap{display:none}.origem-wrap.show{display:block}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-row{gap:16px}
 .rec-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:12px;transition:.15s}
 .rec-card:hover{border-color:var(--green);box-shadow:0 2px 8px rgba(30,107,53,.08)}
 .rec-card.inativo{opacity:.6}

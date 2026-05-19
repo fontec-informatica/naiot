@@ -102,8 +102,7 @@ include dirname(__DIR__) . '/_layout.php';
 .cats-rec.show,.cats-desp.show{display:block}
 .origem-wrap{display:none}
 .origem-wrap.show{display:block}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-row{gap:16px}
 .anx-grid{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .anx-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--off);border-radius:8px;border:1px solid var(--border)}
 .anx-item .anx-icon{font-size:1.1rem;flex-shrink:0}

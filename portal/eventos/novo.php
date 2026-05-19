@@ -97,7 +97,7 @@ include dirname(__DIR__) . '/_layout.php';
              value="<?= htmlspecialchars($_POST['descricao'] ?? '') ?>">
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="form-row">
       <div class="form-group">
         <label for="data_evento">Data de início <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
         <input type="date" id="data_evento" name="data_evento"
@@ -110,7 +110,7 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="form-row">
       <div class="form-group">
         <label for="local_evento">Local <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
         <input type="text" id="local_evento" name="local_evento" placeholder="Ex: Igreja Matriz"
@@ -126,7 +126,7 @@ include dirname(__DIR__) . '/_layout.php';
     <hr style="border:none;border-top:1px solid var(--cinza2);margin:8px 0 16px">
     <p style="font-size:.82rem;color:var(--cinza3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Inscrições</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="form-row">
       <div class="form-group">
         <label for="vagas">Vagas totais <span style="font-weight:400;color:var(--cinza3)">(vazio = ilimitado)</span></label>
         <input type="number" id="vagas" name="vagas" min="1"

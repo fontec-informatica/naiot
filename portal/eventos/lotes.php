@@ -176,7 +176,7 @@ include dirname(__DIR__) . '/_layout.php';
         <input type="number" name="vagas" min="1" placeholder="Deixe vazio para ilimitado" value="<?= htmlspecialchars($_POST['vagas'] ?? '') ?>">
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-row" style="gap:12px">
         <div class="form-group">
           <label>Válido a partir de</label>
           <input type="date" name="data_inicio" value="<?= htmlspecialchars($_POST['data_inicio'] ?? '') ?>">

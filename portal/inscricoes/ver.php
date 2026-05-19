@@ -61,7 +61,7 @@ include dirname(__DIR__) . '/_layout.php';
       <a href="/portal/inscricoes/evento.php?id=<?= $ins['evento_id'] ?>" style="font-size:.82rem;color:var(--cinza3)">← Voltar ao evento</a>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="form-row" style="margin-bottom:20px">
       <div>
         <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--cinza3);font-weight:600;margin-bottom:4px">Evento</div>
         <div style="font-weight:600"><?= htmlspecialchars($ins['evento_titulo']) ?></div>

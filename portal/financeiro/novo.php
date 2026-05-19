@@ -95,8 +95,7 @@ include dirname(__DIR__) . '/_layout.php';
 .anexo-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .anexo-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--off);border-radius:7px;border:1px solid var(--border)}
 .anexo-item span{flex:1;font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-row{gap:16px}
 </style>
 
 <div class="form-wrap">
