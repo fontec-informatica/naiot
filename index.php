@@ -54,10 +54,10 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
   --r:  10px;
   --rl: 18px;
   --ease: .38s cubic-bezier(.4,0,.2,1);
-  --hdr-h: 172px;
+  --hdr-h: 74px;
 }
 
-@media (max-width: 768px) { :root { --hdr-h: 148px; } }
+@media (max-width: 768px) { :root { --hdr-h: 74px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
@@ -128,13 +128,13 @@ button { cursor: pointer; font: inherit; }
 .hdr-inner {
   display: flex; align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
-  gap: 16px;
+  height: var(--hdr-h);
+  gap: 12px;
 }
 
 /* Logo */
-.hdr-logo { flex-shrink: 0; display: flex; align-items: center; }
-.hdr-logo img { height: clamp(132px, 13vw, 156px); width: auto; transition: height var(--ease); mix-blend-mode: multiply; }
+.hdr-logo { flex-shrink: 0; display: flex; align-items: center; height: 100%; }
+.hdr-logo img { height: calc(var(--hdr-h) - 12px); width: auto; mix-blend-mode: multiply; }
 .hdr-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
@@ -211,7 +211,7 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .hero {
   min-height: 100svh;
   display: flex; align-items: center; justify-content: center;
-  text-align: center; padding: calc(var(--hdr-h) + 40px) clamp(18px,4vw,36px) 60px;
+  text-align: center; padding: calc(var(--hdr-h) + 60px) clamp(18px,4vw,36px) 60px;
   position: relative; overflow: hidden; background: var(--white);
 }
 .hero::before {
@@ -474,8 +474,16 @@ footer {
    ╚══════════════════════════════╝ */
 @media (max-width: 768px) {
   /* Nav mobile */
-  .burger { display: flex; }
-  .hdr-social { display: none; }
+  .burger { display: flex; order: 3; }
+  .hdr-social {
+    display: flex; order: 2;
+    border-left: none; padding-left: 0;
+    gap: 6px;
+  }
+  .hdr-social a { width: 32px; height: 32px; }
+  .hdr-social a svg { width: 14px; height: 14px; }
+  .hdr-social a:nth-child(n+3) { display: none; }
+  .hdr-logo { order: 1; }
 
   nav {
     position: fixed; top: var(--hdr-h); left: 0; right: 0;
