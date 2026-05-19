@@ -43,8 +43,8 @@ run_sql("CREATE TABLE IF NOT EXISTS evento_lotes (
   data_fim     DATE DEFAULT NULL,
   ativo        TINYINT(1) NOT NULL DEFAULT 1,
   ordem        INT NOT NULL DEFAULT 0,
-  FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE
-)", "Tabela `evento_lotes` criada/verificada");
+  KEY idx_evento_id (evento_id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4", "Tabela `evento_lotes` criada/verificada");
 
 // Tabela de inscrições
 run_sql("CREATE TABLE IF NOT EXISTS inscricoes (
@@ -68,10 +68,9 @@ run_sql("CREATE TABLE IF NOT EXISTS inscricoes (
   updated_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uk_token (token),
   KEY idx_evento   (evento_id),
-  KEY idx_status   (status),
-  FOREIGN KEY (evento_id) REFERENCES eventos(id) ON DELETE CASCADE,
-  FOREIGN KEY (lote_id)   REFERENCES evento_lotes(id) ON DELETE SET NULL
-)", "Tabela `inscricoes` criada/verificada");
+  KEY idx_lote     (lote_id),
+  KEY idx_status   (status)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4", "Tabela `inscricoes` criada/verificada");
 
 $tem_erro = !empty(array_filter($msgs, fn($m) => $m[0] === 'err'));
 ?>
