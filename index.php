@@ -370,8 +370,9 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 }
 
 /* ── Carrossel de eventos (imagens) ── */
-.evt-slide { padding: 0; background: #f0ede8; }
+.evt-slide { padding: 0; background: transparent; }
 .evt-slide img { width: 100%; max-height: 500px; object-fit: contain; display: block; margin: 0 auto; }
+.evt-carousel .carousel-viewport { background: var(--off); border-color: transparent; box-shadow: none; }
 .evt-caption {
   padding: 14px 20px 18px; background: var(--white);
   border-top: 1px solid var(--border);
@@ -628,7 +629,7 @@ footer {
       <p class="sec-sub">Venha participar e viver momentos de fé com nossa comunidade.</p>
     </div>
     <div class="carousel-center" data-a>
-      <div class="carousel-outer">
+      <div class="carousel-outer evt-carousel">
         <button class="c-prev" aria-label="Anterior">&#8249;</button>
         <button class="c-next" aria-label="Próximo">&#8250;</button>
         <div class="carousel-viewport">
