@@ -27,12 +27,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') !== 'deletar
     if (!csrf_valido()) {
         $erro = 'Token inválido. Recarregue a página.';
     } else {
-        $nome_ev   = trim($_POST['titulo'] ?? '');
-        $descricao = trim($_POST['descricao'] ?? '');
-        $data_ev   = $_POST['data_evento'] ?? '';
-        $data_fim  = $_POST['data_fim'] ?? '';
-        $ordem     = (int)($_POST['ordem'] ?? 0);
-        $ativo     = isset($_POST['ativo']) ? 1 : 0;
+        $nome_ev              = trim($_POST['titulo'] ?? '');
+        $descricao            = trim($_POST['descricao'] ?? '');
+        $data_ev              = $_POST['data_evento'] ?? '';
+        $data_fim             = $_POST['data_fim'] ?? '';
+        $ordem                = (int)($_POST['ordem'] ?? 0);
+        $ativo                = isset($_POST['ativo']) ? 1 : 0;
+        $inscricoes_abertas   = isset($_POST['inscricoes_abertas']) ? 1 : 0;
+        $vagas                = (int)($_POST['vagas'] ?? 0) ?: null;
+        $valor                = (float)str_replace(',', '.', preg_replace('/[^0-9,]/', '', $_POST['valor'] ?? '0'));
+        $data_encerramento    = $_POST['data_encerramento'] ?: null;
+        $local_evento         = trim($_POST['local_evento'] ?? '');
+        $horario              = trim($_POST['horario'] ?? '');
 
         if (!$nome_ev) {
             $erro = 'O título é obrigatório.';
@@ -66,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') !== 'deletar
             }
 
             if (!$erro) {
-                db()->prepare('UPDATE eventos SET titulo=?, descricao=?, data_evento=?, data_fim=?, imagem=?, ordem=?, ativo=? WHERE id=?')
+                db()->prepare('UPDATE eventos SET titulo=?, descricao=?, data_evento=?, data_fim=?, imagem=?, ordem=?, ativo=?, inscricoes_abertas=?, vagas=?, valor=?, data_encerramento=?, local_evento=?, horario=? WHERE id=?')
                     ->execute([
                         $nome_ev,
                         $descricao ?: null,
@@ -75,6 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') !== 'deletar
                         $novo_filename,
                         $ordem,
                         $ativo,
+                        $inscricoes_abertas,
+                        $vagas,
+                        $valor,
+                        $data_encerramento,
+                        $local_evento ?: null,
+                        $horario ?: null,
                         $id,
                     ]);
                 header('Location: /portal/eventos/?editado=1');
@@ -122,10 +134,52 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label for="local_evento">Local do evento <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <input type="text" id="local_evento" name="local_evento"
+               value="<?= htmlspecialchars($_POST['local_evento'] ?? $ev['local_evento'] ?? '') ?>" placeholder="Ex: Igreja Matriz, Salão Paroquial">
+      </div>
+      <div class="form-group">
+        <label for="horario">Horário <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <input type="text" id="horario" name="horario"
+               value="<?= htmlspecialchars($_POST['horario'] ?? $ev['horario'] ?? '') ?>" placeholder="Ex: 19h às 22h">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label for="ordem">Ordem de exibição</label>
+        <input type="number" id="ordem" name="ordem" min="0"
+               value="<?= htmlspecialchars($_POST['ordem'] ?? $ev['ordem']) ?>">
+      </div>
+      <div class="form-group">
+        <label for="data_encerramento">Encerrar inscrições em <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <input type="date" id="data_encerramento" name="data_encerramento"
+               value="<?= htmlspecialchars($_POST['data_encerramento'] ?? $ev['data_encerramento'] ?? '') ?>">
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label for="vagas">Vagas totais <span style="font-weight:400;color:var(--cinza3)">(vazio = ilimitado)</span></label>
+        <input type="number" id="vagas" name="vagas" min="1"
+               value="<?= htmlspecialchars($_POST['vagas'] ?? $ev['vagas'] ?? '') ?>" placeholder="Ilimitado">
+      </div>
+      <div class="form-group">
+        <label for="valor">Valor base (R$) <span style="font-weight:400;color:var(--cinza3)">(0 = gratuito)</span></label>
+        <input type="text" id="valor" name="valor"
+               value="<?= htmlspecialchars($_POST['valor'] ?? number_format($ev['valor'] ?? 0, 2, ',', '')) ?>" placeholder="0,00">
+        <span class="form-hint">Use lotes para múltiplos preços.</span>
+      </div>
+    </div>
+
     <div class="form-group">
-      <label for="ordem">Ordem de exibição</label>
-      <input type="number" id="ordem" name="ordem" min="0"
-             value="<?= htmlspecialchars($_POST['ordem'] ?? $ev['ordem']) ?>">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" name="inscricoes_abertas" value="1"
+               <?= (($_POST['inscricoes_abertas'] ?? $ev['inscricoes_abertas'] ?? 0) ? 'checked' : '') ?>>
+        <span><strong>Inscrições abertas</strong> — exibe botão "Inscrever-se" no site</span>
+      </label>
     </div>
 
     <div class="form-group">
@@ -152,6 +206,16 @@ include dirname(__DIR__) . '/_layout.php';
       <a href="/portal/eventos/" class="btn btn-ghost">Cancelar</a>
     </div>
   </form>
+
+  <hr style="margin:28px 0;border:none;border-top:1px solid var(--cinza2)">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div>
+      <strong style="font-size:.95rem">Lotes de inscrição</strong>
+      <p style="color:var(--cinza3);font-size:.85rem;margin-top:3px">Defina múltiplos preços ou categorias (Adulto, Criança, 1º Lote…)</p>
+    </div>
+    <a href="/portal/eventos/lotes.php?id=<?= $id ?>" class="btn btn-ouro btn-sm">Gerenciar lotes</a>
+  </div>
 
   <hr style="margin:28px 0;border:none;border-top:1px solid var(--cinza2)">
 

@@ -389,6 +389,14 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .evt-titulo { font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600; color: var(--text); display: block; }
 .evt-data   { font-size: .75rem; color: var(--muted); margin-top: 3px; display: block; }
 .evt-desc   { font-size: .85rem; color: var(--muted); font-style: italic; line-height: 1.5; border-left: 2px solid var(--border); padding-left: 16px; }
+.evt-btn-inscricao {
+  display: inline-flex; align-items: center; white-space: nowrap;
+  padding: 7px 18px; margin-left: auto; flex-shrink: 0;
+  background: var(--green-dk); color: #fff; border-radius: 6px;
+  font-family: 'Cinzel', serif; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  transition: background var(--ease), transform var(--ease);
+}
+.evt-btn-inscricao:hover { background: var(--green); transform: translateY(-1px); }
 
 .carousel-nav {
   display: flex; align-items: center;
@@ -646,13 +654,16 @@ footer {
               <div class="evt-inner">
                 <img src="/assets/img/eventos/<?= htmlspecialchars($ev['imagem']) ?>"
                      alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
-                <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao']): ?>
+                <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao'] || !empty($ev['inscricoes_abertas'])): ?>
                 <div class="evt-caption">
                   <div class="evt-info">
                     <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
                     <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
                   </div>
                   <?php if ($ev['descricao']): ?><span class="evt-desc"><?= htmlspecialchars($ev['descricao']) ?></span><?php endif; ?>
+                  <?php if (!empty($ev['inscricoes_abertas'])): ?>
+                  <a href="/inscricao.php?id=<?= $ev['id'] ?>" class="evt-btn-inscricao">Inscrever-se</a>
+                  <?php endif; ?>
                 </div>
                 <?php endif; ?>
               </div>
