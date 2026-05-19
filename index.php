@@ -54,10 +54,10 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
   --r:  10px;
   --rl: 18px;
   --ease: .38s cubic-bezier(.4,0,.2,1);
-  --hdr-h: 74px;
+  --hdr-h: 56px;
 }
 
-@media (max-width: 768px) { :root { --hdr-h: 74px; } }
+@media (max-width: 768px) { :root { --hdr-h: 56px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
@@ -122,6 +122,7 @@ button { cursor: pointer; font: inherit; }
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   border-bottom: 1px solid var(--border);
   transition: box-shadow var(--ease);
+  overflow: visible;
 }
 #hdr.scrolled { box-shadow: 0 2px 28px rgba(0,0,0,.10); }
 
@@ -132,9 +133,9 @@ button { cursor: pointer; font: inherit; }
   gap: 12px;
 }
 
-/* Logo */
-.hdr-logo { flex-shrink: 0; display: flex; align-items: center; height: 100%; }
-.hdr-logo img { height: calc(var(--hdr-h) - 12px); width: auto; mix-blend-mode: multiply; }
+/* Logo — grande, transborda abaixo da barra fina */
+.hdr-logo { flex-shrink: 0; display: flex; align-self: flex-start; }
+.hdr-logo img { height: clamp(90px, 11vw, 120px); width: auto; mix-blend-mode: multiply; }
 .hdr-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
@@ -211,7 +212,7 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .hero {
   min-height: 100svh;
   display: flex; align-items: center; justify-content: center;
-  text-align: center; padding: calc(var(--hdr-h) + 60px) clamp(18px,4vw,36px) 60px;
+  text-align: center; padding: clamp(150px,18vw,180px) clamp(18px,4vw,36px) 60px;
   position: relative; overflow: hidden; background: var(--white);
 }
 .hero::before {
