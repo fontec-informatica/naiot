@@ -296,6 +296,7 @@ include dirname(__DIR__) . '/_layout.php';
         </button>
         <span style="font-size:.72rem;color:var(--muted);align-self:center">PDF, JPG, PNG — máx. 10MB cada</span>
       </div>
+      <!-- input nativo para mobile (capture) -->
       <input type="file" name="anexos[]" id="camera_input" accept="image/*" capture="environment"
              style="display:none" onchange="listarAnexos(this)">
       <div id="anexo_list" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
@@ -306,6 +307,29 @@ include dirname(__DIR__) . '/_layout.php';
       <a href="/portal/financeiro/lancamentos.php?mes=<?= $l['competencia_mes'] ?>&ano=<?= $l['competencia_ano'] ?>" class="btn btn-ghost">Voltar</a>
     </div>
   </form>
+</div>
+
+<!-- Modal webcam -->
+<div id="webcam_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:20px;width:min(480px,94vw);box-shadow:0 8px 40px rgba(0,0,0,.35)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <strong style="font-family:'Cinzel',serif;font-size:.82rem;color:var(--green-dk)">📷 Câmera</strong>
+      <button onclick="fecharWebcam()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
+    </div>
+    <div style="position:relative;background:#000;border-radius:10px;overflow:hidden;line-height:0">
+      <video id="webcam_video" autoplay playsinline muted style="width:100%;max-height:320px;object-fit:cover;display:block"></video>
+      <canvas id="webcam_canvas" style="display:none"></canvas>
+      <img id="webcam_preview" style="display:none;width:100%;max-height:320px;object-fit:contain;border-radius:10px" alt="Preview">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button id="webcam_btn_foto"  onclick="tirarFoto()"   class="btn btn-primary btn-sm">📷 Tirar foto</button>
+      <button id="webcam_btn_usar"  onclick="usarFoto()"    class="btn btn-primary btn-sm" style="display:none">✓ Usar esta foto</button>
+      <button id="webcam_btn_nova"  onclick="novaFoto()"    class="btn btn-ghost btn-sm"   style="display:none">↩ Nova foto</button>
+      <button id="webcam_btn_virar" onclick="virarCamera()" class="btn btn-ghost btn-sm">⇄ Virar câmera</button>
+      <button onclick="fecharWebcam()" class="btn btn-ghost btn-sm" style="margin-left:auto">Cancelar</button>
+    </div>
+    <p id="webcam_erro" style="color:var(--red);font-size:.78rem;margin-top:10px;display:none"></p>
+  </div>
 </div>
 
 <script>
@@ -326,8 +350,7 @@ setTipo(document.getElementById('tipo_hidden').value);
 document.getElementById('valor_input').addEventListener('input', function() {
   var v = this.value.replace(/\D/g,'');
   if (!v) { this.value=''; return; }
-  v = (parseInt(v)/100).toFixed(2);
-  this.value = v.replace('.',',');
+  this.value = (parseInt(v)/100).toFixed(2).replace('.',',');
 });
 
 function listarAnexos(input) {
@@ -340,8 +363,92 @@ function listarAnexos(input) {
   });
 }
 
+// ── Webcam ────────────────────────────────────────────────────────────────────
+var _stream = null, _facing = 'environment', _capturedBlob = null;
+
 function capturarCamera() {
-  document.getElementById('camera_input').click();
+  if (/Mobi|Android/i.test(navigator.userAgent)) {
+    document.getElementById('camera_input').click();
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Seu navegador não suporta acesso à câmera. Use um navegador moderno com HTTPS.');
+    return;
+  }
+  var modal = document.getElementById('webcam_modal');
+  modal.style.display = 'flex';
+  document.getElementById('webcam_erro').style.display = 'none';
+  _iniciarStream();
+}
+
+async function _iniciarStream() {
+  if (_stream) { _stream.getTracks().forEach(t => t.stop()); _stream = null; }
+  try {
+    _stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: _facing, width:{ideal:1280}, height:{ideal:720} }, audio: false });
+    var v = document.getElementById('webcam_video');
+    v.srcObject = _stream;
+    v.style.display = 'block';
+    document.getElementById('webcam_preview').style.display = 'none';
+    document.getElementById('webcam_btn_foto').style.display = '';
+    document.getElementById('webcam_btn_usar').style.display = 'none';
+    document.getElementById('webcam_btn_nova').style.display = 'none';
+  } catch(e) {
+    var msg = e.name === 'NotAllowedError'
+      ? 'Permissão negada. Clique no cadeado na barra de endereço e permita o acesso à câmera.'
+      : 'Erro ao acessar câmera: ' + e.message;
+    var el = document.getElementById('webcam_erro');
+    el.textContent = msg; el.style.display = 'block';
+  }
+}
+
+function tirarFoto() {
+  var video  = document.getElementById('webcam_video');
+  var canvas = document.getElementById('webcam_canvas');
+  canvas.width  = video.videoWidth  || 1280;
+  canvas.height = video.videoHeight || 720;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.toBlob(function(blob) {
+    _capturedBlob = blob;
+    var url = URL.createObjectURL(blob);
+    var preview = document.getElementById('webcam_preview');
+    preview.src = url; preview.style.display = 'block';
+    video.style.display = 'none';
+    document.getElementById('webcam_btn_foto').style.display = 'none';
+    document.getElementById('webcam_btn_usar').style.display = '';
+    document.getElementById('webcam_btn_nova').style.display = '';
+    if (_stream) { _stream.getTracks().forEach(t => t.stop()); _stream = null; }
+  }, 'image/jpeg', 0.93);
+}
+
+function usarFoto() {
+  if (!_capturedBlob) return;
+  var nome  = 'foto_' + Date.now() + '.jpg';
+  var file  = new File([_capturedBlob], nome, { type: 'image/jpeg' });
+  var input = document.getElementById('anexos_input');
+  var dt    = new DataTransfer();
+  Array.from(input.files).forEach(f => dt.items.add(f));
+  dt.items.add(file);
+  input.files = dt.files;
+  listarAnexos({ files: [file] });
+  fecharWebcam();
+}
+
+function novaFoto() { _capturedBlob = null; _iniciarStream(); }
+
+function virarCamera() {
+  _facing = _facing === 'environment' ? 'user' : 'environment';
+  _iniciarStream();
+}
+
+function fecharWebcam() {
+  if (_stream) { _stream.getTracks().forEach(t => t.stop()); _stream = null; }
+  _capturedBlob = null;
+  document.getElementById('webcam_modal').style.display = 'none';
+  document.getElementById('webcam_video').srcObject = null;
+  document.getElementById('webcam_preview').style.display = 'none';
+  document.getElementById('webcam_btn_foto').style.display = '';
+  document.getElementById('webcam_btn_usar').style.display = 'none';
+  document.getElementById('webcam_btn_nova').style.display = 'none';
 }
 </script>
 
