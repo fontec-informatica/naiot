@@ -1,12 +1,12 @@
 <?php
 // ============================================================
-// CONFIGURAÇÃO — altere aqui quando for ao vivo
+// CONFIGURAÇÃO
 // ============================================================
 $ao_vivo = false;
-$youtube_video_id = ''; // Ex: 'dQw4w9WgXcQ' — cole o ID do vídeo ao vivo aqui
+$youtube_video_id = ''; // ID do vídeo ao vivo quando necessário
 
 // ============================================================
-// PROCESSAMENTO DOS FORMULÁRIOS
+// FORMULÁRIOS
 // ============================================================
 function salvar_json(string $arquivo, string $texto): void {
     $dados = file_exists($arquivo) ? (json_decode(file_get_contents($arquivo), true) ?: []) : [];
@@ -33,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Carrega dados (mais recentes primeiro)
 $oracoes     = array_reverse(file_exists('data/oracoes.json')     ? (json_decode(file_get_contents('data/oracoes.json'),     true) ?: []) : []);
 $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode(file_get_contents('data/testemunhos.json'), true) ?: []) : []);
 ?>
@@ -43,748 +42,615 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NAIOT — Comunidade Católica Senhor Jesus</title>
-    <meta name="description" content="Comunidade Católica Senhor Jesus — Campo Limpo de Goiás, GO. Programação semanal, pedidos de oração e testemunhos.">
-    <meta name="theme-color" content="#163d22">
+    <meta name="description" content="Comunidade Católica Senhor Jesus — Campo Limpo de Goiás, GO.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
     <style>
-        /* ===== VARIÁVEIS ===== */
         :root {
-            --green-dark:  #163d22;
-            --green:       #1e6b35;
-            --green-mid:   #2a7d3f;
-            --gold:        #b8962e;
-            --gold-light:  #d4b050;
-            --cream:       #f8f5ee;
-            --cream-alt:   #efe9dc;
-            --white:       #ffffff;
-            --text:        #1c1c1c;
-            --muted:       #5a5550;
-            --red:         #c0392b;
-            --shadow:      0 4px 24px rgba(22,61,34,.12);
-            --shadow-lg:   0 14px 52px rgba(22,61,34,.22);
-            --radius:      8px;
-            --radius-lg:   16px;
-            --ease:        0.35s cubic-bezier(.4,0,.2,1);
+            --green:      #1e6b35;
+            --green-dark: #163d22;
+            --green-pale: #f0f7f2;
+            --gold:       #a87d28;
+            --gold-light: #c9a84c;
+            --white:      #ffffff;
+            --off:        #f8f8f6;
+            --border:     #e8e4dd;
+            --text:       #222222;
+            --muted:      #6e6e6e;
+            --red:        #b83232;
+            --shadow-sm:  0 2px 12px rgba(0,0,0,.07);
+            --shadow:     0 4px 28px rgba(0,0,0,.10);
+            --shadow-lg:  0 12px 48px rgba(0,0,0,.14);
+            --r:          10px;
+            --r-lg:       18px;
+            --ease:       .35s cubic-bezier(.4,0,.2,1);
         }
 
-        /* ===== RESET ===== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body {
             font-family: 'EB Garamond', Georgia, serif;
-            background: var(--cream);
-            color: var(--text);
-            line-height: 1.75;
-            overflow-x: hidden;
             font-size: 17px;
+            line-height: 1.75;
+            color: var(--text);
+            background: var(--white);
+            overflow-x: hidden;
         }
-        img  { max-width: 100%; height: auto; display: block; }
-        a    { text-decoration: none; color: inherit; }
-        ul   { list-style: none; }
+        img { max-width: 100%; height: auto; display: block; }
+        a   { text-decoration: none; color: inherit; }
+        ul  { list-style: none; }
 
-        /* ===== UTILITÁRIOS ===== */
-        .container { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 28px; }
-        h1, h2, h3, h4, nav a, .btn-submit, .btn-channel { font-family: 'Cinzel', serif; }
+        /* ── TIPOGRAFIA ── */
+        .cinzel { font-family: 'Cinzel', serif; }
+        h1, h2, h3, h4 { font-family: 'Cinzel', serif; line-height: 1.25; }
 
-        .section-wrap { padding: 96px 0; }
-        .section-wrap.alt  { background: var(--cream-alt); }
-        .section-wrap.dark { background: var(--green-dark); }
+        /* ── CONTAINER ── */
+        .wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px; }
 
-        .sec-header { text-align: center; margin-bottom: 60px; }
-        .ornament {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            margin-bottom: 18px;
-            color: var(--gold);
-            font-size: 1.1rem;
-            letter-spacing: .2em;
-        }
-        .ornament::before, .ornament::after {
-            content: '';
-            width: 60px; height: 1px;
-            background: var(--gold);
-            opacity: .6;
-        }
-        .sec-title {
-            font-size: clamp(1.7rem, 3.5vw, 2.6rem);
-            font-weight: 700;
-            color: var(--green-dark);
-            letter-spacing: .04em;
-            text-transform: uppercase;
-        }
-        .sec-title.light { color: var(--cream); }
-        .sec-sub {
-            margin-top: 14px;
-            color: var(--muted);
-            font-size: 1.05rem;
-            font-style: italic;
-        }
-        .sec-sub.light { color: rgba(248,245,238,.65); }
+        /* ── SEÇÕES ── */
+        .sec      { padding: 88px 0; }
+        .sec.alt  { background: var(--off); }
+        .sec.pale { background: var(--green-pale); }
+        .sec.dark { background: var(--green-dark); }
 
-        /* ===== HEADER ===== */
-        #header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 900;
-            background: rgba(22,61,34,.97);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(184,150,46,.25);
-            transition: box-shadow var(--ease);
+        /* ── CABEÇALHO DE SEÇÃO ── */
+        .sec-head { text-align: center; margin-bottom: 56px; }
+        .deco {
+            display: flex; align-items: center; justify-content: center;
+            gap: 14px; margin-bottom: 14px; color: var(--gold);
         }
-        #header.scrolled { box-shadow: 0 4px 32px rgba(0,0,0,.4); }
-
-        .header-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 72px;
-        }
-        .header-logo img {
-            height: 46px;
-            width: auto;
-            filter: brightness(0) invert(1);
-        }
-        .header-logo-text {
-            display: none;
-            font-family: 'Cinzel', serif;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--cream);
-            letter-spacing: .1em;
-        }
-
-        nav { display: flex; align-items: center; gap: 2px; }
-        nav a {
-            color: rgba(248,245,238,.80);
-            font-size: .78rem;
-            font-weight: 600;
-            padding: 8px 14px;
-            border-radius: 4px;
-            transition: color var(--ease), background var(--ease);
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-        nav a:hover { color: var(--gold-light); background: rgba(184,150,46,.1); }
-
-        .btn-live {
-            display: inline-flex !important;
-            align-items: center;
-            gap: 7px;
-            background: var(--red) !important;
-            color: #fff !important;
-            padding: 7px 16px !important;
-            border-radius: 3px !important;
-            font-size: .75rem !important;
-            animation: pulse-live 2s ease infinite;
-        }
-        .btn-live::before {
-            content: '';
-            width: 7px; height: 7px;
-            background: #fff;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        @keyframes pulse-live {
-            0%   { box-shadow: 0 0 0 0 rgba(192,57,43,.75); }
-            70%  { box-shadow: 0 0 0 10px rgba(192,57,43,0); }
-            100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
-        }
-
-        /* Hamburger */
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 8px;
-        }
-        .hamburger span {
-            display: block;
-            width: 24px; height: 2px;
-            background: var(--cream);
-            border-radius: 1px;
-            transition: var(--ease);
-        }
-        .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
-        .hamburger.open span:nth-child(2) { opacity: 0; }
-        .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
-
-        /* ===== HERO ===== */
-        .hero {
-            min-height: 100vh;
-            background: var(--green-dark);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            padding: 120px 28px 80px;
-        }
-        /* Padrão de textura sutil */
-        .hero::before {
-            content: '';
-            position: absolute; inset: 0;
-            background:
-                radial-gradient(ellipse 90% 60% at 50% 0%,   rgba(184,150,46,.10) 0%, transparent 65%),
-                radial-gradient(circle at 10% 90%, rgba(184,150,46,.07) 0%, transparent 40%),
-                radial-gradient(circle at 90% 10%, rgba(184,150,46,.07) 0%, transparent 40%);
-            pointer-events: none;
-        }
-        .hero::after {
-            content: '';
-            position: absolute; inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b8962e' fill-opacity='.04'%3E%3Cpath d='M40 0v80M0 40h80' stroke='%23b8962e' stroke-opacity='.04' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E");
-            pointer-events: none;
-        }
-        .hero-content { position: relative; z-index: 1; max-width: 760px; }
-
-        .hero-logo {
-            width: min(220px, 50vw);
-            margin: 0 auto 2.8rem;
-            filter: brightness(0) invert(1);
-            opacity: .95;
-            animation: fade-down .9s ease both;
-        }
-        @keyframes fade-down {
-            from { opacity: 0; transform: translateY(-16px); }
-            to   { opacity: .95; transform: translateY(0); }
-        }
-
-        .hero-ornament {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 2rem;
-            color: var(--gold);
-            font-size: 1.2rem;
-            letter-spacing: .3em;
-            animation: fade-up .9s .2s ease both;
-        }
-        .hero-ornament::before, .hero-ornament::after {
-            content: '';
-            width: 70px; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--gold));
+        .deco::before, .deco::after {
+            content: ''; display: block;
+            width: 52px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-light));
             opacity: .7;
         }
-        .hero-ornament::after { background: linear-gradient(90deg, var(--gold), transparent); }
-
-        .hero h1 {
-            font-size: clamp(1.7rem, 4vw, 3rem);
+        .deco::after { background: linear-gradient(90deg, var(--gold-light), transparent); }
+        .deco span { font-size: 1rem; letter-spacing: .2em; }
+        .sec-title {
+            font-size: clamp(1.6rem, 3.2vw, 2.5rem);
             font-weight: 700;
-            color: var(--cream);
-            margin-bottom: 1.2rem;
             letter-spacing: .05em;
-            line-height: 1.3;
             text-transform: uppercase;
-            animation: fade-up .9s .3s ease both;
+            color: var(--green-dark);
+        }
+        .sec-title.light { color: #fff; }
+        .sec-sub {
+            margin-top: 12px;
+            font-size: 1.05rem;
+            font-style: italic;
+            color: var(--muted);
+        }
+        .sec-sub.light { color: rgba(255,255,255,.6); }
+
+        /* ══════════════════════════════
+           HEADER
+        ══════════════════════════════ */
+        #hdr {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 900;
+            background: rgba(255,255,255,.97);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            transition: box-shadow var(--ease);
+        }
+        #hdr.scrolled { box-shadow: 0 2px 24px rgba(0,0,0,.10); }
+        .hdr-inner {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        .hdr-logo img  { height: 44px; }
+        .hdr-logo-txt  {
+            display: none;
+            font-family: 'Cinzel', serif; font-size: 1.3rem;
+            font-weight: 700; color: var(--green-dark); letter-spacing: .1em;
+        }
+        nav { display: flex; align-items: center; gap: 2px; }
+        nav a {
+            font-family: 'Cinzel', serif;
+            font-size: .72rem; font-weight: 500;
+            letter-spacing: .08em; text-transform: uppercase;
+            color: var(--green-dark);
+            padding: 8px 13px; border-radius: 6px;
+            transition: color var(--ease), background var(--ease);
+        }
+        nav a:hover { color: var(--green); background: var(--green-pale); }
+
+        .btn-live {
+            display: inline-flex !important; align-items: center; gap: 7px;
+            background: var(--red) !important; color: #fff !important;
+            border-radius: 4px !important; animation: pulse-red 2s infinite;
+        }
+        .btn-live::before {
+            content: ''; width: 7px; height: 7px;
+            background: #fff; border-radius: 50%; flex-shrink: 0;
+        }
+        @keyframes pulse-red {
+            0%  { box-shadow: 0 0 0 0 rgba(184,50,50,.7); }
+            70% { box-shadow: 0 0 0 9px rgba(184,50,50,0); }
+            100%{ box-shadow: 0 0 0 0 rgba(184,50,50,0); }
+        }
+
+        /* hamburger */
+        .burger {
+            display: none; flex-direction: column; gap: 5px;
+            background: none; border: none; cursor: pointer; padding: 8px;
+        }
+        .burger span {
+            display: block; width: 24px; height: 2px;
+            background: var(--green-dark); border-radius: 1px;
+            transition: var(--ease);
+        }
+        .burger.open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+        .burger.open span:nth-child(2) { opacity: 0; }
+        .burger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+        /* ══════════════════════════════
+           HERO
+        ══════════════════════════════ */
+        .hero {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center;
+            padding: 110px 28px 72px;
+            position: relative;
+            overflow: hidden;
+            background: var(--white);
+        }
+        /* Faixa verde sutil no topo */
+        .hero::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: linear-gradient(90deg, var(--green-dark), var(--green), var(--gold-light), var(--green), var(--green-dark));
+        }
+        /* Padrão de fundo muito sutil */
+        .hero::after {
+            content: '';
+            position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(circle at 20% 80%, rgba(30,107,53,.04) 0%, transparent 50%),
+                              radial-gradient(circle at 80% 20%, rgba(30,107,53,.04) 0%, transparent 50%);
+        }
+        .hero-inner { position: relative; z-index: 1; max-width: 720px; }
+        .hero-logo {
+            width: min(200px, 48vw);
+            margin: 0 auto 2.4rem;
+            animation: hero-in .9s ease both;
+        }
+        @keyframes hero-in {
+            from { opacity: 0; transform: translateY(-12px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .hero-deco {
+            display: flex; align-items: center; justify-content: center;
+            gap: 14px; margin-bottom: 1.8rem; color: var(--gold);
+            animation: hero-in .9s .15s ease both;
+        }
+        .hero-deco::before, .hero-deco::after {
+            content: ''; width: 64px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-light));
+        }
+        .hero-deco::after { background: linear-gradient(90deg, var(--gold-light), transparent); }
+        .hero h1 {
+            font-size: clamp(1.6rem, 4vw, 3rem);
+            font-weight: 700; letter-spacing: .04em;
+            color: var(--green-dark);
+            line-height: 1.3; text-transform: uppercase;
+            margin-bottom: 1rem;
+            animation: hero-in .9s .25s ease both;
         }
         .hero h1 em {
-            font-style: italic;
-            font-family: 'EB Garamond', serif;
-            color: var(--gold-light);
-            text-transform: none;
-            font-size: 1.15em;
-            letter-spacing: .03em;
+            font-style: italic; font-family: 'EB Garamond', serif;
+            text-transform: none; color: var(--green);
+            font-size: 1.12em; letter-spacing: .02em;
         }
         .hero p {
-            color: rgba(248,245,238,.65);
-            font-size: clamp(1rem, 1.8vw, 1.15rem);
-            font-style: italic;
-            letter-spacing: .04em;
-            animation: fade-up .9s .4s ease both;
+            font-size: 1.05rem; font-style: italic;
+            color: var(--muted); letter-spacing: .03em;
+            animation: hero-in .9s .35s ease both;
         }
-        @keyframes fade-up {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
+        /* Scroll indicator */
         .hero-scroll {
-            position: absolute;
-            bottom: 30px; left: 50%;
+            position: absolute; bottom: 28px; left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            color: rgba(248,245,238,.3);
-            font-family: 'Cinzel', serif;
-            font-size: .65rem;
-            letter-spacing: .18em;
-            text-transform: uppercase;
-            animation: bounce 2.5s ease-in-out infinite;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            color: #bbb;
+            font-family: 'Cinzel', serif; font-size: .62rem; letter-spacing: .16em;
+            animation: bob 2.5s ease-in-out infinite;
         }
-        @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50%       { transform: translateX(-50%) translateY(7px); }
+        @keyframes bob {
+            0%,100% { transform: translateX(-50%) translateY(0); }
+            50%      { transform: translateX(-50%) translateY(7px); }
         }
 
-        /* ===== AO VIVO ===== */
+        /* ══════════════════════════════
+           AO VIVO
+        ══════════════════════════════ */
         .live-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--red);
-            color: #fff;
-            padding: 6px 20px;
-            border-radius: 3px;
-            font-family: 'Cinzel', serif;
-            font-size: .75rem;
-            font-weight: 700;
-            letter-spacing: .12em;
-            margin-bottom: 18px;
-            animation: pulse-live 2s ease infinite;
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--red); color: #fff;
+            font-family: 'Cinzel', serif; font-size: .74rem;
+            font-weight: 600; letter-spacing: .12em;
+            padding: 6px 18px; border-radius: 4px;
+            margin-bottom: 16px; animation: pulse-red 2s infinite;
         }
         .live-badge::before {
-            content: '';
-            width: 7px; height: 7px;
-            background: #fff;
-            border-radius: 50%;
+            content: ''; width: 7px; height: 7px;
+            background: #fff; border-radius: 50%;
         }
-        .video-wrapper {
-            position: relative;
-            padding-bottom: 56.25%;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: 0 24px 80px rgba(0,0,0,.5);
-            border: 1px solid rgba(184,150,46,.2);
+        .video-box {
+            position: relative; padding-bottom: 56.25%;
+            border-radius: var(--r-lg); overflow: hidden;
+            box-shadow: var(--shadow-lg);
         }
-        .video-wrapper iframe {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border: none;
+        .video-box iframe {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%; border: none;
         }
-        .live-fallback {
-            background: rgba(255,255,255,.04);
-            border: 1px solid rgba(184,150,46,.25);
-            border-radius: var(--radius-lg);
-            padding: 64px 40px;
-            text-align: center;
+        .live-link {
+            text-align: center; padding: 56px 40px;
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: var(--r-lg);
         }
-        .live-fallback p { color: rgba(248,245,238,.6); margin-bottom: 28px; font-style: italic; }
-        .btn-channel {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--red);
-            color: #fff;
-            padding: 14px 32px;
-            border-radius: var(--radius);
-            font-size: .85rem;
-            font-weight: 600;
-            letter-spacing: .08em;
+        .live-link p { color: rgba(255,255,255,.6); font-style: italic; margin-bottom: 24px; }
+        .btn-yt {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: var(--red); color: #fff; padding: 13px 30px;
+            border-radius: var(--r); font-family: 'Cinzel', serif;
+            font-size: .82rem; font-weight: 600; letter-spacing: .08em;
             transition: opacity var(--ease), transform var(--ease);
         }
-        .btn-channel:hover { opacity: .88; transform: translateY(-2px); }
+        .btn-yt:hover { opacity: .88; transform: translateY(-2px); }
 
-        /* ===== PROGRAMAÇÃO ===== */
+        /* ══════════════════════════════
+           PROGRAMAÇÃO
+        ══════════════════════════════ */
         .prog-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(256px, 1fr));
+            gap: 22px;
         }
         .prog-card {
             background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: 32px 28px;
-            box-shadow: var(--shadow);
-            border-top: 3px solid var(--gold);
-            position: relative;
-            overflow: hidden;
+            border-radius: var(--r-lg);
+            padding: 30px 26px;
+            box-shadow: var(--shadow-sm);
+            border-top: 3px solid var(--gold-light);
+            border-bottom: 1px solid var(--border);
             transition: transform var(--ease), box-shadow var(--ease);
         }
-        .prog-card::before {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            width: 100px; height: 100px;
-            background: radial-gradient(circle, rgba(30,107,53,.06) 0%, transparent 70%);
-            transform: translate(30%, -30%);
-            pointer-events: none;
-        }
-        .prog-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+        .prog-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
         .prog-icon {
-            width: 50px; height: 50px;
-            background: var(--green-dark);
+            width: 46px; height: 46px;
+            background: var(--green-pale);
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem;
-            margin-bottom: 20px;
+            font-size: 1.3rem; margin-bottom: 18px;
         }
         .prog-day {
-            font-family: 'Cinzel', serif;
-            font-size: .72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .1em;
-            color: var(--gold);
-            margin-bottom: 4px;
+            font-family: 'Cinzel', serif; font-size: .68rem;
+            font-weight: 600; text-transform: uppercase;
+            letter-spacing: .1em; color: var(--gold); margin-bottom: 3px;
         }
         .prog-time {
-            font-family: 'Cinzel', serif;
-            font-size: 1.9rem;
-            font-weight: 900;
-            color: var(--green-dark);
-            line-height: 1;
-            margin-bottom: 10px;
+            font-family: 'Cinzel', serif; font-size: 1.9rem;
+            font-weight: 700; color: var(--green-dark);
+            line-height: 1; margin-bottom: 8px;
         }
         .prog-name {
-            font-family: 'Cinzel', serif;
-            font-weight: 600;
-            font-size: .9rem;
-            color: var(--green-dark);
-            margin-bottom: 8px;
-            letter-spacing: .03em;
+            font-family: 'Cinzel', serif; font-size: .86rem;
+            font-weight: 600; color: var(--green-dark); margin-bottom: 6px;
         }
-        .prog-desc { font-size: .92rem; color: var(--muted); line-height: 1.6; font-style: italic; }
+        .prog-desc { font-size: .9rem; color: var(--muted); font-style: italic; }
 
-        /* ===== REDES SOCIAIS ===== */
+        /* ══════════════════════════════
+           REDES SOCIAIS
+        ══════════════════════════════ */
         .redes-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            gap: 18px;
         }
         .rede-card {
-            border-radius: var(--radius-lg);
-            padding: 40px 20px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 36px 20px;
             text-align: center;
-            color: #fff;
-            transition: transform var(--ease), box-shadow var(--ease);
-            box-shadow: var(--shadow);
-            cursor: pointer;
+            transition: transform var(--ease), box-shadow var(--ease), border-color var(--ease);
+            box-shadow: var(--shadow-sm);
         }
-        .rede-card:hover { transform: translateY(-7px) scale(1.02); box-shadow: var(--shadow-lg); }
-        .rede-card.instagram { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-        .rede-card.whatsapp  { background: linear-gradient(135deg, #25D366, #128C7E); }
-        .rede-card.youtube   { background: linear-gradient(135deg, #FF0000, #b30000); }
-        .rede-card.facebook  { background: linear-gradient(135deg, #1877F2, #0a52cc); }
-        .rede-icon { font-size: 2.4rem; margin-bottom: 14px; }
+        .rede-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+        .rede-card.instagram:hover { border-color: #c13584; }
+        .rede-card.whatsapp:hover  { border-color: #25D366; }
+        .rede-card.youtube:hover   { border-color: #FF0000; }
+        .rede-card.facebook:hover  { border-color: #1877F2; }
+        .rede-icon-wrap {
+            width: 62px; height: 62px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px; font-size: 1.6rem;
+        }
+        .instagram .rede-icon-wrap { background: #fdf0f8; }
+        .whatsapp  .rede-icon-wrap { background: #f0fdf5; }
+        .youtube   .rede-icon-wrap { background: #fff0f0; }
+        .facebook  .rede-icon-wrap { background: #eff4ff; }
         .rede-name {
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
-            font-size: .95rem;
-            margin-bottom: 4px;
-            letter-spacing: .05em;
+            font-family: 'Cinzel', serif; font-weight: 600;
+            font-size: .88rem; letter-spacing: .04em;
+            color: var(--green-dark); margin-bottom: 4px;
         }
-        .rede-handle { font-size: .82rem; opacity: .85; font-style: italic; }
+        .rede-handle { font-size: .82rem; color: var(--muted); font-style: italic; }
 
-        /* ===== FORMS ===== */
-        .forms-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 48px;
-            align-items: start;
+        /* ══════════════════════════════
+           CARROSSEL
+        ══════════════════════════════ */
+        .carousel-outer { position: relative; }
+        .carousel-viewport {
+            overflow: hidden;
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            background: var(--white);
+            box-shadow: var(--shadow-sm);
         }
-        .form-col { display: flex; flex-direction: column; gap: 24px; }
+        .carousel-track {
+            display: flex;
+            transition: transform .65s cubic-bezier(.4,0,.2,1);
+        }
+        .carousel-slide {
+            min-width: 100%;
+            padding: 38px 36px 32px;
+        }
+        .carousel-quote {
+            font-size: 1.08rem;
+            font-style: italic;
+            line-height: 1.8;
+            color: var(--text);
+            margin-bottom: 18px;
+            position: relative;
+            padding-left: 20px;
+            border-left: 3px solid var(--gold-light);
+        }
+        .carousel-date {
+            font-family: 'Cinzel', serif;
+            font-size: .7rem; letter-spacing: .07em;
+            color: var(--muted); text-transform: uppercase;
+        }
+        .carousel-nav {
+            display: flex; align-items: center;
+            justify-content: center; gap: 7px; margin-top: 16px;
+        }
+        .c-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #ccc; border: none; cursor: pointer; padding: 0;
+            transition: background var(--ease), transform var(--ease);
+        }
+        .c-dot.on { background: var(--green); transform: scale(1.3); }
+        /* Prev / Next */
+        .c-prev, .c-next {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--white); border: 1px solid var(--border);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-sm); z-index: 2;
+            transition: background var(--ease), border-color var(--ease);
+            color: var(--green-dark); font-size: .9rem;
+        }
+        .c-prev { left: -18px; }
+        .c-next { right: -18px; }
+        .c-prev:hover, .c-next:hover { background: var(--green); color: #fff; border-color: var(--green); }
+
+        /* ══════════════════════════════
+           FORMULÁRIOS
+        ══════════════════════════════ */
+        .forms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; }
+        .form-col { display: flex; flex-direction: column; gap: 28px; }
+
         .form-box {
             background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: 36px;
-            box-shadow: var(--shadow);
-            border-top: 3px solid var(--gold);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 34px;
+            box-shadow: var(--shadow-sm);
         }
         .form-box h3 {
-            font-family: 'Cinzel', serif;
-            font-size: 1.1rem;
-            color: var(--green-dark);
-            margin-bottom: 6px;
-            letter-spacing: .05em;
-            text-transform: uppercase;
+            font-size: .92rem; font-weight: 700;
+            letter-spacing: .06em; text-transform: uppercase;
+            color: var(--green-dark); margin-bottom: 6px;
         }
-        .form-box > p { font-size: .95rem; color: var(--muted); margin-bottom: 20px; font-style: italic; }
-        .success-msg {
-            background: #d4edda;
-            color: #155724;
-            border-left: 3px solid #28a745;
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            font-size: .92rem;
-            margin-bottom: 16px;
-            font-style: italic;
+        .form-box > p { font-size: .9rem; color: var(--muted); font-style: italic; margin-bottom: 18px; }
+        .ok-msg {
+            background: #edf7ef; color: #1a5c28;
+            border-left: 3px solid var(--green);
+            padding: 11px 15px; border-radius: 6px;
+            font-size: .9rem; font-style: italic; margin-bottom: 16px;
         }
         textarea {
-            width: 100%;
-            border: 1px solid #d8cfc3;
-            border-radius: var(--radius);
-            padding: 14px 16px;
-            font-family: 'EB Garamond', serif;
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 120px;
-            color: var(--text);
-            background: var(--cream);
+            width: 100%; border: 1px solid var(--border);
+            border-radius: var(--r); padding: 13px 15px;
+            font-family: 'EB Garamond', serif; font-size: 1rem;
+            resize: vertical; min-height: 115px;
+            color: var(--text); background: var(--off);
             transition: border-color var(--ease), box-shadow var(--ease), background var(--ease);
         }
         textarea:focus {
-            outline: none;
-            border-color: var(--green);
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(30,107,53,.10);
+            outline: none; border-color: var(--green);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(30,107,53,.09);
         }
-        .btn-submit {
-            width: 100%;
-            margin-top: 12px;
-            padding: 14px;
-            background: var(--green-dark);
-            color: var(--cream);
-            border: none;
-            border-radius: var(--radius);
-            font-size: .82rem;
-            font-weight: 700;
+        .btn-sub {
+            width: 100%; margin-top: 11px; padding: 13px;
+            background: var(--green-dark); color: var(--white);
+            border: none; border-radius: var(--r);
+            font-family: 'Cinzel', serif; font-size: .78rem;
+            font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
             cursor: pointer;
-            letter-spacing: .1em;
-            text-transform: uppercase;
             transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
         }
-        .btn-submit:hover {
+        .btn-sub:hover {
             background: var(--green);
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(22,61,34,.25);
+            box-shadow: 0 6px 20px rgba(22,61,34,.2);
         }
 
-        /* Cards de submissões */
-        .cards-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
+        /* ══════════════════════════════
+           MAPA
+        ══════════════════════════════ */
+        .map-box {
+            height: 450px; border-radius: var(--r-lg);
+            overflow: hidden; box-shadow: var(--shadow);
+            border: 1px solid var(--border);
         }
-        .cards-header h4 {
-            font-family: 'Cinzel', serif;
-            font-size: .88rem;
-            color: var(--green-dark);
-            letter-spacing: .05em;
-            text-transform: uppercase;
-        }
-        .cards-count {
-            background: var(--green-dark);
-            color: var(--gold-light);
-            font-family: 'Cinzel', serif;
-            font-size: .75rem;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 3px;
-        }
-        .submissions-scroll {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 6px;
-        }
-        .submissions-scroll::-webkit-scrollbar { width: 3px; }
-        .submissions-scroll::-webkit-scrollbar-track { background: var(--cream-alt); }
-        .submissions-scroll::-webkit-scrollbar-thumb { background: var(--gold); }
-        .sub-card {
-            background: var(--cream);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            border-left: 3px solid var(--gold);
-        }
-        .sub-card p { font-size: .95rem; color: var(--text); line-height: 1.65; margin-bottom: 8px; font-style: italic; }
-        .sub-card span { font-size: .76rem; color: var(--muted); font-family: 'Cinzel', serif; letter-spacing: .04em; }
-        .empty-state {
-            text-align: center;
-            color: var(--muted);
-            font-size: .95rem;
-            padding: 28px;
-            background: var(--white);
-            border-radius: var(--radius);
-            font-style: italic;
-            border: 1px dashed #ccc4b4;
-        }
+        .map-box iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* ===== MAPA ===== */
-        .mapa-wrap {
-            height: 460px;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--cream-alt);
-        }
-        .mapa-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
-
-        /* ===== FOOTER ===== */
+        /* ══════════════════════════════
+           FOOTER
+        ══════════════════════════════ */
         footer {
             background: var(--green-dark);
-            border-top: 1px solid rgba(184,150,46,.2);
-            padding: 64px 0 32px;
+            border-top: 3px solid var(--gold);
+            padding: 60px 0 30px;
         }
-        .footer-body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 28px;
-            text-align: center;
+        .foot-inner {
+            display: flex; flex-direction: column;
+            align-items: center; gap: 24px; text-align: center;
         }
-        .footer-logo img {
-            height: 58px;
-            filter: brightness(0) invert(1);
-            opacity: .88;
-            margin: 0 auto;
+        .foot-logo img  { height: 54px; filter: brightness(0) invert(1); opacity: .9; margin: 0 auto; }
+        .foot-logo-txt  {
+            display: none; font-family: 'Cinzel', serif;
+            font-size: 1.7rem; font-weight: 700; color: #fff; letter-spacing: .12em;
         }
-        .footer-logo-text {
-            display: none;
-            font-family: 'Cinzel', serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--cream);
-            letter-spacing: .12em;
+        .foot-deco {
+            display: flex; align-items: center; gap: 14px; color: var(--gold-light);
+            font-size: .9rem; letter-spacing: .2em;
         }
-        .footer-ornament {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            color: var(--gold);
-            font-size: 1rem;
-            letter-spacing: .2em;
+        .foot-deco::before, .foot-deco::after {
+            content: ''; width: 48px; height: 1px;
+            background: rgba(201,168,76,.3);
         }
-        .footer-ornament::before, .footer-ornament::after {
-            content: '';
-            width: 50px; height: 1px;
-            background: var(--gold);
-            opacity: .4;
-        }
-        .footer-redes { display: flex; gap: 14px; }
-        .footer-rede {
-            width: 42px; height: 42px;
-            background: rgba(255,255,255,.07);
-            border: 1px solid rgba(184,150,46,.2);
-            border-radius: 50%;
+        .foot-redes { display: flex; gap: 12px; }
+        .foot-rede {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.12);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.05rem;
+            font-size: 1rem;
             transition: background var(--ease), transform var(--ease);
         }
-        .footer-rede:hover { background: var(--gold); transform: translateY(-3px); }
-        .footer-hr { width: 100%; height: 1px; background: rgba(255,255,255,.07); }
-        .footer-copy {
-            font-size: .82rem;
-            color: rgba(248,245,238,.4);
-            font-style: italic;
-            letter-spacing: .03em;
+        .foot-rede:hover { background: var(--gold); transform: translateY(-3px); }
+        .foot-hr { width: 100%; height: 1px; background: rgba(255,255,255,.07); }
+        .foot-copy {
+            font-size: .8rem; color: rgba(255,255,255,.38);
+            font-style: italic; letter-spacing: .03em;
         }
-        .footer-copy strong { color: var(--gold); font-style: normal; }
+        .foot-copy strong { color: var(--gold-light); font-style: normal; }
 
-        /* ===== ANIMAÇÕES ===== */
-        [data-anim] {
-            opacity: 0;
-            transform: translateY(24px);
-            transition: opacity .7s ease, transform .7s ease;
+        /* ══════════════════════════════
+           ANIMAÇÕES
+        ══════════════════════════════ */
+        [data-a] {
+            opacity: 0; transform: translateY(22px);
+            transition: opacity .65s ease, transform .65s ease;
         }
-        [data-anim].visible { opacity: 1; transform: translateY(0); }
-        [data-anim][data-d="1"] { transition-delay: .10s; }
-        [data-anim][data-d="2"] { transition-delay: .20s; }
-        [data-anim][data-d="3"] { transition-delay: .30s; }
-        [data-anim][data-d="4"] { transition-delay: .40s; }
-        [data-anim][data-d="5"] { transition-delay: .50s; }
+        [data-a].in { opacity: 1; transform: none; }
+        [data-a][data-d="1"] { transition-delay: .10s; }
+        [data-a][data-d="2"] { transition-delay: .20s; }
+        [data-a][data-d="3"] { transition-delay: .30s; }
+        [data-a][data-d="4"] { transition-delay: .40s; }
+        [data-a][data-d="5"] { transition-delay: .50s; }
 
-        /* ===== RESPONSIVO ===== */
+        /* ══════════════════════════════
+           RESPONSIVO
+        ══════════════════════════════ */
         @media (max-width: 900px) {
             .redes-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
             nav {
-                position: fixed;
-                top: 72px; left: 0; right: 0;
-                background: var(--green-dark);
-                flex-direction: column;
-                padding: 16px;
-                gap: 4px;
-                transform: translateY(-110%);
-                transition: transform var(--ease);
-                border-bottom: 1px solid rgba(184,150,46,.15);
-                z-index: 899;
+                position: fixed; top: 70px; left: 0; right: 0;
+                background: var(--white); flex-direction: column;
+                padding: 14px; gap: 2px;
+                transform: translateY(-110%); transition: transform var(--ease);
+                border-bottom: 1px solid var(--border); z-index: 899;
+                box-shadow: 0 8px 24px rgba(0,0,0,.08);
             }
             nav.open { transform: translateY(0); }
             nav a { width: 100%; text-align: center; padding: 12px; }
-            .hamburger { display: flex; }
-            .forms-grid { grid-template-columns: 1fr; gap: 32px; }
-            .section-wrap { padding: 72px 0; }
+            .burger { display: flex; }
+            .sec { padding: 64px 0; }
+            .forms-grid { grid-template-columns: 1fr; gap: 28px; }
             .prog-grid { grid-template-columns: 1fr; }
+            .c-prev { left: -10px; }
+            .c-next { right: -10px; }
         }
-        @media (max-width: 480px) {
+        @media (max-width: 520px) {
             .redes-grid { grid-template-columns: 1fr 1fr; }
-            .form-box { padding: 24px; }
-            .mapa-wrap { height: 320px; border-radius: 0; }
+            .form-box { padding: 22px; }
+            .map-box { height: 300px; border-radius: 0; }
+            .carousel-slide { padding: 28px 22px; }
         }
     </style>
 </head>
 <body>
 
-<!-- ===================== HEADER ===================== -->
-<header id="header">
-    <div class="container header-inner">
-
-        <a href="#inicio" class="header-logo">
+<!-- ═══════════ HEADER ═══════════ -->
+<header id="hdr">
+    <div class="wrap hdr-inner">
+        <a href="#inicio" class="hdr-logo">
             <img src="assets/img/logo.png" alt="NAIOT"
-                 onerror="this.style.display='none'; document.querySelector('.header-logo-text').style.display='block'">
-            <span class="header-logo-text">NAIOT</span>
+                 onerror="this.style.display='none';document.querySelector('.hdr-logo-txt').style.display='block'">
+            <span class="hdr-logo-txt">NAIOT</span>
         </a>
 
-        <button class="hamburger" id="hamburger" aria-label="Abrir menu">
+        <button class="burger" id="burger" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
 
         <nav id="nav">
             <a href="#inicio">Início</a>
             <a href="#programacao">Programação</a>
-            <?php if ($ao_vivo): ?>
-            <a href="#ao-vivo" class="btn-live">Ao Vivo</a>
-            <?php endif; ?>
+            <?php if ($ao_vivo): ?><a href="#ao-vivo" class="btn-live">Ao Vivo</a><?php endif; ?>
             <a href="#oracao">Oração</a>
             <a href="#testemunhos">Testemunhos</a>
         </nav>
-
     </div>
 </header>
 
-<!-- ===================== HERO ===================== -->
+<!-- ═══════════ HERO ═══════════ -->
 <section class="hero" id="inicio">
-    <div class="hero-content">
+    <div class="hero-inner">
         <img src="assets/img/logo.png" alt="NAIOT" class="hero-logo"
              onerror="this.style.display='none'">
-        <div class="hero-ornament">✝</div>
+        <div class="hero-deco"><span>✝</span></div>
         <h1>Nossa missão é estar<br>aos pés de <em>Jesus</em></h1>
         <p>Comunidade Católica Senhor Jesus &mdash; Campo Limpo de Goiás, GO</p>
     </div>
     <div class="hero-scroll" aria-hidden="true">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
         </svg>
     </div>
 </section>
 
-<!-- ===================== AO VIVO (condicional) ===================== -->
+<!-- ═══════════ AO VIVO ═══════════ -->
 <?php if ($ao_vivo): ?>
-<section class="section-wrap dark" id="ao-vivo">
-    <div class="container">
-        <div class="sec-header" data-anim>
-            <div class="live-badge">Ao Vivo</div>
-            <h2 class="sec-title light">Transmissão ao Vivo</h2>
-            <p class="sec-sub light">Acompanhe nossa programação em tempo real</p>
+<section class="sec dark" id="ao-vivo">
+    <div class="wrap">
+        <div class="sec-head" data-a>
+            <div class="live-badge">Transmissão ao Vivo</div>
+            <h2 class="sec-title light">Ao Vivo</h2>
+            <p class="sec-sub light">Acompanhe em tempo real</p>
         </div>
         <?php if (!empty($youtube_video_id)): ?>
-        <div class="video-wrapper" data-anim>
+        <div class="video-box" data-a>
             <iframe src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_video_id, ENT_QUOTES) ?>?autoplay=1&rel=0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen></iframe>
         </div>
         <?php else: ?>
-        <div class="live-fallback" data-anim>
-            <p>Estamos ao vivo! Clique para assistir no YouTube.</p>
-            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener" class="btn-channel">
-                ▶ Assistir no YouTube
+        <div class="live-link" data-a>
+            <p>Estamos ao vivo! Clique abaixo para assistir.</p>
+            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener" class="btn-yt">
+                ▶&ensp;Assistir no YouTube
             </a>
         </div>
         <?php endif; ?>
@@ -792,90 +658,84 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
 </section>
 <?php endif; ?>
 
-<!-- ===================== PROGRAMAÇÃO ===================== -->
-<section class="section-wrap" id="programacao">
-    <div class="container">
-        <div class="sec-header" data-anim>
-            <div class="ornament">✝</div>
+<!-- ═══════════ PROGRAMAÇÃO ═══════════ -->
+<section class="sec alt" id="programacao">
+    <div class="wrap">
+        <div class="sec-head" data-a>
+            <div class="deco"><span>✝</span></div>
             <h2 class="sec-title">Programação</h2>
             <p class="sec-sub">Nossa agenda semanal de encontros e transmissões</p>
         </div>
         <div class="prog-grid">
-
-            <div class="prog-card" data-anim data-d="1">
+            <div class="prog-card" data-a data-d="1">
                 <div class="prog-icon">📺</div>
                 <div class="prog-day">Terça-feira</div>
                 <div class="prog-time">20h30</div>
                 <div class="prog-name">Fortalecendo a Fé</div>
-                <p class="prog-desc">Transmissão ao vivo em todas as redes sociais. Participe e fortaleça sua fé!</p>
+                <p class="prog-desc">Transmissão ao vivo em todas as redes sociais.</p>
             </div>
-
-            <div class="prog-card" data-anim data-d="2">
+            <div class="prog-card" data-a data-d="2">
                 <div class="prog-icon">🙏</div>
                 <div class="prog-day">Quarta-feira</div>
                 <div class="prog-time">09h00</div>
                 <div class="prog-name">Grupo de Oração</div>
-                <p class="prog-desc">Encontro de oração matinal. Venha louvar e adorar a Deus em comunidade.</p>
+                <p class="prog-desc">Encontro de oração matinal em comunidade.</p>
             </div>
-
-            <div class="prog-card" data-anim data-d="3">
+            <div class="prog-card" data-a data-d="3">
                 <div class="prog-icon">👤</div>
                 <div class="prog-day">Quarta-feira</div>
                 <div class="prog-time">13h00</div>
                 <div class="prog-name">Atendimento Individual</div>
-                <p class="prog-desc">Por ordem de chegada. Sr. Toninho atende os primeiros 15 participantes.</p>
+                <p class="prog-desc">Por ordem de chegada. Sr. Toninho atende os primeiros 15.</p>
             </div>
-
-            <div class="prog-card" data-anim data-d="4">
+            <div class="prog-card" data-a data-d="4">
                 <div class="prog-icon">✨</div>
                 <div class="prog-day">Quarta-feira</div>
                 <div class="prog-time">19h00</div>
                 <div class="prog-name">Grupo de Oração</div>
-                <p class="prog-desc">Encontro noturno de oração. Encerramos o dia em louvor e gratidão.</p>
+                <p class="prog-desc">Encontro noturno de louvor e gratidão.</p>
             </div>
-
-            <div class="prog-card" data-anim data-d="5">
+            <div class="prog-card" data-a data-d="5">
                 <div class="prog-icon">📅</div>
                 <div class="prog-day">Finais de semana</div>
                 <div class="prog-time">Eventos</div>
                 <div class="prog-name">Conforme Calendário</div>
-                <p class="prog-desc">Acompanhe nossas redes sociais para conferir os eventos especiais do final de semana.</p>
+                <p class="prog-desc">Acompanhe as redes sociais para eventos especiais.</p>
             </div>
-
         </div>
     </div>
 </section>
 
-<!-- ===================== REDES SOCIAIS ===================== -->
-<section class="section-wrap dark" id="redes">
-    <div class="container">
-        <div class="sec-header" data-anim>
-            <div class="ornament" style="color:var(--gold)">✝</div>
-            <h2 class="sec-title light">Nossas Redes</h2>
-            <p class="sec-sub light">Siga e compartilhe nossa missão</p>
+<!-- ═══════════ REDES SOCIAIS ═══════════ -->
+<section class="sec" id="redes">
+    <div class="wrap">
+        <div class="sec-head" data-a>
+            <div class="deco"><span>✝</span></div>
+            <h2 class="sec-title">Nossas Redes</h2>
+            <p class="sec-sub">Siga-nos e compartilhe nossa missão</p>
         </div>
         <div class="redes-grid">
             <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener"
-               class="rede-card instagram" data-anim data-d="1">
-                <div class="rede-icon">📷</div>
+               class="rede-card instagram" data-a data-d="1">
+                <div class="rede-icon-wrap">📷</div>
                 <div class="rede-name">Instagram</div>
                 <div class="rede-handle">@naiot_oficial</div>
             </a>
             <a href="https://whatsapp.com/channel/0029VaVPbi15Ui2Y5f23h22i" target="_blank" rel="noopener"
-               class="rede-card whatsapp" data-anim data-d="2">
-                <div class="rede-icon">💬</div>
+               class="rede-card whatsapp" data-a data-d="2">
+                <div class="rede-icon-wrap">💬</div>
                 <div class="rede-name">WhatsApp</div>
                 <div class="rede-handle">Canal Oficial</div>
             </a>
             <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener"
-               class="rede-card youtube" data-anim data-d="3">
-                <div class="rede-icon">▶️</div>
+               class="rede-card youtube" data-a data-d="3">
+                <div class="rede-icon-wrap">▶️</div>
                 <div class="rede-name">YouTube</div>
                 <div class="rede-handle">@naiot_oficial4299</div>
             </a>
             <a href="https://www.facebook.com/comunidadenaiot/" target="_blank" rel="noopener"
-               class="rede-card facebook" data-anim data-d="4">
-                <div class="rede-icon">👥</div>
+               class="rede-card facebook" data-a data-d="4">
+                <div class="rede-icon-wrap">👥</div>
                 <div class="rede-name">Facebook</div>
                 <div class="rede-handle">comunidadenaiot</div>
             </a>
@@ -883,96 +743,121 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
     </div>
 </section>
 
-<!-- ===================== ORAÇÃO & TESTEMUNHOS ===================== -->
-<section class="section-wrap alt" id="oracao">
-    <div class="container">
-        <div class="sec-header" data-anim>
-            <div class="ornament">✝</div>
+<!-- ═══════════ CARROSSÉIS ═══════════ -->
+<section class="sec pale" id="oracao">
+    <div class="wrap">
+        <div class="sec-head" data-a>
+            <div class="deco"><span>✝</span></div>
             <h2 class="sec-title">Oração &amp; Testemunhos</h2>
-            <p class="sec-sub">Compartilhe suas intenções e as graças recebidas</p>
+            <p class="sec-sub">Palavras de fé que edificam e inspiram</p>
         </div>
 
-        <div class="forms-grid">
+        <div class="forms-grid" style="margin-bottom: 64px;">
 
-            <!-- COLUNA: PEDIDO DE ORAÇÃO -->
-            <div class="form-col">
-                <div class="form-box" data-anim data-d="1">
-                    <h3>Pedido de Oração</h3>
+            <!-- Carrossel Oração -->
+            <div data-a data-d="1">
+                <p style="font-family:'Cinzel',serif;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">
+                    ✝ &ensp;Pedidos de Oração
+                </p>
+                <?php if (!empty($oracoes)): ?>
+                <div class="carousel-outer">
+                    <button class="c-prev" data-target="c-oracao">&#8249;</button>
+                    <button class="c-next" data-target="c-oracao">&#8250;</button>
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="c-oracao">
+                            <?php foreach ($oracoes as $item): ?>
+                            <div class="carousel-slide">
+                                <p class="carousel-quote"><?= nl2br(htmlspecialchars($item['texto'])) ?></p>
+                                <span class="carousel-date"><?= htmlspecialchars($item['data']) ?></span>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <div class="carousel-nav" id="dots-oracao">
+                        <?php foreach ($oracoes as $i => $_): ?>
+                        <button class="c-dot<?= $i===0?' on':'' ?>" data-i="<?=$i?>"></button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php else: ?>
+                <p style="font-style:italic;color:var(--muted);">Nenhum pedido ainda.</p>
+                <?php endif; ?>
+            </div>
+
+            <!-- Carrossel Testemunhos -->
+            <div id="testemunhos" data-a data-d="2">
+                <p style="font-family:'Cinzel',serif;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">
+                    ✝ &ensp;Testemunhos
+                </p>
+                <?php if (!empty($testemunhos)): ?>
+                <div class="carousel-outer">
+                    <button class="c-prev" data-target="c-test">&#8249;</button>
+                    <button class="c-next" data-target="c-test">&#8250;</button>
+                    <div class="carousel-viewport">
+                        <div class="carousel-track" id="c-test">
+                            <?php foreach ($testemunhos as $item): ?>
+                            <div class="carousel-slide">
+                                <p class="carousel-quote"><?= nl2br(htmlspecialchars($item['texto'])) ?></p>
+                                <span class="carousel-date"><?= htmlspecialchars($item['data']) ?></span>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <div class="carousel-nav" id="dots-test">
+                        <?php foreach ($testemunhos as $i => $_): ?>
+                        <button class="c-dot<?= $i===0?' on':'' ?>" data-i="<?=$i?>"></button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php else: ?>
+                <p style="font-style:italic;color:var(--muted);">Nenhum testemunho ainda.</p>
+                <?php endif; ?>
+            </div>
+
+        </div>
+
+        <!-- Formulários -->
+        <div class="forms-grid">
+            <div class="form-col" data-a data-d="1">
+                <div class="form-box">
+                    <h3>Enviar Pedido de Oração</h3>
                     <p>Compartilhe sua intenção de forma anônima. Nossa comunidade orará por você.</p>
-                    <?php if (isset($_GET['oracao']) && $_GET['oracao'] === 'ok'): ?>
-                    <div class="success-msg">Seu pedido foi enviado. Vamos orar por você!</div>
+                    <?php if (isset($_GET['oracao']) && $_GET['oracao']==='ok'): ?>
+                    <div class="ok-msg">Seu pedido foi recebido. Vamos orar por você!</div>
                     <?php endif; ?>
                     <form method="POST">
                         <textarea name="oracao" placeholder="Escreva seu pedido de oração..." required maxlength="1000"></textarea>
-                        <button type="submit" class="btn-submit">Enviar Pedido</button>
+                        <button type="submit" class="btn-sub">Enviar Pedido</button>
                     </form>
                 </div>
-                <?php if (!empty($oracoes)): ?>
-                <div class="form-box" data-anim data-d="2">
-                    <div class="cards-header">
-                        <h4>Intenções de Oração</h4>
-                        <span class="cards-count"><?= count($oracoes) ?></span>
-                    </div>
-                    <div class="submissions-scroll">
-                        <?php foreach ($oracoes as $item): ?>
-                        <div class="sub-card">
-                            <p><?= nl2br(htmlspecialchars($item['texto'])) ?></p>
-                            <span><?= htmlspecialchars($item['data']) ?></span>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php else: ?>
-                <div class="empty-state" data-anim data-d="2">Nenhum pedido ainda. Seja o primeiro a compartilhar.</div>
-                <?php endif; ?>
             </div>
-
-            <!-- COLUNA: TESTEMUNHOS -->
-            <div class="form-col" id="testemunhos">
-                <div class="form-box" data-anim data-d="3">
+            <div class="form-col" data-a data-d="2">
+                <div class="form-box">
                     <h3>Compartilhar Testemunho</h3>
                     <p>Compartilhe as graças e milagres que Deus realizou em sua vida.</p>
-                    <?php if (isset($_GET['testemunho']) && $_GET['testemunho'] === 'ok'): ?>
-                    <div class="success-msg">Seu testemunho foi compartilhado. Que Deus seja glorificado!</div>
+                    <?php if (isset($_GET['testemunho']) && $_GET['testemunho']==='ok'): ?>
+                    <div class="ok-msg">Seu testemunho foi compartilhado. Que Deus seja glorificado!</div>
                     <?php endif; ?>
                     <form method="POST">
                         <textarea name="testemunho" placeholder="Compartilhe seu testemunho..." required maxlength="2000"></textarea>
-                        <button type="submit" class="btn-submit">Compartilhar Testemunho</button>
+                        <button type="submit" class="btn-sub">Compartilhar Testemunho</button>
                     </form>
                 </div>
-                <?php if (!empty($testemunhos)): ?>
-                <div class="form-box" data-anim data-d="4">
-                    <div class="cards-header">
-                        <h4>Testemunhos</h4>
-                        <span class="cards-count"><?= count($testemunhos) ?></span>
-                    </div>
-                    <div class="submissions-scroll">
-                        <?php foreach ($testemunhos as $item): ?>
-                        <div class="sub-card">
-                            <p><?= nl2br(htmlspecialchars($item['texto'])) ?></p>
-                            <span><?= htmlspecialchars($item['data']) ?></span>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                <?php else: ?>
-                <div class="empty-state" data-anim data-d="4">Nenhum testemunho ainda. Compartilhe o que Deus fez por você!</div>
-                <?php endif; ?>
             </div>
-
         </div>
+
     </div>
 </section>
 
-<!-- ===================== MAPA ===================== -->
-<section class="section-wrap" id="mapa" style="padding-bottom: 0;">
-    <div class="container">
-        <div class="sec-header" data-anim>
-            <div class="ornament">✝</div>
+<!-- ═══════════ MAPA ═══════════ -->
+<section class="sec alt" id="mapa" style="padding-bottom: 0;">
+    <div class="wrap">
+        <div class="sec-head" data-a>
+            <div class="deco"><span>✝</span></div>
             <h2 class="sec-title">Como Chegar</h2>
-            <p class="sec-sub">Comunidade NAIOT — Campo Limpo de Goiás, GO</p>
+            <p class="sec-sub">Comunidade NAIOT &mdash; Campo Limpo de Goiás, GO</p>
         </div>
-        <div class="mapa-wrap" data-anim>
+        <div class="map-box" data-a>
             <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3830.1820033058525!2d-49.14189992509153!3d-16.26243988444542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935c276d0e8c03cf%3A0x7bfd94fb797d6e1b!2sComunidade%20NAIOT%20(Novo%20Acesso)!5e0!3m2!1spt-BR!2sbr!4v1754773032917!5m2!1spt-BR!2sbr"
                 allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
@@ -981,62 +866,91 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
     </div>
 </section>
 
-<!-- ===================== FOOTER ===================== -->
+<!-- ═══════════ FOOTER ═══════════ -->
 <footer>
-    <div class="container footer-body">
-
-        <div class="footer-logo">
+    <div class="wrap foot-inner">
+        <div class="foot-logo">
             <img src="assets/img/logo.png" alt="NAIOT"
-                 onerror="this.style.display='none'; document.querySelector('.footer-logo-text').style.display='block'">
-            <span class="footer-logo-text">NAIOT</span>
+                 onerror="this.style.display='none';document.querySelector('.foot-logo-txt').style.display='block'">
+            <span class="foot-logo-txt">NAIOT</span>
         </div>
-
-        <div class="footer-ornament">✝</div>
-
-        <div class="footer-redes">
-            <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener" class="footer-rede" title="Instagram">📷</a>
-            <a href="https://whatsapp.com/channel/0029VaVPbi15Ui2Y5f23h22i" target="_blank" rel="noopener" class="footer-rede" title="WhatsApp">💬</a>
-            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener" class="footer-rede" title="YouTube">▶️</a>
-            <a href="https://www.facebook.com/comunidadenaiot/" target="_blank" rel="noopener" class="footer-rede" title="Facebook">👥</a>
+        <div class="foot-deco"><span>✝</span></div>
+        <div class="foot-redes">
+            <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener" class="foot-rede" title="Instagram">📷</a>
+            <a href="https://whatsapp.com/channel/0029VaVPbi15Ui2Y5f23h22i" target="_blank" rel="noopener" class="foot-rede" title="WhatsApp">💬</a>
+            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener" class="foot-rede" title="YouTube">▶️</a>
+            <a href="https://www.facebook.com/comunidadenaiot/" target="_blank" rel="noopener" class="foot-rede" title="Facebook">👥</a>
         </div>
-
-        <div class="footer-hr"></div>
-
-        <p class="footer-copy">
-            © 2026 <strong>NAIOT</strong> — Comunidade Católica Senhor Jesus. Todos os direitos reservados.
-        </p>
-
+        <div class="foot-hr"></div>
+        <p class="foot-copy">© 2026 <strong>NAIOT</strong> — Comunidade Católica Senhor Jesus. Todos os direitos reservados.</p>
     </div>
 </footer>
 
-<!-- ===================== SCRIPTS ===================== -->
+<!-- ═══════════ SCRIPTS ═══════════ -->
 <script>
-    const hamburger = document.getElementById('hamburger');
-    const nav = document.getElementById('nav');
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('open');
-        nav.classList.toggle('open');
-    });
-    nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-        hamburger.classList.remove('open');
-        nav.classList.remove('open');
-    }));
+/* ── Menu mobile ── */
+const burger = document.getElementById('burger');
+const nav    = document.getElementById('nav');
+burger.addEventListener('click', () => {
+    burger.classList.toggle('open');
+    nav.classList.toggle('open');
+});
+nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    burger.classList.remove('open');
+    nav.classList.remove('open');
+}));
 
-    const header = document.getElementById('header');
-    window.addEventListener('scroll', () => {
-        header.classList.toggle('scrolled', window.scrollY > 30);
-    }, { passive: true });
+/* ── Header shadow ── */
+const hdr = document.getElementById('hdr');
+window.addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 30), { passive: true });
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(e => {
-            if (e.isIntersecting) {
-                e.target.classList.add('visible');
-                observer.unobserve(e.target);
-            }
-        });
-    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+/* ── Scroll animations ── */
+const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -36px 0px' });
+document.querySelectorAll('[data-a]').forEach(el => io.observe(el));
 
-    document.querySelectorAll('[data-anim]').forEach(el => observer.observe(el));
+/* ── Carrossel ── */
+class Carousel {
+    constructor(trackId, dotsId, delay = 5500) {
+        this.track  = document.getElementById(trackId);
+        this.dotsEl = document.getElementById(dotsId);
+        if (!this.track) return;
+        this.slides = this.track.querySelectorAll('.carousel-slide');
+        this.dots   = this.dotsEl ? this.dotsEl.querySelectorAll('.c-dot') : [];
+        this.n      = this.slides.length;
+        this.cur    = 0;
+        this.timer  = null;
+        this.delay  = delay;
+
+        /* Dots */
+        this.dots.forEach((d, i) => d.addEventListener('click', () => this.go(i)));
+
+        /* Prev / Next */
+        const outer = this.track.closest('.carousel-outer');
+        outer.querySelector('.c-prev')?.addEventListener('click', () => this.go((this.cur - 1 + this.n) % this.n));
+        outer.querySelector('.c-next')?.addEventListener('click', () => this.go((this.cur + 1) % this.n));
+
+        /* Pause on hover */
+        outer.addEventListener('mouseenter', () => clearInterval(this.timer));
+        outer.addEventListener('mouseleave', () => this.startAuto());
+
+        this.startAuto();
+    }
+    go(i) {
+        this.cur = i;
+        this.track.style.transform = `translateX(-${i * 100}%)`;
+        this.dots.forEach((d, j) => d.classList.toggle('on', j === i));
+        clearInterval(this.timer);
+        this.startAuto();
+    }
+    startAuto() {
+        this.timer = setInterval(() => this.go((this.cur + 1) % this.n), this.delay);
+    }
+}
+
+new Carousel('c-oracao', 'dots-oracao', 5500);
+new Carousel('c-test',   'dots-test',   6500);
 </script>
 
 </body>
