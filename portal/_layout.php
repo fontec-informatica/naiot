@@ -5,13 +5,13 @@ $inicial = mb_strtoupper(mb_substr(trim($nome), 0, 1)) ?: 'U';
 $perfis_label = ['admin' => 'Administrador', 'financeiro' => 'Financeiro', 'secretaria' => 'Secretaria'];
 $perfil_label = $perfis_label[$perfil] ?? ucfirst($perfil);
 
-/* ── SVG icons ── */
+/* ── SVG icons (width/height obrigatórios) ── */
 $icons = [
-  'dashboard'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
-  'eventos'    => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
-  'inscricoes' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
-  'financeiro' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
-  'usuarios'   => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  'dashboard'  => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  'eventos'    => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  'inscricoes' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+  'financeiro' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+  'usuarios'   => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
 ];
 
 $menu = [
@@ -44,14 +44,14 @@ $menu = [
 
     <div class="sidebar-brand">
       <img src="/assets/img/logo.png" alt="NAIOT"
-           onerror="this.style.display='none';document.querySelector('.sidebar-brand-name').textContent='NAIOT'">
-      <div class="sidebar-brand-txt">
-        <span class="sidebar-brand-name">NAIOT</span>
-        <span class="sidebar-brand-sub">Portal Administrativo</span>
+           onerror="this.style.display='none';document.querySelector('.sb-name').textContent='NAIOT'">
+      <div>
+        <span class="sb-name">NAIOT</span>
+        <span class="sb-sub">Portal Administrativo</span>
       </div>
     </div>
 
-    <span class="sidebar-section">Menu</span>
+    <span class="nav-section">Menu</span>
     <ul class="sidebar-nav">
       <?php foreach ($menu as $chave => $item): ?>
         <?php if (in_array($perfil, $item['perfis'], true)): ?>
@@ -59,10 +59,10 @@ $menu = [
             <a href="<?= $item['href'] ?>"
                class="<?= ($pagina_ativa ?? '') === $chave ? 'ativo' : '' ?>">
               <?php if (($pagina_ativa ?? '') === $chave): ?>
-                <span class="nav-indicator"></span>
+                <span class="bar"></span>
               <?php endif; ?>
-              <?= $item['icon'] ?>
-              <?= $item['label'] ?>
+              <span class="icon"><?= $item['icon'] ?></span>
+              <span class="lbl"><?= $item['label'] ?></span>
             </a>
           </li>
         <?php endif; ?>
@@ -72,13 +72,13 @@ $menu = [
     <div class="sidebar-spacer"></div>
 
     <div class="sidebar-footer">
-      <div class="sidebar-avatar"><?= htmlspecialchars($inicial) ?></div>
-      <div class="sidebar-user-info">
-        <span class="sidebar-user-name"><?= htmlspecialchars($nome) ?></span>
-        <span class="sidebar-user-role"><?= htmlspecialchars($perfil_label) ?></span>
+      <div class="s-avatar"><?= htmlspecialchars($inicial) ?></div>
+      <div class="s-user-info">
+        <span class="s-name"><?= htmlspecialchars($nome) ?></span>
+        <span class="s-role"><?= htmlspecialchars($perfil_label) ?></span>
       </div>
-      <a href="/portal/logout.php" class="sidebar-logout" title="Sair">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <a href="/portal/logout.php" class="s-logout" title="Sair">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
         </svg>
       </a>
@@ -91,22 +91,22 @@ $menu = [
 
     <header class="topbar">
       <div class="topbar-left">
-        <button class="topbar-burger" id="burger" aria-label="Abrir menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <button class="topbar-burger" id="burger" aria-label="Abrir menu" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <path d="M3 12h18M3 6h18M3 18h18"/>
           </svg>
         </button>
-        <div class="topbar-breadcrumb">
-          <span class="bc-root">NAIOT</span>
+        <div class="topbar-bc">
+          <span class="bc-org">NAIOT</span>
           <span class="bc-sep">›</span>
           <span class="topbar-title"><?= htmlspecialchars($titulo ?? 'Portal') ?></span>
         </div>
       </div>
       <div class="topbar-right">
-        <div class="topbar-user-pill">
-          <div class="topbar-avatar"><?= htmlspecialchars($inicial) ?></div>
-          <span class="topbar-name"><?= htmlspecialchars(explode(' ', trim($nome))[0]) ?></span>
-          <span class="topbar-role"><?= htmlspecialchars($perfil_label) ?></span>
+        <div class="t-user">
+          <div class="t-avatar"><?= htmlspecialchars($inicial) ?></div>
+          <span class="t-name"><?= htmlspecialchars(explode(' ', trim($nome))[0]) ?></span>
+          <span class="t-role"><?= htmlspecialchars($perfil_label) ?></span>
         </div>
       </div>
     </header>
