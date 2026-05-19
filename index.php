@@ -54,10 +54,10 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
   --r:  10px;
   --rl: 18px;
   --ease: .38s cubic-bezier(.4,0,.2,1);
-  --hdr-h: 56px;
+  --hdr-h: 80px;
 }
 
-@media (max-width: 768px) { :root { --hdr-h: 56px; } }
+@media (max-width: 768px) { :root { --hdr-h: 80px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
