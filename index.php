@@ -90,7 +90,7 @@ function formatar_periodo(string $inicio, ?string $fim): string {
 @media (max-width: 768px) { :root { --hdr-h: 90px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--hdr-h) - 40px); }
 body {
   font-family: 'EB Garamond', Georgia, serif;
   font-size: clamp(16px, 2vw, 18px);
@@ -371,7 +371,6 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 
 /* ── Carrossel de eventos (imagens) ── */
 #eventos .sec-head { margin-bottom: clamp(16px, 2vw, 24px); }
-#inicio, #eventos, #programacao, #oracao, #testemunhos { scroll-margin-top: calc(var(--hdr-h) - 60px); }
 .evt-slide  { padding: 0; background: transparent; }
 .evt-inner  { width: 100%; }
 .evt-inner > img { width: 100%; height: auto; display: block; }
