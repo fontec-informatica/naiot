@@ -102,7 +102,7 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 /* ── Sidebar ── */
 .sidebar{
   width:var(--sidebar-w);
-  background:linear-gradient(175deg,#1e6b35 0%,#1a5c2e 40%,#163d22 100%);
+  background:linear-gradient(175deg,#6b7f45 0%,#566637 40%,#404e2a 100%);
   display:flex;flex-direction:column;flex-shrink:0;
   position:fixed;top:0;left:0;height:100vh;
   overflow-y:auto;z-index:200;
