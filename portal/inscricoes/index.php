@@ -13,7 +13,7 @@ $totais = db()->query("SELECT
   FROM inscricoes")->fetch();
 
 $eventos = db()->query("
-    SELECT e.id, e.titulo, e.data_evento, e.inscricoes_abertas, e.vagas,
+    SELECT e.id, e.titulo, e.data_evento, e.ativo, e.inscricoes_abertas, e.vagas,
            COUNT(i.id)                      AS total,
            SUM(i.status = 'confirmado')     AS confirmados,
            SUM(i.status = 'pendente')       AS pendentes,
@@ -22,8 +22,7 @@ $eventos = db()->query("
            SUM(CASE WHEN i.status != 'cancelado' THEN i.valor_pago ELSE 0 END) AS receita
     FROM eventos e
     LEFT JOIN inscricoes i ON i.evento_id = e.id
-    WHERE e.inscricoes_abertas = 1
-       OR EXISTS (SELECT 1 FROM inscricoes ii WHERE ii.evento_id = e.id)
+    WHERE e.ativo = 1
     GROUP BY e.id
     ORDER BY e.inscricoes_abertas DESC, e.data_evento DESC, e.id DESC
 ")->fetchAll();
@@ -57,7 +56,7 @@ include dirname(__DIR__) . '/_layout.php';
 
   <?php if (empty($eventos)): ?>
   <div style="padding:48px;text-align:center;color:var(--cinza3)">
-    Nenhum evento com inscrições. Abra as inscrições de um evento em
+    Nenhum evento ativo. Cadastre um evento em
     <a href="/portal/eventos/" style="color:var(--azul2)">Próx. Eventos</a>.
   </div>
   <?php else: ?>
@@ -95,8 +94,9 @@ include dirname(__DIR__) . '/_layout.php';
       <td style="text-align:right;font-size:.88rem;color:var(--cinza3)">
         <?= $ev['receita'] > 0 ? 'R$ ' . number_format($ev['receita'], 2, ',', '.') : '—' ?>
       </td>
-      <td>
-        <a href="/portal/inscricoes/evento.php?id=<?= $ev['id'] ?>" class="btn btn-primary btn-sm">Ver inscritos</a>
+      <td style="white-space:nowrap">
+        <a href="/portal/inscricoes/configurar.php?id=<?= $ev['id'] ?>" class="btn btn-ouro btn-sm" style="margin-right:4px">Configurar</a>
+        <a href="/portal/inscricoes/evento.php?id=<?= $ev['id'] ?>" class="btn btn-primary btn-sm">Inscritos</a>
       </td>
     </tr>
     <?php endforeach; ?>

@@ -10,25 +10,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_valido()) {
         $erro = 'Token inválido. Recarregue a página.';
     } else {
-        $nome_ev            = trim($_POST['titulo'] ?? '');
-        $descricao          = trim($_POST['descricao'] ?? '');
-        $data_ev            = $_POST['data_evento'] ?? '';
-        $data_fim           = $_POST['data_fim'] ?? '';
-        $ordem              = (int)($_POST['ordem'] ?? 0);
-        $inscricoes_abertas = isset($_POST['inscricoes_abertas']) ? 1 : 0;
-        $vagas              = (int)($_POST['vagas'] ?? 0) ?: null;
-        $valor              = (float)str_replace(',', '.', preg_replace('/[^0-9,]/', '', $_POST['valor'] ?? '0'));
-        $data_encerramento  = $_POST['data_encerramento'] ?: null;
-        $local_evento       = trim($_POST['local_evento'] ?? '');
-        $horario            = trim($_POST['horario'] ?? '');
+        $nome_ev   = trim($_POST['titulo']    ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $data_ev   = $_POST['data_evento']    ?? '';
+        $data_fim  = $_POST['data_fim']       ?? '';
+        $local     = trim($_POST['local_evento'] ?? '');
+        $horario   = trim($_POST['horario']   ?? '');
+        $ordem     = (int)($_POST['ordem']    ?? 0);
 
         if (!$nome_ev) {
             $erro = 'O título é obrigatório.';
         } elseif (empty($_FILES['imagem']['tmp_name'])) {
-            $erro = 'Selecione uma imagem para o evento.';
+            $erro = 'Selecione uma arte para o evento.';
         } else {
-            $finfo     = new finfo(FILEINFO_MIME_TYPE);
-            $mime      = $finfo->file($_FILES['imagem']['tmp_name']);
+            $finfo      = new finfo(FILEINFO_MIME_TYPE);
+            $mime       = $finfo->file($_FILES['imagem']['tmp_name']);
             $permitidos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
 
             if (!isset($permitidos[$mime])) {
@@ -43,20 +39,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!move_uploaded_file($_FILES['imagem']['tmp_name'], $destino)) {
                     $erro = 'Erro ao salvar a imagem no servidor.';
                 } else {
-                    db()->prepare('INSERT INTO eventos (titulo, descricao, data_evento, data_fim, imagem, ordem, inscricoes_abertas, vagas, valor, data_encerramento, local_evento, horario) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+                    db()->prepare('INSERT INTO eventos (titulo, descricao, data_evento, data_fim, local_evento, horario, imagem, ordem) VALUES (?,?,?,?,?,?,?,?)')
                         ->execute([
                             $nome_ev,
                             $descricao ?: null,
-                            $data_ev ?: null,
-                            $data_fim ?: null,
+                            $data_ev   ?: null,
+                            $data_fim  ?: null,
+                            $local     ?: null,
+                            $horario   ?: null,
                             $filename,
                             $ordem,
-                            $inscricoes_abertas,
-                            $vagas,
-                            $valor,
-                            $data_encerramento,
-                            $local_evento ?: null,
-                            $horario ?: null,
                         ]);
                     header('Location: /portal/eventos/?criado=1');
                     exit;
@@ -69,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div class="form-wrap" style="max-width:640px">
-  <h2>Novo evento</h2>
+<div class="form-wrap" style="max-width:600px">
+  <h2>Nova arte / evento</h2>
 
   <?php if ($erro): ?>
     <div class="alerta alerta-erro"><?= htmlspecialchars($erro) ?></div>
@@ -98,7 +90,7 @@ include dirname(__DIR__) . '/_layout.php';
                value="<?= htmlspecialchars($_POST['data_evento'] ?? '') ?>">
       </div>
       <div class="form-group">
-        <label for="data_fim">Data de término <span style="font-weight:400;color:var(--cinza3)">(deixe vazio se for 1 dia)</span></label>
+        <label for="data_fim">Data de término <span style="font-weight:400;color:var(--cinza3)">(vazio = 1 dia)</span></label>
         <input type="date" id="data_fim" name="data_fim"
                value="<?= htmlspecialchars($_POST['data_fim'] ?? '') ?>">
       </div>
@@ -106,7 +98,7 @@ include dirname(__DIR__) . '/_layout.php';
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="form-group">
-        <label for="local_evento">Local do evento <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <label for="local_evento">Local <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
         <input type="text" id="local_evento" name="local_evento" placeholder="Ex: Igreja Matriz"
                value="<?= htmlspecialchars($_POST['local_evento'] ?? '') ?>">
       </div>
@@ -117,49 +109,21 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="form-group">
-        <label for="ordem">Ordem de exibição</label>
-        <input type="number" id="ordem" name="ordem" min="0"
-               value="<?= htmlspecialchars($_POST['ordem'] ?? '0') ?>">
-        <span class="form-hint">Menor número aparece primeiro.</span>
-      </div>
-      <div class="form-group">
-        <label for="data_encerramento">Encerrar inscrições em <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
-        <input type="date" id="data_encerramento" name="data_encerramento"
-               value="<?= htmlspecialchars($_POST['data_encerramento'] ?? '') ?>">
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="form-group">
-        <label for="vagas">Vagas totais <span style="font-weight:400;color:var(--cinza3)">(vazio = ilimitado)</span></label>
-        <input type="number" id="vagas" name="vagas" min="1" placeholder="Ilimitado"
-               value="<?= htmlspecialchars($_POST['vagas'] ?? '') ?>">
-      </div>
-      <div class="form-group">
-        <label for="valor">Valor base (R$) <span style="font-weight:400;color:var(--cinza3)">(0 = gratuito)</span></label>
-        <input type="text" id="valor" name="valor" placeholder="0,00"
-               value="<?= htmlspecialchars($_POST['valor'] ?? '') ?>">
-        <span class="form-hint">Múltiplos preços via lotes após criar o evento.</span>
-      </div>
+    <div class="form-group">
+      <label for="ordem">Ordem de exibição no carrossel</label>
+      <input type="number" id="ordem" name="ordem" min="0"
+             value="<?= htmlspecialchars($_POST['ordem'] ?? '0') ?>">
+      <span class="form-hint">Menor número aparece primeiro.</span>
     </div>
 
     <div class="form-group">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-        <input type="checkbox" name="inscricoes_abertas" value="1" <?= isset($_POST['inscricoes_abertas']) ? 'checked' : '' ?>>
-        <span><strong>Abrir inscrições imediatamente</strong></span>
-      </label>
-    </div>
-
-    <div class="form-group">
-      <label for="imagem">Arte do evento</label>
+      <label for="imagem">Arte do evento <span style="color:var(--vermelho)">*</span></label>
       <input type="file" id="imagem" name="imagem" accept="image/jpeg,image/png,image/webp,image/gif" required>
-      <span class="form-hint">JPG, PNG, WebP ou GIF — máximo 8MB. Qualquer proporção é aceita.</span>
+      <span class="form-hint">JPG, PNG, WebP ou GIF — máximo 8 MB.</span>
     </div>
 
     <div style="display:flex;gap:12px;margin-top:8px">
-      <button type="submit" class="btn btn-primary">Publicar evento</button>
+      <button type="submit" class="btn btn-primary">Publicar arte</button>
       <a href="/portal/eventos/" class="btn btn-ghost">Cancelar</a>
     </div>
   </form>
