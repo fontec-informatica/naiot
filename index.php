@@ -44,120 +44,133 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NAIOT — Comunidade Católica Senhor Jesus</title>
     <meta name="description" content="Comunidade Católica Senhor Jesus — Campo Limpo de Goiás, GO. Programação semanal, pedidos de oração e testemunhos.">
-    <meta name="theme-color" content="#0d1b3e">
+    <meta name="theme-color" content="#163d22">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
     <style>
         /* ===== VARIÁVEIS ===== */
         :root {
-            --navy:       #0d1b3e;
-            --navy-light: #162348;
-            --gold:       #c9a84c;
-            --gold-light: #e2c87a;
-            --bg:         #f4f6fb;
-            --bg-alt:     #eaecf5;
-            --white:      #ffffff;
-            --text:       #1a1a2e;
-            --muted:      #6b7280;
-            --red:        #dc2626;
-            --shadow:     0 4px 24px rgba(13,27,62,.10);
-            --shadow-lg:  0 12px 48px rgba(13,27,62,.18);
-            --radius:     12px;
-            --radius-lg:  20px;
-            --ease:       0.35s cubic-bezier(.4,0,.2,1);
+            --green-dark:  #163d22;
+            --green:       #1e6b35;
+            --green-mid:   #2a7d3f;
+            --gold:        #b8962e;
+            --gold-light:  #d4b050;
+            --cream:       #f8f5ee;
+            --cream-alt:   #efe9dc;
+            --white:       #ffffff;
+            --text:        #1c1c1c;
+            --muted:       #5a5550;
+            --red:         #c0392b;
+            --shadow:      0 4px 24px rgba(22,61,34,.12);
+            --shadow-lg:   0 14px 52px rgba(22,61,34,.22);
+            --radius:      8px;
+            --radius-lg:   16px;
+            --ease:        0.35s cubic-bezier(.4,0,.2,1);
         }
 
         /* ===== RESET ===== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
+            font-family: 'EB Garamond', Georgia, serif;
+            background: var(--cream);
             color: var(--text);
-            line-height: 1.65;
+            line-height: 1.75;
             overflow-x: hidden;
+            font-size: 17px;
         }
         img  { max-width: 100%; height: auto; display: block; }
         a    { text-decoration: none; color: inherit; }
         ul   { list-style: none; }
 
         /* ===== UTILITÁRIOS ===== */
-        .container {
-            width: 100%;
-            max-width: 1160px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-        h1, h2, h3, h4 { font-family: 'Syne', sans-serif; line-height: 1.2; }
+        .container { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 28px; }
+        h1, h2, h3, h4, nav a, .btn-submit, .btn-channel { font-family: 'Cinzel', serif; }
 
         .section-wrap { padding: 96px 0; }
-        .section-wrap.alt { background: var(--bg-alt); }
-        .section-wrap.dark { background: var(--navy); }
+        .section-wrap.alt  { background: var(--cream-alt); }
+        .section-wrap.dark { background: var(--green-dark); }
 
-        .sec-header { text-align: center; margin-bottom: 56px; }
-        .gold-bar {
-            width: 52px; height: 4px;
+        .sec-header { text-align: center; margin-bottom: 60px; }
+        .ornament {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 18px;
+            color: var(--gold);
+            font-size: 1.1rem;
+            letter-spacing: .2em;
+        }
+        .ornament::before, .ornament::after {
+            content: '';
+            width: 60px; height: 1px;
             background: var(--gold);
-            border-radius: 2px;
-            margin: 0 auto 16px;
+            opacity: .6;
         }
         .sec-title {
-            font-size: clamp(1.9rem, 4vw, 2.8rem);
-            font-weight: 800;
-            color: var(--navy);
+            font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+            font-weight: 700;
+            color: var(--green-dark);
+            letter-spacing: .04em;
+            text-transform: uppercase;
         }
-        .sec-title.light { color: #fff; }
+        .sec-title.light { color: var(--cream); }
         .sec-sub {
-            margin-top: 10px;
+            margin-top: 14px;
             color: var(--muted);
             font-size: 1.05rem;
+            font-style: italic;
         }
-        .sec-sub.light { color: rgba(255,255,255,.6); }
+        .sec-sub.light { color: rgba(248,245,238,.65); }
 
         /* ===== HEADER ===== */
         #header {
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 900;
-            background: rgba(13,27,62,.96);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border-bottom: 1px solid rgba(201,168,76,.15);
+            background: rgba(22,61,34,.97);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(184,150,46,.25);
             transition: box-shadow var(--ease);
         }
-        #header.scrolled { box-shadow: 0 4px 32px rgba(0,0,0,.35); }
+        #header.scrolled { box-shadow: 0 4px 32px rgba(0,0,0,.4); }
 
         .header-inner {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 68px;
+            height: 72px;
         }
         .header-logo img {
-            height: 42px;
+            height: 46px;
             width: auto;
+            filter: brightness(0) invert(1);
         }
         .header-logo-text {
             display: none;
-            font-family: 'Syne', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--gold);
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--cream);
+            letter-spacing: .1em;
         }
 
-        nav { display: flex; align-items: center; gap: 4px; }
+        nav { display: flex; align-items: center; gap: 2px; }
         nav a {
-            color: rgba(255,255,255,.82);
-            font-size: .9rem;
-            font-weight: 500;
+            color: rgba(248,245,238,.80);
+            font-size: .78rem;
+            font-weight: 600;
             padding: 8px 14px;
-            border-radius: 8px;
+            border-radius: 4px;
             transition: color var(--ease), background var(--ease);
-            letter-spacing: .02em;
+            letter-spacing: .08em;
+            text-transform: uppercase;
             white-space: nowrap;
         }
-        nav a:hover { color: var(--gold); background: rgba(201,168,76,.08); }
+        nav a:hover { color: var(--gold-light); background: rgba(184,150,46,.1); }
 
         .btn-live {
             display: inline-flex !important;
@@ -166,23 +179,21 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             background: var(--red) !important;
             color: #fff !important;
             padding: 7px 16px !important;
-            border-radius: 20px !important;
-            font-weight: 700 !important;
-            font-size: .82rem !important;
-            letter-spacing: .04em !important;
+            border-radius: 3px !important;
+            font-size: .75rem !important;
             animation: pulse-live 2s ease infinite;
         }
         .btn-live::before {
             content: '';
-            width: 8px; height: 8px;
+            width: 7px; height: 7px;
             background: #fff;
             border-radius: 50%;
             flex-shrink: 0;
         }
         @keyframes pulse-live {
-            0%   { box-shadow: 0 0 0 0 rgba(220,38,38,.75); }
-            70%  { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
-            100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+            0%   { box-shadow: 0 0 0 0 rgba(192,57,43,.75); }
+            70%  { box-shadow: 0 0 0 10px rgba(192,57,43,0); }
+            100% { box-shadow: 0 0 0 0 rgba(192,57,43,0); }
         }
 
         /* Hamburger */
@@ -198,8 +209,8 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
         .hamburger span {
             display: block;
             width: 24px; height: 2px;
-            background: #fff;
-            border-radius: 2px;
+            background: var(--cream);
+            border-radius: 1px;
             transition: var(--ease);
         }
         .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
@@ -209,77 +220,106 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
         /* ===== HERO ===== */
         .hero {
             min-height: 100vh;
-            background: var(--navy);
+            background: var(--green-dark);
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             position: relative;
             overflow: hidden;
-            padding: 110px 24px 72px;
+            padding: 120px 28px 80px;
         }
+        /* Padrão de textura sutil */
         .hero::before {
             content: '';
             position: absolute; inset: 0;
             background:
-                radial-gradient(ellipse 80% 60% at 50% 0%,   rgba(201,168,76,.10) 0%, transparent 65%),
-                radial-gradient(circle at 15% 85%, rgba(201,168,76,.06) 0%, transparent 40%),
-                radial-gradient(circle at 85% 15%, rgba(201,168,76,.06) 0%, transparent 40%);
+                radial-gradient(ellipse 90% 60% at 50% 0%,   rgba(184,150,46,.10) 0%, transparent 65%),
+                radial-gradient(circle at 10% 90%, rgba(184,150,46,.07) 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, rgba(184,150,46,.07) 0%, transparent 40%);
             pointer-events: none;
         }
-        /* Subtle cross pattern */
         .hero::after {
             content: '';
             position: absolute; inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c9a84c' fill-opacity='.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2zM6 4V0H4v4H0v2h4v4h2V6h4V4z'/%3E%3C/g%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23b8962e' fill-opacity='.04'%3E%3Cpath d='M40 0v80M0 40h80' stroke='%23b8962e' stroke-opacity='.04' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E");
             pointer-events: none;
         }
-        .hero-content { position: relative; z-index: 1; max-width: 780px; }
+        .hero-content { position: relative; z-index: 1; max-width: 760px; }
 
         .hero-logo {
-            width: min(210px, 48vw);
-            margin: 0 auto 2.5rem;
-            filter: drop-shadow(0 8px 40px rgba(201,168,76,.35));
-            animation: float 5s ease-in-out infinite;
+            width: min(220px, 50vw);
+            margin: 0 auto 2.8rem;
+            filter: brightness(0) invert(1);
+            opacity: .95;
+            animation: fade-down .9s ease both;
         }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50%       { transform: translateY(-10px); }
+        @keyframes fade-down {
+            from { opacity: 0; transform: translateY(-16px); }
+            to   { opacity: .95; transform: translateY(0); }
         }
 
-        .hero-divider {
-            width: 64px; height: 3px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-            margin: 0 auto 1.8rem;
+        .hero-ornament {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 2rem;
+            color: var(--gold);
+            font-size: 1.2rem;
+            letter-spacing: .3em;
+            animation: fade-up .9s .2s ease both;
         }
+        .hero-ornament::before, .hero-ornament::after {
+            content: '';
+            width: 70px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold));
+            opacity: .7;
+        }
+        .hero-ornament::after { background: linear-gradient(90deg, var(--gold), transparent); }
+
         .hero h1 {
-            font-size: clamp(1.9rem, 4.5vw, 3.4rem);
+            font-size: clamp(1.7rem, 4vw, 3rem);
             font-weight: 700;
-            color: #fff;
-            margin-bottom: 1.1rem;
-            text-shadow: 0 2px 24px rgba(0,0,0,.25);
+            color: var(--cream);
+            margin-bottom: 1.2rem;
+            letter-spacing: .05em;
+            line-height: 1.3;
+            text-transform: uppercase;
+            animation: fade-up .9s .3s ease both;
         }
         .hero h1 em {
-            font-style: normal;
-            color: var(--gold);
-        }
-        .hero p {
-            color: rgba(255,255,255,.70);
-            font-size: clamp(1rem, 2vw, 1.18rem);
-            font-weight: 300;
+            font-style: italic;
+            font-family: 'EB Garamond', serif;
+            color: var(--gold-light);
+            text-transform: none;
+            font-size: 1.15em;
             letter-spacing: .03em;
         }
+        .hero p {
+            color: rgba(248,245,238,.65);
+            font-size: clamp(1rem, 1.8vw, 1.15rem);
+            font-style: italic;
+            letter-spacing: .04em;
+            animation: fade-up .9s .4s ease both;
+        }
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         .hero-scroll {
             position: absolute;
-            bottom: 28px; left: 50%;
+            bottom: 30px; left: 50%;
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 6px;
-            color: rgba(255,255,255,.35);
-            font-size: .72rem;
-            letter-spacing: .12em;
+            color: rgba(248,245,238,.3);
+            font-family: 'Cinzel', serif;
+            font-size: .65rem;
+            letter-spacing: .18em;
             text-transform: uppercase;
             animation: bounce 2.5s ease-in-out infinite;
         }
@@ -295,17 +335,18 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             gap: 8px;
             background: var(--red);
             color: #fff;
-            padding: 6px 18px;
-            border-radius: 20px;
-            font-size: .82rem;
+            padding: 6px 20px;
+            border-radius: 3px;
+            font-family: 'Cinzel', serif;
+            font-size: .75rem;
             font-weight: 700;
-            letter-spacing: .06em;
-            margin-bottom: 16px;
+            letter-spacing: .12em;
+            margin-bottom: 18px;
             animation: pulse-live 2s ease infinite;
         }
         .live-badge::before {
             content: '';
-            width: 8px; height: 8px;
+            width: 7px; height: 7px;
             background: #fff;
             border-radius: 50%;
         }
@@ -315,6 +356,7 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             border-radius: var(--radius-lg);
             overflow: hidden;
             box-shadow: 0 24px 80px rgba(0,0,0,.5);
+            border: 1px solid rgba(184,150,46,.2);
         }
         .video-wrapper iframe {
             position: absolute;
@@ -323,32 +365,32 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             border: none;
         }
         .live-fallback {
-            background: rgba(255,255,255,.05);
-            border: 2px dashed rgba(201,168,76,.3);
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(184,150,46,.25);
             border-radius: var(--radius-lg);
-            padding: 60px 40px;
+            padding: 64px 40px;
             text-align: center;
         }
-        .live-fallback p { color: rgba(255,255,255,.6); margin-bottom: 24px; }
+        .live-fallback p { color: rgba(248,245,238,.6); margin-bottom: 28px; font-style: italic; }
         .btn-channel {
             display: inline-flex;
             align-items: center;
             gap: 10px;
             background: var(--red);
             color: #fff;
-            padding: 14px 28px;
+            padding: 14px 32px;
             border-radius: var(--radius);
-            font-family: 'Syne', sans-serif;
-            font-weight: 700;
-            font-size: 1rem;
+            font-size: .85rem;
+            font-weight: 600;
+            letter-spacing: .08em;
             transition: opacity var(--ease), transform var(--ease);
         }
-        .btn-channel:hover { opacity: .9; transform: translateY(-2px); }
+        .btn-channel:hover { opacity: .88; transform: translateY(-2px); }
 
         /* ===== PROGRAMAÇÃO ===== */
         .prog-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 24px;
         }
         .prog-card {
@@ -356,53 +398,55 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             border-radius: var(--radius-lg);
             padding: 32px 28px;
             box-shadow: var(--shadow);
-            border-top: 4px solid var(--gold);
+            border-top: 3px solid var(--gold);
             position: relative;
             overflow: hidden;
             transition: transform var(--ease), box-shadow var(--ease);
         }
-        .prog-card::after {
+        .prog-card::before {
             content: '';
             position: absolute;
             top: 0; right: 0;
-            width: 110px; height: 110px;
-            background: radial-gradient(circle, rgba(201,168,76,.07) 0%, transparent 70%);
-            transform: translate(25%, -25%);
+            width: 100px; height: 100px;
+            background: radial-gradient(circle, rgba(30,107,53,.06) 0%, transparent 70%);
+            transform: translate(30%, -30%);
             pointer-events: none;
         }
-        .prog-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+        .prog-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
         .prog-icon {
-            width: 52px; height: 52px;
-            background: linear-gradient(135deg, var(--navy), var(--navy-light));
-            border-radius: 14px;
+            width: 50px; height: 50px;
+            background: var(--green-dark);
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             margin-bottom: 20px;
-            flex-shrink: 0;
         }
         .prog-day {
-            font-size: .78rem;
+            font-family: 'Cinzel', serif;
+            font-size: .72rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .08em;
+            letter-spacing: .1em;
             color: var(--gold);
             margin-bottom: 4px;
         }
         .prog-time {
-            font-family: 'Syne', sans-serif;
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--navy);
+            font-family: 'Cinzel', serif;
+            font-size: 1.9rem;
+            font-weight: 900;
+            color: var(--green-dark);
             line-height: 1;
             margin-bottom: 10px;
         }
         .prog-name {
+            font-family: 'Cinzel', serif;
             font-weight: 600;
-            font-size: 1.02rem;
-            color: var(--navy);
+            font-size: .9rem;
+            color: var(--green-dark);
             margin-bottom: 8px;
+            letter-spacing: .03em;
         }
-        .prog-desc { font-size: .88rem; color: var(--muted); line-height: 1.55; }
+        .prog-desc { font-size: .92rem; color: var(--muted); line-height: 1.6; font-style: italic; }
 
         /* ===== REDES SOCIAIS ===== */
         .redes-grid {
@@ -412,21 +456,27 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
         }
         .rede-card {
             border-radius: var(--radius-lg);
-            padding: 40px 24px;
+            padding: 40px 20px;
             text-align: center;
             color: #fff;
             transition: transform var(--ease), box-shadow var(--ease);
             box-shadow: var(--shadow);
             cursor: pointer;
         }
-        .rede-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: var(--shadow-lg); }
-        .rede-card.instagram { background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .rede-card:hover { transform: translateY(-7px) scale(1.02); box-shadow: var(--shadow-lg); }
+        .rede-card.instagram { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         .rede-card.whatsapp  { background: linear-gradient(135deg, #25D366, #128C7E); }
         .rede-card.youtube   { background: linear-gradient(135deg, #FF0000, #b30000); }
         .rede-card.facebook  { background: linear-gradient(135deg, #1877F2, #0a52cc); }
-        .rede-icon { font-size: 2.6rem; margin-bottom: 14px; }
-        .rede-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.08rem; margin-bottom: 4px; }
-        .rede-handle { font-size: .82rem; opacity: .85; }
+        .rede-icon { font-size: 2.4rem; margin-bottom: 14px; }
+        .rede-name {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: .95rem;
+            margin-bottom: 4px;
+            letter-spacing: .05em;
+        }
+        .rede-handle { font-size: .82rem; opacity: .85; font-style: italic; }
 
         /* ===== FORMS ===== */
         .forms-grid {
@@ -441,60 +491,65 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             border-radius: var(--radius-lg);
             padding: 36px;
             box-shadow: var(--shadow);
+            border-top: 3px solid var(--gold);
         }
         .form-box h3 {
-            font-size: 1.25rem;
-            color: var(--navy);
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: var(--green-dark);
             margin-bottom: 6px;
+            letter-spacing: .05em;
+            text-transform: uppercase;
         }
-        .form-box > p { font-size: .88rem; color: var(--muted); margin-bottom: 20px; }
+        .form-box > p { font-size: .95rem; color: var(--muted); margin-bottom: 20px; font-style: italic; }
         .success-msg {
-            background: #d1fae5;
-            color: #064e3b;
-            border-left: 4px solid #10b981;
+            background: #d4edda;
+            color: #155724;
+            border-left: 3px solid #28a745;
             padding: 12px 16px;
-            border-radius: 8px;
-            font-size: .9rem;
+            border-radius: var(--radius);
+            font-size: .92rem;
             margin-bottom: 16px;
+            font-style: italic;
         }
         textarea {
             width: 100%;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
+            border: 1px solid #d8cfc3;
+            border-radius: var(--radius);
             padding: 14px 16px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: .95rem;
+            font-family: 'EB Garamond', serif;
+            font-size: 1rem;
             resize: vertical;
             min-height: 120px;
             color: var(--text);
-            background: #fafafa;
+            background: var(--cream);
             transition: border-color var(--ease), box-shadow var(--ease), background var(--ease);
         }
         textarea:focus {
             outline: none;
-            border-color: var(--gold);
+            border-color: var(--green);
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(201,168,76,.12);
+            box-shadow: 0 0 0 3px rgba(30,107,53,.10);
         }
         .btn-submit {
             width: 100%;
             margin-top: 12px;
             padding: 14px;
-            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
-            color: #fff;
+            background: var(--green-dark);
+            color: var(--cream);
             border: none;
-            border-radius: 10px;
-            font-family: 'Syne', sans-serif;
+            border-radius: var(--radius);
+            font-size: .82rem;
             font-weight: 700;
-            font-size: .98rem;
             cursor: pointer;
-            letter-spacing: .02em;
-            transition: opacity var(--ease), transform var(--ease), box-shadow var(--ease);
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
         }
         .btn-submit:hover {
-            opacity: .92;
+            background: var(--green);
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(13,27,62,.3);
+            box-shadow: 0 8px 24px rgba(22,61,34,.25);
         }
 
         /* Cards de submissões */
@@ -505,43 +560,49 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             margin-bottom: 14px;
         }
         .cards-header h4 {
-            font-size: 1rem;
-            color: var(--navy);
+            font-family: 'Cinzel', serif;
+            font-size: .88rem;
+            color: var(--green-dark);
+            letter-spacing: .05em;
+            text-transform: uppercase;
         }
         .cards-count {
-            background: var(--navy);
-            color: var(--gold);
-            font-size: .78rem;
+            background: var(--green-dark);
+            color: var(--gold-light);
+            font-family: 'Cinzel', serif;
+            font-size: .75rem;
             font-weight: 700;
             padding: 3px 10px;
-            border-radius: 20px;
+            border-radius: 3px;
         }
         .submissions-scroll {
             display: flex;
             flex-direction: column;
             gap: 14px;
-            max-height: 420px;
+            max-height: 400px;
             overflow-y: auto;
             padding-right: 6px;
         }
-        .submissions-scroll::-webkit-scrollbar { width: 4px; }
-        .submissions-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 2px; }
-        .submissions-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+        .submissions-scroll::-webkit-scrollbar { width: 3px; }
+        .submissions-scroll::-webkit-scrollbar-track { background: var(--cream-alt); }
+        .submissions-scroll::-webkit-scrollbar-thumb { background: var(--gold); }
         .sub-card {
-            background: var(--bg);
+            background: var(--cream);
             border-radius: var(--radius);
             padding: 18px 20px;
-            border-left: 4px solid var(--gold);
+            border-left: 3px solid var(--gold);
         }
-        .sub-card p { font-size: .93rem; color: var(--text); line-height: 1.6; margin-bottom: 8px; }
-        .sub-card span { font-size: .76rem; color: var(--muted); }
+        .sub-card p { font-size: .95rem; color: var(--text); line-height: 1.65; margin-bottom: 8px; font-style: italic; }
+        .sub-card span { font-size: .76rem; color: var(--muted); font-family: 'Cinzel', serif; letter-spacing: .04em; }
         .empty-state {
             text-align: center;
             color: var(--muted);
-            font-size: .88rem;
+            font-size: .95rem;
             padding: 28px;
-            background: var(--bg);
+            background: var(--white);
             border-radius: var(--radius);
+            font-style: italic;
+            border: 1px dashed #ccc4b4;
         }
 
         /* ===== MAPA ===== */
@@ -550,12 +611,14 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             border-radius: var(--radius-lg);
             overflow: hidden;
             box-shadow: var(--shadow-lg);
+            border: 1px solid var(--cream-alt);
         }
         .mapa-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
 
         /* ===== FOOTER ===== */
         footer {
-            background: var(--navy);
+            background: var(--green-dark);
+            border-top: 1px solid rgba(184,150,46,.2);
             padding: 64px 0 32px;
         }
         .footer-body {
@@ -565,37 +628,59 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             gap: 28px;
             text-align: center;
         }
-        .footer-logo img { height: 52px; filter: brightness(0) invert(1); opacity: .88; }
+        .footer-logo img {
+            height: 58px;
+            filter: brightness(0) invert(1);
+            opacity: .88;
+            margin: 0 auto;
+        }
         .footer-logo-text {
             display: none;
-            font-family: 'Syne', sans-serif;
-            font-size: 2rem;
-            font-weight: 800;
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--cream);
+            letter-spacing: .12em;
+        }
+        .footer-ornament {
+            display: flex;
+            align-items: center;
+            gap: 14px;
             color: var(--gold);
+            font-size: 1rem;
+            letter-spacing: .2em;
+        }
+        .footer-ornament::before, .footer-ornament::after {
+            content: '';
+            width: 50px; height: 1px;
+            background: var(--gold);
+            opacity: .4;
         }
         .footer-redes { display: flex; gap: 14px; }
         .footer-rede {
             width: 42px; height: 42px;
-            background: rgba(255,255,255,.08);
-            border: 1px solid rgba(201,168,76,.2);
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(184,150,46,.2);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             transition: background var(--ease), transform var(--ease);
         }
         .footer-rede:hover { background: var(--gold); transform: translateY(-3px); }
-        .footer-hr { width: 100%; height: 1px; background: rgba(255,255,255,.08); }
+        .footer-hr { width: 100%; height: 1px; background: rgba(255,255,255,.07); }
         .footer-copy {
-            font-size: .83rem;
-            color: rgba(255,255,255,.45);
+            font-size: .82rem;
+            color: rgba(248,245,238,.4);
+            font-style: italic;
+            letter-spacing: .03em;
         }
-        .footer-copy strong { color: var(--gold); font-weight: 600; }
+        .footer-copy strong { color: var(--gold); font-style: normal; }
 
         /* ===== ANIMAÇÕES ===== */
         [data-anim] {
             opacity: 0;
-            transform: translateY(28px);
-            transition: opacity .65s ease, transform .65s ease;
+            transform: translateY(24px);
+            transition: opacity .7s ease, transform .7s ease;
         }
         [data-anim].visible { opacity: 1; transform: translateY(0); }
         [data-anim][data-d="1"] { transition-delay: .10s; }
@@ -608,18 +693,17 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
         @media (max-width: 900px) {
             .redes-grid { grid-template-columns: repeat(2, 1fr); }
         }
-
         @media (max-width: 768px) {
             nav {
                 position: fixed;
-                top: 68px; left: 0; right: 0;
-                background: var(--navy);
+                top: 72px; left: 0; right: 0;
+                background: var(--green-dark);
                 flex-direction: column;
                 padding: 16px;
                 gap: 4px;
                 transform: translateY(-110%);
                 transition: transform var(--ease);
-                border-bottom: 1px solid rgba(201,168,76,.15);
+                border-bottom: 1px solid rgba(184,150,46,.15);
                 z-index: 899;
             }
             nav.open { transform: translateY(0); }
@@ -629,7 +713,6 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             .section-wrap { padding: 72px 0; }
             .prog-grid { grid-template-columns: 1fr; }
         }
-
         @media (max-width: 480px) {
             .redes-grid { grid-template-columns: 1fr 1fr; }
             .form-box { padding: 24px; }
@@ -657,7 +740,7 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             <a href="#inicio">Início</a>
             <a href="#programacao">Programação</a>
             <?php if ($ao_vivo): ?>
-            <a href="#ao-vivo" class="btn-live">AO VIVO</a>
+            <a href="#ao-vivo" class="btn-live">Ao Vivo</a>
             <?php endif; ?>
             <a href="#oracao">Oração</a>
             <a href="#testemunhos">Testemunhos</a>
@@ -671,12 +754,12 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
     <div class="hero-content">
         <img src="assets/img/logo.png" alt="NAIOT" class="hero-logo"
              onerror="this.style.display='none'">
-        <div class="hero-divider"></div>
+        <div class="hero-ornament">✝</div>
         <h1>Nossa missão é estar<br>aos pés de <em>Jesus</em></h1>
-        <p>Comunidade Católica Senhor Jesus<br>Campo Limpo de Goiás — GO</p>
+        <p>Comunidade Católica Senhor Jesus &mdash; Campo Limpo de Goiás, GO</p>
     </div>
     <div class="hero-scroll" aria-hidden="true">
-        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
         </svg>
     </div>
@@ -687,18 +770,15 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
 <section class="section-wrap dark" id="ao-vivo">
     <div class="container">
         <div class="sec-header" data-anim>
-            <div class="live-badge">AO VIVO AGORA</div>
+            <div class="live-badge">Ao Vivo</div>
             <h2 class="sec-title light">Transmissão ao Vivo</h2>
             <p class="sec-sub light">Acompanhe nossa programação em tempo real</p>
         </div>
-
         <?php if (!empty($youtube_video_id)): ?>
         <div class="video-wrapper" data-anim>
-            <iframe
-                src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_video_id, ENT_QUOTES) ?>?autoplay=1&rel=0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-            </iframe>
+            <iframe src="https://www.youtube.com/embed/<?= htmlspecialchars($youtube_video_id, ENT_QUOTES) ?>?autoplay=1&rel=0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
         </div>
         <?php else: ?>
         <div class="live-fallback" data-anim>
@@ -713,10 +793,10 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
 <?php endif; ?>
 
 <!-- ===================== PROGRAMAÇÃO ===================== -->
-<section class="section-wrap alt" id="programacao">
+<section class="section-wrap" id="programacao">
     <div class="container">
         <div class="sec-header" data-anim>
-            <div class="gold-bar"></div>
+            <div class="ornament">✝</div>
             <h2 class="sec-title">Programação</h2>
             <p class="sec-sub">Nossa agenda semanal de encontros e transmissões</p>
         </div>
@@ -726,7 +806,7 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
                 <div class="prog-icon">📺</div>
                 <div class="prog-day">Terça-feira</div>
                 <div class="prog-time">20h30</div>
-                <div class="prog-name">Programa Fortalecendo a Fé</div>
+                <div class="prog-name">Fortalecendo a Fé</div>
                 <p class="prog-desc">Transmissão ao vivo em todas as redes sociais. Participe e fortaleça sua fé!</p>
             </div>
 
@@ -770,7 +850,7 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
 <section class="section-wrap dark" id="redes">
     <div class="container">
         <div class="sec-header" data-anim>
-            <div class="gold-bar"></div>
+            <div class="ornament" style="color:var(--gold)">✝</div>
             <h2 class="sec-title light">Nossas Redes</h2>
             <p class="sec-sub light">Siga e compartilhe nossa missão</p>
         </div>
@@ -804,10 +884,10 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
 </section>
 
 <!-- ===================== ORAÇÃO & TESTEMUNHOS ===================== -->
-<section class="section-wrap" id="oracao">
+<section class="section-wrap alt" id="oracao">
     <div class="container">
         <div class="sec-header" data-anim>
-            <div class="gold-bar"></div>
+            <div class="ornament">✝</div>
             <h2 class="sec-title">Oração &amp; Testemunhos</h2>
             <p class="sec-sub">Compartilhe suas intenções e as graças recebidas</p>
         </div>
@@ -817,22 +897,16 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             <!-- COLUNA: PEDIDO DE ORAÇÃO -->
             <div class="form-col">
                 <div class="form-box" data-anim data-d="1">
-                    <h3>🙏 Pedido de Oração</h3>
+                    <h3>Pedido de Oração</h3>
                     <p>Compartilhe sua intenção de forma anônima. Nossa comunidade orará por você.</p>
-
                     <?php if (isset($_GET['oracao']) && $_GET['oracao'] === 'ok'): ?>
-                    <div class="success-msg">Seu pedido foi enviado. Vamos orar por você! 🙏</div>
+                    <div class="success-msg">Seu pedido foi enviado. Vamos orar por você!</div>
                     <?php endif; ?>
-
                     <form method="POST">
-                        <textarea name="oracao"
-                                  placeholder="Escreva seu pedido de oração aqui..."
-                                  required
-                                  maxlength="1000"></textarea>
-                        <button type="submit" class="btn-submit">Enviar Pedido de Oração</button>
+                        <textarea name="oracao" placeholder="Escreva seu pedido de oração..." required maxlength="1000"></textarea>
+                        <button type="submit" class="btn-submit">Enviar Pedido</button>
                     </form>
                 </div>
-
                 <?php if (!empty($oracoes)): ?>
                 <div class="form-box" data-anim data-d="2">
                     <div class="cards-header">
@@ -843,37 +917,29 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
                         <?php foreach ($oracoes as $item): ?>
                         <div class="sub-card">
                             <p><?= nl2br(htmlspecialchars($item['texto'])) ?></p>
-                            <span>📅 <?= htmlspecialchars($item['data']) ?></span>
+                            <span><?= htmlspecialchars($item['data']) ?></span>
                         </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
                 <?php else: ?>
-                <div class="empty-state" data-anim data-d="2">
-                    Nenhum pedido de oração ainda. Seja o primeiro!
-                </div>
+                <div class="empty-state" data-anim data-d="2">Nenhum pedido ainda. Seja o primeiro a compartilhar.</div>
                 <?php endif; ?>
             </div>
 
             <!-- COLUNA: TESTEMUNHOS -->
             <div class="form-col" id="testemunhos">
                 <div class="form-box" data-anim data-d="3">
-                    <h3>✨ Compartilhar Testemunho</h3>
+                    <h3>Compartilhar Testemunho</h3>
                     <p>Compartilhe as graças e milagres que Deus realizou em sua vida.</p>
-
                     <?php if (isset($_GET['testemunho']) && $_GET['testemunho'] === 'ok'): ?>
-                    <div class="success-msg">Seu testemunho foi compartilhado. Que Deus seja glorificado! ✨</div>
+                    <div class="success-msg">Seu testemunho foi compartilhado. Que Deus seja glorificado!</div>
                     <?php endif; ?>
-
                     <form method="POST">
-                        <textarea name="testemunho"
-                                  placeholder="Compartilhe seu testemunho aqui..."
-                                  required
-                                  maxlength="2000"></textarea>
+                        <textarea name="testemunho" placeholder="Compartilhe seu testemunho..." required maxlength="2000"></textarea>
                         <button type="submit" class="btn-submit">Compartilhar Testemunho</button>
                     </form>
                 </div>
-
                 <?php if (!empty($testemunhos)): ?>
                 <div class="form-box" data-anim data-d="4">
                     <div class="cards-header">
@@ -884,15 +950,13 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
                         <?php foreach ($testemunhos as $item): ?>
                         <div class="sub-card">
                             <p><?= nl2br(htmlspecialchars($item['texto'])) ?></p>
-                            <span>📅 <?= htmlspecialchars($item['data']) ?></span>
+                            <span><?= htmlspecialchars($item['data']) ?></span>
                         </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
                 <?php else: ?>
-                <div class="empty-state" data-anim data-d="4">
-                    Nenhum testemunho ainda. Compartilhe o que Deus fez por você!
-                </div>
+                <div class="empty-state" data-anim data-d="4">Nenhum testemunho ainda. Compartilhe o que Deus fez por você!</div>
                 <?php endif; ?>
             </div>
 
@@ -901,19 +965,17 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
 </section>
 
 <!-- ===================== MAPA ===================== -->
-<section class="section-wrap alt" style="padding-bottom:0;" id="mapa">
+<section class="section-wrap" id="mapa" style="padding-bottom: 0;">
     <div class="container">
         <div class="sec-header" data-anim>
-            <div class="gold-bar"></div>
+            <div class="ornament">✝</div>
             <h2 class="sec-title">Como Chegar</h2>
             <p class="sec-sub">Comunidade NAIOT — Campo Limpo de Goiás, GO</p>
         </div>
         <div class="mapa-wrap" data-anim>
             <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3830.1820033058525!2d-49.14189992509153!3d-16.26243988444542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x935c276d0e8c03cf%3A0x7bfd94fb797d6e1b!2sComunidade%20NAIOT%20(Novo%20Acesso)!5e0!3m2!1spt-BR!2sbr!4v1754773032917!5m2!1spt-BR!2sbr"
-                allowfullscreen=""
-                loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade">
+                allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
             </iframe>
         </div>
     </div>
@@ -929,22 +991,19 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
             <span class="footer-logo-text">NAIOT</span>
         </div>
 
+        <div class="footer-ornament">✝</div>
+
         <div class="footer-redes">
-            <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener"
-               class="footer-rede" title="Instagram">📷</a>
-            <a href="https://whatsapp.com/channel/0029VaVPbi15Ui2Y5f23h22i" target="_blank" rel="noopener"
-               class="footer-rede" title="WhatsApp">💬</a>
-            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener"
-               class="footer-rede" title="YouTube">▶️</a>
-            <a href="https://www.facebook.com/comunidadenaiot/" target="_blank" rel="noopener"
-               class="footer-rede" title="Facebook">👥</a>
+            <a href="https://www.instagram.com/naiot_oficial/" target="_blank" rel="noopener" class="footer-rede" title="Instagram">📷</a>
+            <a href="https://whatsapp.com/channel/0029VaVPbi15Ui2Y5f23h22i" target="_blank" rel="noopener" class="footer-rede" title="WhatsApp">💬</a>
+            <a href="https://www.youtube.com/@naiot_oficial4299" target="_blank" rel="noopener" class="footer-rede" title="YouTube">▶️</a>
+            <a href="https://www.facebook.com/comunidadenaiot/" target="_blank" rel="noopener" class="footer-rede" title="Facebook">👥</a>
         </div>
 
         <div class="footer-hr"></div>
 
         <p class="footer-copy">
-            © 2026 <strong>NAIOT</strong> — Comunidade Católica Senhor Jesus.
-            Todos os direitos reservados.
+            © 2026 <strong>NAIOT</strong> — Comunidade Católica Senhor Jesus. Todos os direitos reservados.
         </p>
 
     </div>
@@ -952,7 +1011,6 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
 
 <!-- ===================== SCRIPTS ===================== -->
 <script>
-    // Mobile menu
     const hamburger = document.getElementById('hamburger');
     const nav = document.getElementById('nav');
     hamburger.addEventListener('click', () => {
@@ -964,13 +1022,11 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
         nav.classList.remove('open');
     }));
 
-    // Header sombra no scroll
     const header = document.getElementById('header');
     window.addEventListener('scroll', () => {
         header.classList.toggle('scrolled', window.scrollY > 30);
     }, { passive: true });
 
-    // Animações por Intersection Observer
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(e => {
             if (e.isIntersecting) {
