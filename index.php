@@ -374,7 +374,10 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .evt-inner  { width: 100%; }
 .evt-inner > img { width: 100%; height: auto; display: block; }
 @media (min-width: 769px) {
-  .evt-inner > img { max-height: 480px; object-fit: contain; background: var(--off); }
+  .evt-slide  { text-align: center; }
+  .evt-inner  { display: inline-block; max-width: 100%; text-align: left; vertical-align: top; }
+  .evt-inner > img { max-height: 480px; width: auto; max-width: 100%; display: block; }
+  .evt-caption { width: calc(100% + 32px); margin: 0 -16px; padding-left: 32px; padding-right: 32px; }
 }
 .evt-carousel .carousel-viewport { background: var(--off); border-color: transparent; box-shadow: none; }
 .evt-caption {
