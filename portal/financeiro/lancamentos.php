@@ -156,6 +156,10 @@ include dirname(__DIR__) . '/_layout.php';
 <div class="tabela-wrap">
   <div class="tabela-header">
     <h2>Lançamentos — <?= $meses_nomes[$mes] ?> <?= $ano ?></h2>
+    <a href="/portal/financeiro/exportar.php?exp=lancamentos&<?= $qs() ?>"
+       class="btn btn-ghost btn-sm" style="margin-left:auto" title="Exportar para Excel">
+      📊 Exportar Excel
+    </a>
   </div>
   <?php if (empty($lancamentos)): ?>
     <div style="padding:40px;text-align:center;color:var(--muted)">Nenhum lançamento encontrado.</div>

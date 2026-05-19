@@ -288,7 +288,9 @@ include dirname(__DIR__) . '/_layout.php';
 <div class="tabela-wrap">
   <div class="tabela-header">
     <h2>DRE Gerencial — <?= $meses_nomes[$mes] ?> <?= $ano ?></h2>
-    <div style="margin-left:auto">
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <a href="/portal/financeiro/exportar.php?exp=balanco&mes=<?= $mes ?>&ano=<?= $ano ?>"
+         class="btn btn-ghost btn-sm" title="Exportar balanço completo para Excel">📊 Exportar Excel</a>
       <button onclick="window.print()" class="btn btn-ghost btn-sm">🖨️ Imprimir</button>
     </div>
   </div>
