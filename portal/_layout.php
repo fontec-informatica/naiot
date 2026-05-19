@@ -43,14 +43,9 @@ $menu = [
   <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-brand">
-      <div class="brand-logo">
-        <img src="/assets/img/logo.png" alt="NAIOT"
-             onerror="this.parentElement.style.display='none'">
-      </div>
-      <div>
-        <span class="sb-name">NAIOT</span>
-        <span class="sb-sub">Portal Administrativo</span>
-      </div>
+      <img class="brand-logo-img" src="/assets/img/logo.png" alt="NAIOT"
+           onerror="this.style.display='none'">
+      <span class="sb-sub" style="margin-top:6px">Portal Administrativo</span>
     </div>
 
     <span class="nav-section">Menu</span>
