@@ -375,10 +375,12 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .evt-caption {
   padding: 14px 20px 18px; background: var(--white);
   border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 20px;
 }
+.evt-info   { flex-shrink: 0; }
 .evt-titulo { font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600; color: var(--text); display: block; }
 .evt-data   { font-size: .75rem; color: var(--muted); margin-top: 3px; display: block; }
-.evt-desc   { font-size: .82rem; color: var(--muted); margin-top: 5px; display: block; font-style: italic; }
+.evt-desc   { font-size: .85rem; color: var(--muted); font-style: italic; line-height: 1.5; border-left: 2px solid var(--border); padding-left: 16px; }
 
 .carousel-nav {
   display: flex; align-items: center;
@@ -637,8 +639,10 @@ footer {
                    alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
               <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao']): ?>
               <div class="evt-caption">
-                <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
-                <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
+                <div class="evt-info">
+                  <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
+                  <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
+                </div>
                 <?php if ($ev['descricao']): ?><span class="evt-desc"><?= htmlspecialchars($ev['descricao']) ?></span><?php endif; ?>
               </div>
               <?php endif; ?>
