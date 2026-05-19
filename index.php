@@ -57,7 +57,7 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
   --hdr-h: 100px;
 }
 
-@media (max-width: 768px) { :root { --hdr-h: 90px; } }
+@media (max-width: 768px) { :root { --hdr-h: 110px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
@@ -133,7 +133,7 @@ button { cursor: pointer; font: inherit; }
 
 /* Logo */
 .hdr-logo { flex-shrink: 0; display: flex; align-items: center; }
-.hdr-logo img { height: clamp(80px, 12vw, 130px); width: auto; transition: height var(--ease); mix-blend-mode: multiply; }
+.hdr-logo img { height: clamp(100px, 12vw, 130px); width: auto; transition: height var(--ease); mix-blend-mode: multiply; }
 .hdr-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
@@ -423,13 +423,13 @@ textarea:focus {
 footer {
   background: var(--white);
   border-top: 3px solid var(--gold-lt);
-  padding: clamp(44px, 6vw, 68px) 0 clamp(22px, 3vw, 32px);
+  padding: clamp(22px, 3.5vw, 36px) 0 clamp(14px, 2vw, 20px);
 }
 .foot-inner {
   display: flex; flex-direction: column;
-  align-items: center; gap: clamp(18px, 3vw, 26px); text-align: center;
+  align-items: center; gap: clamp(10px, 1.8vw, 16px); text-align: center;
 }
-.foot-logo img { height: clamp(90px, 14vw, 140px); margin: 0 auto; mix-blend-mode: multiply; }
+.foot-logo img { height: clamp(68px, 9vw, 100px); margin: 0 auto; mix-blend-mode: multiply; }
 .foot-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.4rem, 3vw, 2rem);
