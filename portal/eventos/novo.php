@@ -6,17 +6,25 @@ $titulo       = 'Novo Evento';
 $pagina_ativa = 'eventos';
 $erro = '';
 
+// Se vier do módulo de inscrições, volta para lá após salvar
+$origem = ($_GET['origem'] ?? '') === 'inscricoes' ? 'inscricoes' : 'eventos';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_valido()) {
         $erro = 'Token inválido. Recarregue a página.';
     } else {
-        $nome_ev   = trim($_POST['titulo']    ?? '');
-        $descricao = trim($_POST['descricao'] ?? '');
-        $data_ev   = $_POST['data_evento']    ?? '';
-        $data_fim  = $_POST['data_fim']       ?? '';
-        $local     = trim($_POST['local_evento'] ?? '');
-        $horario   = trim($_POST['horario']   ?? '');
-        $ordem     = (int)($_POST['ordem']    ?? 0);
+        $nome_ev              = trim($_POST['titulo']          ?? '');
+        $descricao            = trim($_POST['descricao']       ?? '');
+        $data_ev              = $_POST['data_evento']          ?? '';
+        $data_fim             = $_POST['data_fim']             ?? '';
+        $local                = trim($_POST['local_evento']    ?? '');
+        $horario              = trim($_POST['horario']         ?? '');
+        $ordem                = (int)($_POST['ordem']          ?? 0);
+        $ativo                = isset($_POST['ativo'])          ? 1 : 0;
+        $inscricoes_abertas   = isset($_POST['inscricoes_abertas']) ? 1 : 0;
+        $vagas                = (int)($_POST['vagas']          ?? 0) ?: null;
+        $valor                = (float)str_replace(',', '.', preg_replace('/[^0-9,]/', '', $_POST['valor'] ?? '0'));
+        $data_encerramento    = $_POST['data_encerramento']    ?: null;
 
         if (!$nome_ev) {
             $erro = 'O título é obrigatório.';
@@ -39,18 +47,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!move_uploaded_file($_FILES['imagem']['tmp_name'], $destino)) {
                     $erro = 'Erro ao salvar a imagem no servidor.';
                 } else {
-                    db()->prepare('INSERT INTO eventos (titulo, descricao, data_evento, data_fim, local_evento, horario, imagem, ordem) VALUES (?,?,?,?,?,?,?,?)')
+                    db()->prepare('INSERT INTO eventos (titulo, descricao, data_evento, data_fim, local_evento, horario, imagem, ordem, ativo, inscricoes_abertas, vagas, valor, data_encerramento) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
                         ->execute([
                             $nome_ev,
-                            $descricao ?: null,
-                            $data_ev   ?: null,
-                            $data_fim  ?: null,
-                            $local     ?: null,
-                            $horario   ?: null,
+                            $descricao          ?: null,
+                            $data_ev            ?: null,
+                            $data_fim           ?: null,
+                            $local              ?: null,
+                            $horario            ?: null,
                             $filename,
                             $ordem,
+                            $ativo,
+                            $inscricoes_abertas,
+                            $vagas,
+                            $valor,
+                            $data_encerramento,
                         ]);
-                    header('Location: /portal/eventos/?criado=1');
+                    $redir = $origem === 'inscricoes' ? '/portal/inscricoes/?criado=1' : '/portal/eventos/?criado=1';
+                    header('Location: ' . $redir);
                     exit;
                 }
             }
@@ -61,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div class="form-wrap" style="max-width:600px">
-  <h2>Nova arte / evento</h2>
+<div class="form-wrap" style="max-width:620px">
+  <h2>Novo evento</h2>
 
   <?php if ($erro): ?>
     <div class="alerta alerta-erro"><?= htmlspecialchars($erro) ?></div>
@@ -109,6 +123,40 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
+    <hr style="border:none;border-top:1px solid var(--cinza2);margin:8px 0 16px">
+    <p style="font-size:.82rem;color:var(--cinza3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Inscrições</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label for="vagas">Vagas totais <span style="font-weight:400;color:var(--cinza3)">(vazio = ilimitado)</span></label>
+        <input type="number" id="vagas" name="vagas" min="1"
+               value="<?= htmlspecialchars($_POST['vagas'] ?? '') ?>" placeholder="Ilimitado">
+      </div>
+      <div class="form-group">
+        <label for="valor">Valor base (R$) <span style="font-weight:400;color:var(--cinza3)">(0 = gratuito)</span></label>
+        <input type="text" id="valor" name="valor"
+               value="<?= htmlspecialchars($_POST['valor'] ?? '0,00') ?>" placeholder="0,00">
+        <span class="form-hint">Use lotes para múltiplos preços.</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="data_encerramento">Encerrar inscrições em <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+      <input type="date" id="data_encerramento" name="data_encerramento"
+             value="<?= htmlspecialchars($_POST['data_encerramento'] ?? '') ?>">
+    </div>
+
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" name="inscricoes_abertas" value="1"
+               <?= (isset($_POST['inscricoes_abertas']) ? 'checked' : '') ?>>
+        <span><strong>Inscrições abertas</strong> — exibe botão "Inscrever-se" no site</span>
+      </label>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--cinza2);margin:8px 0 16px">
+    <p style="font-size:.82rem;color:var(--cinza3);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Arte e carrossel</p>
+
     <div class="form-group">
       <label for="ordem">Ordem de exibição no carrossel</label>
       <input type="number" id="ordem" name="ordem" min="0"
@@ -122,9 +170,17 @@ include dirname(__DIR__) . '/_layout.php';
       <span class="form-hint">JPG, PNG, WebP ou GIF — máximo 8 MB.</span>
     </div>
 
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" name="ativo" value="1"
+               <?= (!isset($_POST['ativo']) || $_POST['ativo'] ? 'checked' : '') ?>>
+        Exibir no carrossel do site (Próximos Eventos)
+      </label>
+    </div>
+
     <div style="display:flex;gap:12px;margin-top:8px">
-      <button type="submit" class="btn btn-primary">Publicar arte</button>
-      <a href="/portal/eventos/" class="btn btn-ghost">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Publicar evento</button>
+      <a href="/portal/<?= $origem === 'inscricoes' ? 'inscricoes/' : 'eventos/' ?>" class="btn btn-ghost">Cancelar</a>
     </div>
   </form>
 </div>

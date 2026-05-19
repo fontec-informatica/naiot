@@ -22,7 +22,6 @@ $eventos = db()->query("
            SUM(CASE WHEN i.status != 'cancelado' THEN i.valor_pago ELSE 0 END) AS receita
     FROM eventos e
     LEFT JOIN inscricoes i ON i.evento_id = e.id
-    WHERE e.ativo = 1
     GROUP BY e.id
     ORDER BY e.inscricoes_abertas DESC, e.data_evento DESC, e.id DESC
 ")->fetchAll();
@@ -50,14 +49,15 @@ include dirname(__DIR__) . '/_layout.php';
 </div>
 
 <div class="tabela-wrap">
-  <div class="tabela-header">
+  <div class="tabela-header" style="display:flex;align-items:center;justify-content:space-between">
     <h2>Inscrições por evento</h2>
+    <a href="/portal/eventos/novo.php?origem=inscricoes" class="btn btn-primary btn-sm">+ Novo evento</a>
   </div>
 
   <?php if (empty($eventos)): ?>
   <div style="padding:48px;text-align:center;color:var(--cinza3)">
-    Nenhum evento ativo. Cadastre um evento em
-    <a href="/portal/eventos/" style="color:var(--azul2)">Próx. Eventos</a>.
+    Nenhum evento cadastrado ainda.
+    <a href="/portal/eventos/novo.php?origem=inscricoes" style="color:var(--azul2)">Cadastrar agora</a>
   </div>
   <?php else: ?>
   <table>
@@ -82,6 +82,9 @@ include dirname(__DIR__) . '/_layout.php';
           <span style="margin-left:6px;font-size:.72rem;color:var(--verde);background:#dcfce7;padding:2px 9px;border-radius:20px">● aberto</span>
         <?php else: ?>
           <span style="margin-left:6px;font-size:.72rem;color:var(--cinza3);background:var(--cinza2);padding:2px 9px;border-radius:20px">encerrado</span>
+        <?php endif; ?>
+        <?php if (!$ev['ativo']): ?>
+          <span style="margin-left:4px;font-size:.72rem;color:#92400e;background:#fef3c7;padding:2px 9px;border-radius:20px">fora do carrossel</span>
         <?php endif; ?>
       </td>
       <td style="font-size:.83rem;color:var(--cinza3)">
