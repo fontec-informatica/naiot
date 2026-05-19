@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nome_ev    = trim($_POST['titulo'] ?? '');
         $descricao  = trim($_POST['descricao'] ?? '');
         $data_ev    = $_POST['data_evento'] ?? '';
+        $data_fim   = $_POST['data_fim'] ?? '';
         $ordem      = (int)($_POST['ordem'] ?? 0);
 
         if (!$nome_ev) {
@@ -36,11 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!move_uploaded_file($_FILES['imagem']['tmp_name'], $destino)) {
                     $erro = 'Erro ao salvar a imagem no servidor.';
                 } else {
-                    db()->prepare('INSERT INTO eventos (titulo, descricao, data_evento, imagem, ordem) VALUES (?,?,?,?,?)')
+                    db()->prepare('INSERT INTO eventos (titulo, descricao, data_evento, data_fim, imagem, ordem) VALUES (?,?,?,?,?,?)')
                         ->execute([
                             $nome_ev,
                             $descricao ?: null,
                             $data_ev ?: null,
+                            $data_fim ?: null,
                             $filename,
                             $ordem,
                         ]);
@@ -77,10 +79,17 @@ include dirname(__DIR__) . '/_layout.php';
              value="<?= htmlspecialchars($_POST['descricao'] ?? '') ?>">
     </div>
 
-    <div class="form-group">
-      <label for="data_evento">Data do evento <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
-      <input type="date" id="data_evento" name="data_evento"
-             value="<?= htmlspecialchars($_POST['data_evento'] ?? '') ?>">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label for="data_evento">Data de início <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <input type="date" id="data_evento" name="data_evento"
+               value="<?= htmlspecialchars($_POST['data_evento'] ?? '') ?>">
+      </div>
+      <div class="form-group">
+        <label for="data_fim">Data de término <span style="font-weight:400;color:var(--cinza3)">(deixe vazio se for 1 dia)</span></label>
+        <input type="date" id="data_fim" name="data_fim"
+               value="<?= htmlspecialchars($_POST['data_fim'] ?? '') ?>">
+      </div>
     </div>
 
     <div class="form-group">

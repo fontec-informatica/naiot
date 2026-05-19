@@ -31,6 +31,26 @@ if (file_exists(__DIR__ . '/portal/config.php')) {
         $eventos = [];
     }
 }
+
+function formatar_periodo(string $inicio, ?string $fim): string {
+    $meses = ['','jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    $di = date('j', strtotime($inicio));
+    $mi = (int)date('n', strtotime($inicio));
+    $ai = date('Y', strtotime($inicio));
+    if (!$fim || $fim === $inicio) {
+        return $di . ' de ' . $meses[$mi] . '. de ' . $ai;
+    }
+    $df = date('j', strtotime($fim));
+    $mf = (int)date('n', strtotime($fim));
+    $af = date('Y', strtotime($fim));
+    if ($mi === $mf && $ai === $af) {
+        return $di . ' a ' . $df . ' de ' . $meses[$mf] . '. de ' . $af;
+    }
+    if ($ai === $af) {
+        return $di . ' de ' . $meses[$mi] . ' a ' . $df . ' de ' . $meses[$mf] . '. de ' . $af;
+    }
+    return $di . '/' . $meses[$mi] . '/' . $ai . ' a ' . $df . '/' . $meses[$mf] . '/' . $af;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -617,7 +637,7 @@ footer {
               <?php if ($ev['titulo'] || $ev['data_evento']): ?>
               <div class="evt-caption">
                 <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
-                <?php if ($ev['data_evento']): ?><span class="evt-data"><?= date('d/m/Y', strtotime($ev['data_evento'])) ?></span><?php endif; ?>
+                <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
               </div>
               <?php endif; ?>
             </div>

@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') !== 'deletar
         $nome_ev   = trim($_POST['titulo'] ?? '');
         $descricao = trim($_POST['descricao'] ?? '');
         $data_ev   = $_POST['data_evento'] ?? '';
+        $data_fim  = $_POST['data_fim'] ?? '';
         $ordem     = (int)($_POST['ordem'] ?? 0);
         $ativo     = isset($_POST['ativo']) ? 1 : 0;
 
@@ -65,11 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') !== 'deletar
             }
 
             if (!$erro) {
-                db()->prepare('UPDATE eventos SET titulo=?, descricao=?, data_evento=?, imagem=?, ordem=?, ativo=? WHERE id=?')
+                db()->prepare('UPDATE eventos SET titulo=?, descricao=?, data_evento=?, data_fim=?, imagem=?, ordem=?, ativo=? WHERE id=?')
                     ->execute([
                         $nome_ev,
                         $descricao ?: null,
                         $data_ev ?: null,
+                        $data_fim ?: null,
                         $novo_filename,
                         $ordem,
                         $ativo,
@@ -107,10 +109,17 @@ include dirname(__DIR__) . '/_layout.php';
              value="<?= htmlspecialchars($_POST['descricao'] ?? $ev['descricao'] ?? '') ?>">
     </div>
 
-    <div class="form-group">
-      <label for="data_evento">Data do evento <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
-      <input type="date" id="data_evento" name="data_evento"
-             value="<?= htmlspecialchars($_POST['data_evento'] ?? $ev['data_evento'] ?? '') ?>">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="form-group">
+        <label for="data_evento">Data de início <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <input type="date" id="data_evento" name="data_evento"
+               value="<?= htmlspecialchars($_POST['data_evento'] ?? $ev['data_evento'] ?? '') ?>">
+      </div>
+      <div class="form-group">
+        <label for="data_fim">Data de término <span style="font-weight:400;color:var(--cinza3)">(deixe vazio se for 1 dia)</span></label>
+        <input type="date" id="data_fim" name="data_fim"
+               value="<?= htmlspecialchars($_POST['data_fim'] ?? $ev['data_fim'] ?? '') ?>">
+      </div>
     </div>
 
     <div class="form-group">
