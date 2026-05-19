@@ -374,7 +374,7 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .evt-inner  { width: 100%; }
 .evt-inner > img { width: 100%; height: auto; display: block; }
 @media (min-width: 769px) {
-  .evt-inner > img { max-height: 440px; object-fit: cover; }
+  .evt-inner > img { max-height: 480px; object-fit: contain; background: var(--off); }
 }
 .evt-carousel .carousel-viewport { background: var(--off); border-color: transparent; box-shadow: none; }
 .evt-caption {
