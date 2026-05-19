@@ -43,6 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Login — Portal NAIOT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/portal/assets/css/portal.css">
 </head>
 <body>
@@ -50,9 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="login-box">
     <div class="login-logo">
       <img src="/assets/img/logo.png" alt="NAIOT"
-           onerror="this.style.display='none'">
+           onerror="this.style.display='none';document.querySelector('.login-logo-txt').style.display='block'">
+      <span class="login-logo-txt">NAIOT</span>
       <h2>Portal Administrativo</h2>
-      <p>NAIOT — Núcleo de Amor Incondicional e Oração Transformadora</p>
+      <p>NAIOT — Comunidade Católica Senhor Jesus</p>
     </div>
 
     <?php if ($erro): ?>
