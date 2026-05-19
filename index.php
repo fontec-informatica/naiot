@@ -21,6 +21,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $oracoes     = array_reverse(file_exists('data/oracoes.json')     ? (json_decode(file_get_contents('data/oracoes.json'),true)     ?: []) : []);
 $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode(file_get_contents('data/testemunhos.json'),true) ?: []) : []);
+
+$eventos = [];
+if (file_exists(__DIR__ . '/portal/config.php')) {
+    try {
+        require_once __DIR__ . '/portal/config.php';
+        $eventos = db()->query('SELECT * FROM eventos WHERE ativo = 1 ORDER BY ordem ASC, id ASC')->fetchAll();
+    } catch (Exception $e) {
+        $eventos = [];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -339,6 +349,16 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
   letter-spacing: .07em; color: var(--muted); text-transform: uppercase;
 }
 
+/* ── Carrossel de eventos (imagens) ── */
+.evt-slide { padding: 0; background: #f0ede8; }
+.evt-slide img { width: 100%; max-height: 500px; object-fit: contain; display: block; margin: 0 auto; }
+.evt-caption {
+  padding: 14px 20px 18px; background: var(--white);
+  border-top: 1px solid var(--border);
+}
+.evt-titulo { font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600; color: var(--text); display: block; }
+.evt-data   { font-size: .75rem; color: var(--muted); margin-top: 3px; display: block; }
+
 .carousel-nav {
   display: flex; align-items: center;
   justify-content: center; gap: 8px; margin-top: 14px;
@@ -536,6 +556,7 @@ footer {
 
     <nav id="nav" aria-label="Menu principal">
       <a href="#inicio">Início</a>
+      <?php if (!empty($eventos)): ?><a href="#eventos">Próximos Eventos</a><?php endif; ?>
       <a href="#programacao">Programação</a>
       <?php if ($ao_vivo): ?><a href="#ao-vivo" class="btn-live">Ao Vivo</a><?php endif; ?>
       <a href="#oracao">Oração</a>
@@ -573,6 +594,46 @@ footer {
     </svg>
   </div>
 </section>
+
+<!-- ═══ PRÓXIMOS EVENTOS ═══ -->
+<?php if (!empty($eventos)): ?>
+<section class="sec alt" id="eventos">
+  <div class="wrap">
+    <div class="sec-head" data-a>
+      <div class="deco"><span class="deco-icon">&#x271D;&#xFE0E;</span></div>
+      <h2 class="sec-title">Próximos Eventos</h2>
+      <p class="sec-sub">Venha participar e viver momentos de fé com nossa comunidade.</p>
+    </div>
+    <div class="carousel-center" data-a>
+      <div class="carousel-outer">
+        <button class="c-prev" aria-label="Anterior">&#8249;</button>
+        <button class="c-next" aria-label="Próximo">&#8250;</button>
+        <div class="carousel-viewport">
+          <div class="carousel-track" id="ce">
+            <?php foreach ($eventos as $ev): ?>
+            <div class="carousel-slide evt-slide">
+              <img src="/assets/img/eventos/<?= htmlspecialchars($ev['imagem']) ?>"
+                   alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
+              <?php if ($ev['titulo'] || $ev['data_evento']): ?>
+              <div class="evt-caption">
+                <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
+                <?php if ($ev['data_evento']): ?><span class="evt-data"><?= date('d/m/Y', strtotime($ev['data_evento'])) ?></span><?php endif; ?>
+              </div>
+              <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <div class="carousel-nav" id="dots-ce" aria-label="Eventos">
+          <?php foreach ($eventos as $i => $_): ?>
+          <button class="c-dot<?= $i===0?' on':'' ?>" data-i="<?=$i?>" aria-label="Evento <?=$i+1?>"></button>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 
 <!-- ═══ AO VIVO ═══ -->
 <?php if ($ao_vivo): ?>
@@ -872,6 +933,7 @@ class Carousel {
 
 new Carousel('co', 'dots-co', 5500);
 new Carousel('ct', 'dots-ct', 6800);
+new Carousel('ce', 'dots-ce', 4500);
 
 </script>
 </body>
