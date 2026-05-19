@@ -54,10 +54,10 @@ $testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode
   --r:  10px;
   --rl: 18px;
   --ease: .38s cubic-bezier(.4,0,.2,1);
-  --hdr-h: 100px;
+  --hdr-h: 172px;
 }
 
-@media (max-width: 768px) { :root { --hdr-h: 130px; } }
+@media (max-width: 768px) { :root { --hdr-h: 148px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
@@ -128,13 +128,13 @@ button { cursor: pointer; font: inherit; }
 .hdr-inner {
   display: flex; align-items: center;
   justify-content: space-between;
-  height: var(--hdr-h);
+  padding: 8px 0;
   gap: 16px;
 }
 
 /* Logo */
 .hdr-logo { flex-shrink: 0; display: flex; align-items: center; }
-.hdr-logo img { height: clamp(120px, 12vw, 130px); width: auto; transition: height var(--ease); mix-blend-mode: multiply; }
+.hdr-logo img { height: clamp(132px, 13vw, 156px); width: auto; transition: height var(--ease); mix-blend-mode: multiply; }
 .hdr-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
