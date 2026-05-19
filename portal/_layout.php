@@ -43,8 +43,10 @@ $menu = [
   <aside class="sidebar" id="sidebar">
 
     <div class="sidebar-brand">
-      <img src="/assets/img/logo.png" alt="NAIOT"
-           onerror="this.style.display='none';document.querySelector('.sb-name').textContent='NAIOT'">
+      <div class="brand-logo">
+        <img src="/assets/img/logo.png" alt="NAIOT"
+             onerror="this.parentElement.style.display='none'">
+      </div>
       <div>
         <span class="sb-name">NAIOT</span>
         <span class="sb-sub">Portal Administrativo</span>

@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div class="form-wrap" style="max-width:620px">
+<div class="form-wrap" style="max-width:860px">
   <h2>Novo evento</h2>
 
   <?php if ($erro): ?>

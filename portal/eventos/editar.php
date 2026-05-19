@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') !== 'deletar
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div class="form-wrap" style="max-width:640px">
+<div class="form-wrap" style="max-width:860px">
   <h2>Editar evento</h2>
 
   <?php if ($erro): ?>
