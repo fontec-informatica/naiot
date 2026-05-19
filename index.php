@@ -378,6 +378,7 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 }
 .evt-titulo { font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600; color: var(--text); display: block; }
 .evt-data   { font-size: .75rem; color: var(--muted); margin-top: 3px; display: block; }
+.evt-desc   { font-size: .82rem; color: var(--muted); margin-top: 5px; display: block; font-style: italic; }
 
 .carousel-nav {
   display: flex; align-items: center;
@@ -634,10 +635,11 @@ footer {
             <div class="carousel-slide evt-slide">
               <img src="/assets/img/eventos/<?= htmlspecialchars($ev['imagem']) ?>"
                    alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
-              <?php if ($ev['titulo'] || $ev['data_evento']): ?>
+              <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao']): ?>
               <div class="evt-caption">
                 <?php if ($ev['titulo']): ?><span class="evt-titulo"><?= htmlspecialchars($ev['titulo']) ?></span><?php endif; ?>
                 <?php if ($ev['data_evento']): ?><span class="evt-data"><?= formatar_periodo($ev['data_evento'], $ev['data_fim'] ?? null) ?></span><?php endif; ?>
+                <?php if ($ev['descricao']): ?><span class="evt-desc"><?= htmlspecialchars($ev['descricao']) ?></span><?php endif; ?>
               </div>
               <?php endif; ?>
             </div>
