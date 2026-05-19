@@ -373,6 +373,9 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 .evt-slide  { padding: 0; background: transparent; }
 .evt-inner  { width: 100%; }
 .evt-inner > img { width: 100%; height: auto; display: block; }
+@media (min-width: 769px) {
+  .evt-inner > img { max-height: 440px; object-fit: cover; }
+}
 .evt-carousel .carousel-viewport { background: var(--off); border-color: transparent; box-shadow: none; }
 .evt-caption {
   padding: 14px 24px 18px; background: var(--white);
