@@ -84,10 +84,10 @@ function formatar_periodo(string $inicio, ?string $fim): string {
   --r:  10px;
   --rl: 18px;
   --ease: .38s cubic-bezier(.4,0,.2,1);
-  --hdr-h: 118px;
+  --hdr-h: 94px;
 }
 
-@media (max-width: 768px) { :root { --hdr-h: 90px; } }
+@media (max-width: 768px) { :root { --hdr-h: 72px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; scroll-padding-top: calc(var(--hdr-h) - clamp(60px, 8vw, 100px) + 16px); }
@@ -164,7 +164,7 @@ button { cursor: pointer; font: inherit; }
 
 /* Logo — dentro da barra, sem padding desperdiçado */
 .hdr-logo { flex-shrink: 0; display: flex; align-items: center; }
-.hdr-logo img { height: clamp(52px, 6.3vw, 77px); width: auto; mix-blend-mode: multiply; }
+.hdr-logo img { height: clamp(42px, 5vw, 62px); width: auto; mix-blend-mode: multiply; }
 .hdr-logo-txt {
   display: none; font-family: 'Cinzel', serif;
   font-size: clamp(1.2rem, 2.5vw, 1.8rem);
