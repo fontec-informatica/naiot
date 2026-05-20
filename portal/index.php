@@ -5,44 +5,20 @@ requer_login();
 $titulo       = 'Dashboard';
 $pagina_ativa = 'dashboard';
 
-/* ── Dados reais ── */
 try {
-    $total_usuarios  = (int)db()->query("SELECT COUNT(*) FROM usuarios WHERE ativo = 1")->fetchColumn();
-    $total_eventos   = (int)db()->query("SELECT COUNT(*) FROM eventos WHERE ativo = 1")->fetchColumn();
+    $total_usuarios   = (int)db()->query("SELECT COUNT(*) FROM usuarios WHERE ativo = 1")->fetchColumn();
+    $total_eventos    = (int)db()->query("SELECT COUNT(*) FROM eventos WHERE ativo = 1")->fetchColumn();
     $total_inscricoes = (int)db()->query("SELECT COUNT(*) FROM inscricoes WHERE status != 'cancelado'")->fetchColumn();
-    $inscricoes_hoje = (int)db()->query("SELECT COUNT(*) FROM inscricoes WHERE DATE(created_at) = CURDATE()")->fetchColumn();
-    $receita_total   = (float)db()->query("SELECT COALESCE(SUM(valor_pago),0) FROM inscricoes WHERE status IN ('confirmado','checkin')")->fetchColumn();
-    $pendentes       = (int)db()->query("SELECT COUNT(*) FROM inscricoes WHERE status = 'pendente'")->fetchColumn();
-
-    /* Últimas inscrições */
-    $ultimas = db()->query("
-        SELECT i.nome, i.email, i.status, i.created_at, e.titulo AS evento
-        FROM inscricoes i
-        JOIN eventos e ON i.evento_id = e.id
-        ORDER BY i.created_at DESC LIMIT 6
-    ")->fetchAll();
-
-    /* Eventos com inscrições abertas */
-    $eventos_abertos = db()->query("
-        SELECT e.id, e.titulo, e.data_evento,
-               COUNT(i.id) AS total,
-               e.vagas
-        FROM eventos e
-        LEFT JOIN inscricoes i ON i.evento_id = e.id AND i.status != 'cancelado'
-        WHERE e.inscricoes_abertas = 1
-        GROUP BY e.id
-        ORDER BY e.data_evento ASC LIMIT 4
-    ")->fetchAll();
+    $inscricoes_hoje  = (int)db()->query("SELECT COUNT(*) FROM inscricoes WHERE DATE(created_at) = CURDATE()")->fetchColumn();
+    $pendentes        = (int)db()->query("SELECT COUNT(*) FROM inscricoes WHERE status = 'pendente'")->fetchColumn();
+    $eventos_abertos  = (int)db()->query("SELECT COUNT(*) FROM eventos WHERE inscricoes_abertas = 1")->fetchColumn();
 } catch (Exception $e) {
-    $total_usuarios = $total_eventos = $total_inscricoes = $inscricoes_hoje = $pendentes = 0;
-    $receita_total  = 0;
-    $ultimas = $eventos_abertos = [];
+    $total_usuarios = $total_eventos = $total_inscricoes = $inscricoes_hoje = $pendentes = $eventos_abertos = 0;
 }
 
 include __DIR__ . '/_layout.php';
 ?>
 
-<!-- Cards -->
 <div class="cards">
   <div class="card-stat">
     <h3>Eventos ativos</h3>
@@ -52,20 +28,13 @@ include __DIR__ . '/_layout.php';
   <div class="card-stat verde">
     <h3>Inscrições</h3>
     <div class="val"><?= $total_inscricoes ?></div>
-    <div class="val-sub"><?= $inscricoes_hoje ?> hoje</div>
+    <div class="val-sub"><?= $inscricoes_hoje ?> hoje · <?= $pendentes ?> pendente(s)</div>
   </div>
   <div class="card-stat ouro">
-    <h3>Aguardando</h3>
-    <div class="val"><?= $pendentes ?></div>
-    <div class="val-sub">pendentes de confirmação</div>
+    <h3>Eventos abertos</h3>
+    <div class="val"><?= $eventos_abertos ?></div>
+    <div class="val-sub">com inscrições abertas</div>
   </div>
-  <?php if (in_array($_SESSION['usuario_perfil'] ?? '', ['admin','financeiro'])): ?>
-  <div class="card-stat">
-    <h3>Receita confirmada</h3>
-    <div class="val" style="font-size:1.5rem"><?= $receita_total > 0 ? 'R$&nbsp;' . number_format($receita_total, 2, ',', '.') : '—' ?></div>
-    <div class="val-sub">inscrições confirmadas + check-in</div>
-  </div>
-  <?php endif; ?>
   <div class="card-stat">
     <h3>Usuários ativos</h3>
     <div class="val"><?= $total_usuarios ?></div>
@@ -73,100 +42,32 @@ include __DIR__ . '/_layout.php';
   </div>
 </div>
 
-<!-- Grid: Últimas inscrições + Eventos abertos -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px;align-items:start">
+<!-- Acesso rápido -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;margin-top:8px">
 
-  <!-- Últimas inscrições -->
-  <div class="tabela-wrap">
-    <div class="tabela-header">
-      <h2>Últimas inscrições</h2>
-      <a href="/portal/inscricoes/" class="btn btn-ghost btn-sm">Ver todas</a>
+  <a href="/portal/inscricoes/" style="text-decoration:none">
+    <div style="background:#fff;border:1px solid var(--border);border-top:3px solid var(--verde);border-radius:var(--rl);padding:20px 22px;transition:.15s" onmouseover="this.style.boxShadow='0 4px 18px rgba(0,0,0,.09)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'Cinzel',serif;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px">Inscrições</div>
+      <div style="font-size:.88rem;color:var(--text)">Ver dashboard completo, últimas inscrições e gerenciar eventos.</div>
+      <div style="margin-top:10px;font-size:.78rem;font-weight:600;color:var(--verde)">Abrir →</div>
     </div>
-    <?php if (empty($ultimas)): ?>
-      <div style="padding:36px;text-align:center;color:var(--muted);font-size:.88rem">Nenhuma inscrição ainda.</div>
-    <?php else: ?>
-    <table>
-      <thead>
-        <tr>
-          <th>Participante</th>
-          <th>Evento</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php
-        $status_style = [
-          'confirmado' => 'background:#dcfce7;color:#166534',
-          'pendente'   => 'background:#fef9c3;color:#854d0e',
-          'checkin'    => 'background:#dbeafe;color:#1e40af',
-          'cancelado'  => 'background:#fee2e2;color:#991b1b',
-        ];
-        $status_label = ['confirmado'=>'Confirmado','pendente'=>'Pendente','checkin'=>'Check-in','cancelado'=>'Cancelado'];
-        foreach ($ultimas as $ins): ?>
-        <tr>
-          <td>
-            <div style="font-weight:600;font-size:.85rem"><?= htmlspecialchars($ins['nome']) ?></div>
-            <div style="font-size:.75rem;color:var(--muted)"><?= htmlspecialchars($ins['email']) ?></div>
-          </td>
-          <td style="font-size:.82rem;color:var(--muted);max-width:160px">
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block"><?= htmlspecialchars($ins['evento']) ?></span>
-            <span style="font-size:.73rem"><?= date('d/m H:i', strtotime($ins['created_at'])) ?></span>
-          </td>
-          <td>
-            <span class="badge" style="<?= $status_style[$ins['status']] ?? '' ?>">
-              <?= $status_label[$ins['status']] ?? $ins['status'] ?>
-            </span>
-          </td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-    <?php endif; ?>
-  </div>
+  </a>
 
-  <!-- Eventos com inscrições abertas -->
-  <div class="tabela-wrap">
-    <div class="tabela-header">
-      <h2>Inscrições abertas</h2>
-      <a href="/portal/inscricoes/" class="btn btn-ghost btn-sm">Gerenciar</a>
+  <a href="/portal/financeiro/" style="text-decoration:none">
+    <div style="background:#fff;border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:var(--rl);padding:20px 22px;transition:.15s" onmouseover="this.style.boxShadow='0 4px 18px rgba(0,0,0,.09)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'Cinzel',serif;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px">Financeiro</div>
+      <div style="font-size:.88rem;color:var(--text)">Lançamentos do mês, balanço, recorrentes e exportação.</div>
+      <div style="margin-top:10px;font-size:.78rem;font-weight:600;color:var(--gold)">Abrir →</div>
     </div>
-    <?php if (empty($eventos_abertos)): ?>
-      <div style="padding:36px;text-align:center;color:var(--muted);font-size:.88rem">
-        Nenhum evento com inscrições abertas.
-      </div>
-    <?php else: ?>
-    <table>
-      <thead>
-        <tr>
-          <th>Evento</th>
-          <th style="text-align:center">Inscritos</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($eventos_abertos as $ev): ?>
-        <tr>
-          <td>
-            <div style="font-weight:600;font-size:.85rem"><?= htmlspecialchars($ev['titulo']) ?></div>
-            <div style="font-size:.76rem;color:var(--muted)">
-              <?= $ev['data_evento'] ? date('d/m/Y', strtotime($ev['data_evento'])) : 'Sem data' ?>
-            </div>
-          </td>
-          <td style="text-align:center;font-weight:700">
-            <?= (int)$ev['total'] ?>
-            <?php if ($ev['vagas']): ?>
-              <span style="font-size:.76rem;color:var(--muted);font-weight:400"> / <?= $ev['vagas'] ?></span>
-            <?php endif; ?>
-          </td>
-          <td>
-            <a href="/portal/inscricoes/evento.php?id=<?= $ev['id'] ?>" class="btn btn-primary btn-sm">Ver</a>
-          </td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-    <?php endif; ?>
-  </div>
+  </a>
+
+  <a href="/portal/eventos/" style="text-decoration:none">
+    <div style="background:#fff;border:1px solid var(--border);border-top:3px solid var(--green);border-radius:var(--rl);padding:20px 22px;transition:.15s" onmouseover="this.style.boxShadow='0 4px 18px rgba(0,0,0,.09)'" onmouseout="this.style.boxShadow=''">
+      <div style="font-family:'Cinzel',serif;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px">Eventos</div>
+      <div style="font-size:.88rem;color:var(--text)">Gerenciar eventos, datas, imagens e carrossel do site.</div>
+      <div style="margin-top:10px;font-size:.78rem;font-weight:600;color:var(--green)">Abrir →</div>
+    </div>
+  </a>
 
 </div>
 
