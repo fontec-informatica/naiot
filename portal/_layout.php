@@ -14,12 +14,26 @@ $icons = [
   'usuarios'   => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
 ];
 
+// Dashboard aponta para a home correta de cada perfil
+$home_href  = home_por_perfil($perfil);
+$home_label = match($perfil) {
+    'financeiro' => 'Financeiro',
+    'secretaria' => 'Inscrições',
+    default      => 'Dashboard',
+};
+// Para não-admin, o item "ativo" do dashboard deve refletir sua seção home
+$pagina_ativa_sidebar = ($pagina_ativa ?? '') === 'dashboard' ? match($perfil) {
+    'financeiro' => 'financeiro',
+    'secretaria' => 'inscricoes',
+    default      => 'dashboard',
+} : ($pagina_ativa ?? '');
+
 $menu = [
-  'dashboard'  => ['icon' => $icons['dashboard'],  'label' => 'Dashboard',     'href' => '/portal/',            'perfis' => ['admin','financeiro','secretaria']],
-  'eventos'    => ['icon' => $icons['eventos'],    'label' => 'Próx. Eventos', 'href' => '/portal/eventos/',    'perfis' => ['admin','secretaria']],
-  'inscricoes' => ['icon' => $icons['inscricoes'], 'label' => 'Inscrições',    'href' => '/portal/inscricoes/', 'perfis' => ['admin','secretaria']],
-  'financeiro' => ['icon' => $icons['financeiro'], 'label' => 'Financeiro',    'href' => '/portal/financeiro/', 'perfis' => ['admin','financeiro']],
-  'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'perfis' => ['admin']],
+  'dashboard'  => ['icon' => $icons['dashboard'],  'label' => $home_label,      'href' => $home_href,            'perfis' => ['admin','financeiro','secretaria']],
+  'eventos'    => ['icon' => $icons['eventos'],    'label' => 'Próx. Eventos',  'href' => '/portal/eventos/',    'perfis' => ['admin','secretaria']],
+  'inscricoes' => ['icon' => $icons['inscricoes'], 'label' => 'Inscrições',     'href' => '/portal/inscricoes/', 'perfis' => ['admin','secretaria']],
+  'financeiro' => ['icon' => $icons['financeiro'], 'label' => 'Financeiro',     'href' => '/portal/financeiro/', 'perfis' => ['admin','financeiro']],
+  'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',       'href' => '/portal/usuarios/',   'perfis' => ['admin']],
 ];
 ?>
 <!DOCTYPE html>
@@ -53,8 +67,8 @@ $menu = [
         <?php if (in_array($perfil, $item['perfis'], true)): ?>
           <li>
             <a href="<?= $item['href'] ?>"
-               class="<?= ($pagina_ativa ?? '') === $chave ? 'ativo' : '' ?>">
-              <?php if (($pagina_ativa ?? '') === $chave): ?>
+               class="<?= $pagina_ativa_sidebar === $chave ? 'ativo' : '' ?>">
+              <?php if ($pagina_ativa_sidebar === $chave): ?>
                 <span class="bar"></span>
               <?php endif; ?>
               <span class="icon"><?= $item['icon'] ?></span>

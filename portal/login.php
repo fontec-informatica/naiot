@@ -4,7 +4,7 @@ require_once __DIR__ . '/config.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (isset($_SESSION['usuario_id'])) {
-    header('Location: /portal/');
+    header('Location: ' . home_por_perfil($_SESSION['usuario_perfil'] ?? ''));
     exit;
 }
 
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare('UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?')
                 ->execute([$usuario['id']]);
 
-            header('Location: /portal/');
+            header('Location: ' . home_por_perfil($usuario['perfil']));
             exit;
         }
     }

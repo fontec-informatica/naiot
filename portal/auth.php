@@ -25,6 +25,14 @@ function requer_perfil(array $perfis): void {
     }
 }
 
+function home_por_perfil(string $perfil): string {
+    return match($perfil) {
+        'financeiro' => '/portal/financeiro/',
+        'secretaria' => '/portal/inscricoes/',
+        default      => '/portal/',
+    };
+}
+
 function csrf_token(): string {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

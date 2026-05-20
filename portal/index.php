@@ -5,6 +5,13 @@ requer_login();
 $titulo       = 'Dashboard';
 $pagina_ativa = 'dashboard';
 
+// Somente admin acessa o dashboard geral — demais perfis são enviados à sua seção
+$perfil_atual = $_SESSION['usuario_perfil'] ?? '';
+if ($perfil_atual !== 'admin') {
+    header('Location: ' . home_por_perfil($perfil_atual));
+    exit;
+}
+
 try {
     $total_usuarios   = (int)db()->query("SELECT COUNT(*) FROM usuarios WHERE ativo = 1")->fetchColumn();
     $total_eventos    = (int)db()->query("SELECT COUNT(*) FROM eventos WHERE ativo = 1")->fetchColumn();
