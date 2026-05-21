@@ -211,8 +211,51 @@ include dirname(__DIR__) . '/_layout.php';
     <input type="hidden" name="acao" value="excluir">
   </form>
 
-<script src="/portal/assets/js/cidade-autocomplete.js"></script>
 <script>
+(function(){
+  var cache=null,KEY='naiot_cidades_v1';
+  var RE=new RegExp('['+String.fromCharCode(768)+'-'+String.fromCharCode(879)+']','g');
+  function norm(s){return s.toLowerCase().normalize('NFD').replace(RE,'');}
+  function filtrar(l,q){var n=norm(q),r=l.filter(function(c){return norm(c.nome).indexOf(n)===0;});return r.length?r.slice(0,10):l.filter(function(c){return norm(c.nome).indexOf(n)!==-1;}).slice(0,10);}
+  function init(inp){
+    var w=inp.parentNode;w.style.position='relative';
+    var box=document.createElement('ul');box.className='cidade-ac-box';w.appendChild(box);
+    var tim,ok=false;
+    function fecha(){box.innerHTML='';box.style.display='none';}
+    function mostra(l){
+      box.innerHTML='';if(!l.length){fecha();return;}
+      l.forEach(function(c){
+        var li=document.createElement('li');li.className='cidade-ac-item';
+        li.innerHTML='<span class="cidade-ac-nome">'+c.nome+'</span><span class="cidade-ac-uf">'+c.uf+'</span>';
+        li.addEventListener('mousedown',function(e){e.preventDefault();ok=true;inp.value=c.nome;fecha();inp.focus();ok=false;});
+        box.appendChild(li);
+      });
+      box.style.display='block';
+    }
+    function busca(q){
+      if(q.length<2){fecha();return;}
+      if(cache){mostra(filtrar(cache,q));return;}
+      fetch('/portal/membros/cidades_ibge.php').then(function(r){return r.json();}).then(function(d){
+        cache=d;try{sessionStorage.setItem(KEY,JSON.stringify(d));}catch(_){}mostra(filtrar(d,q));
+      }).catch(function(){});
+    }
+    inp.addEventListener('input',function(){clearTimeout(tim);var q=this.value.trim();tim=setTimeout(function(){busca(q);},220);});
+    inp.addEventListener('focus',function(){if(this.value.trim().length>=2)busca(this.value.trim());});
+    inp.addEventListener('blur',function(){if(!ok)setTimeout(fecha,160);});
+    inp.addEventListener('keydown',function(e){
+      var its=box.querySelectorAll('.cidade-ac-item'),at=box.querySelector('.cidade-ac-item.ativo'),ix=Array.prototype.indexOf.call(its,at);
+      if(e.key==='ArrowDown'){e.preventDefault();if(at)at.classList.remove('ativo');var nx=its[ix+1]||its[0];if(nx)nx.classList.add('ativo');}
+      else if(e.key==='ArrowUp'){e.preventDefault();if(at)at.classList.remove('ativo');var pv=its[ix-1]||its[its.length-1];if(pv)pv.classList.add('ativo');}
+      else if(e.key==='Enter'&&at){e.preventDefault();inp.value=at.querySelector('.cidade-ac-nome').textContent;fecha();}
+      else if(e.key==='Escape')fecha();
+    });
+  }
+  document.addEventListener('DOMContentLoaded',function(){
+    try{var s=sessionStorage.getItem(KEY);if(s)cache=JSON.parse(s);}catch(_){}
+    document.querySelectorAll('[data-cidade-ac]').forEach(function(el){init(el);});
+  });
+})();
+
 function previewFoto(input) {
   var file = input.files[0];
   if (!file) return;
