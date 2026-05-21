@@ -102,29 +102,30 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 /* ── Sidebar ── */
 .sidebar{
   width:var(--sidebar-w);
-  background:linear-gradient(175deg,var(--green) 0%,#1a5c2e 40%,var(--green-dk) 100%);
+  background:linear-gradient(175deg,#f4faf6 0%,#eaf5ee 100%);
+  border-right:1px solid rgba(30,107,53,.1);
   display:flex;flex-direction:column;flex-shrink:0;
   position:fixed;top:0;left:0;height:100vh;height:100svh;
   overflow-y:auto;z-index:200;
   transition:transform var(--ease);
 }
 .sidebar::-webkit-scrollbar{width:3px}
-.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(30,107,53,.15);border-radius:2px}
 
 /* Brand */
 .sidebar-brand{
   display:flex;flex-direction:column;align-items:flex-start;
   padding:20px 18px 16px;
-  border-bottom:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(30,107,53,.1);
   flex-shrink:0;
 }
 .sb-name{
   font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;
-  color:#fff;letter-spacing:.18em;display:block;line-height:1.1;
+  color:var(--green-dk);letter-spacing:.18em;display:block;line-height:1.1;
   text-transform:uppercase;
 }
 .sb-sub{
-  font-size:.56rem;color:rgba(255,255,255,.35);
+  font-size:.56rem;color:rgba(30,107,53,.4);
   text-transform:uppercase;letter-spacing:.14em;display:block;margin-top:4px;
 }
 
@@ -133,7 +134,7 @@ button{cursor:pointer;font:inherit;border:none;background:none}
   padding:18px 16px 5px;
   font-size:.58rem;font-weight:700;
   text-transform:uppercase;letter-spacing:.15em;
-  color:rgba(255,255,255,.28);
+  color:rgba(30,107,53,.35);
 }
 
 /* Nav links */
@@ -142,7 +143,7 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 .sidebar-nav li a{
   display:flex;align-items:center;flex-direction:row;gap:9px;
   padding:9px 14px;margin:1px 8px;
-  color:rgba(255,255,255,.6);
+  color:rgba(22,61,34,.55);
   font-size:.82rem;font-weight:500;
   border-radius:8px;
   transition:background var(--ease),color var(--ease);
@@ -160,12 +161,12 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 }
 .sidebar-nav li a .lbl{flex:1;min-width:0}
 .sidebar-nav li a:hover{
-  background:rgba(255,255,255,.08);color:#fff;
+  background:rgba(30,107,53,.08);color:var(--green-dk);
 }
 .sidebar-nav li a.ativo{
-  background:rgba(168,125,40,.15);
-  border:1px solid rgba(168,125,40,.25);
-  color:#fff;font-weight:600;
+  background:rgba(30,107,53,.1);
+  border:1px solid rgba(30,107,53,.18);
+  color:var(--green-dk);font-weight:600;
 }
 .sidebar-nav li a.ativo .bar{
   position:absolute;left:8px;top:50%;transform:translateY(-50%);
@@ -176,29 +177,29 @@ button{cursor:pointer;font:inherit;border:none;background:none}
 .sidebar-spacer{flex:1}
 .sidebar-footer{
   padding:12px 16px;flex-shrink:0;
-  border-top:1px solid rgba(255,255,255,.08);
+  border-top:1px solid rgba(30,107,53,.1);
   display:flex;align-items:center;gap:9px;
 }
 .s-avatar{
   width:30px;height:30px;border-radius:7px;flex-shrink:0;
-  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  background:var(--green-dk);border:1px solid rgba(30,107,53,.2);
   display:flex;align-items:center;justify-content:center;
   font-family:'Cinzel',serif;font-size:.68rem;font-weight:700;
   color:#fff;text-transform:uppercase;
 }
 .s-user-info{flex:1;min-width:0}
 .s-name{
-  font-size:.78rem;font-weight:600;color:#fff;
+  font-size:.78rem;font-weight:600;color:var(--green-dk);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;
 }
-.s-role{font-size:.64rem;color:rgba(255,255,255,.38);display:block;margin-top:1px}
+.s-role{font-size:.64rem;color:var(--muted);display:block;margin-top:1px}
 .s-logout{
   width:26px;height:26px;border-radius:6px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.32);
+  color:var(--muted);
   transition:background var(--ease),color var(--ease);
 }
-.s-logout:hover{background:rgba(255,255,255,.08);color:#fff}
+.s-logout:hover{background:rgba(30,107,53,.08);color:var(--green-dk)}
 .s-logout svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2px;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Main ── */
