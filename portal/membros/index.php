@@ -6,47 +6,58 @@ $titulo       = 'Membros';
 $pagina_ativa = 'membros';
 
 $grupo_id = (int)($_GET['grupo'] ?? 0);
+$cargo_id = (int)($_GET['cargo'] ?? 0);
 $busca    = trim($_GET['q'] ?? '');
 
-// Ação: remover membro do grupo
+// Ações POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $acao = $_POST['acao'] ?? '';
+
     if ($acao === 'remover_grupo') {
-        $gid = (int)$_POST['grupo_id'];
-        $mid = (int)$_POST['membro_id'];
+        $gid = (int)$_POST['grupo_id']; $mid = (int)$_POST['membro_id'];
         db()->prepare("DELETE FROM membros_grupo_rel WHERE grupo_id=? AND membro_id=?")->execute([$gid, $mid]);
-        header("Location: /portal/membros/?grupo={$gid}");
-        exit;
+        header("Location: /portal/membros/?grupo={$gid}"); exit;
     }
     if ($acao === 'adicionar_grupo') {
-        $gid = (int)$_POST['grupo_id'];
-        $mid = (int)$_POST['membro_id'];
+        $gid = (int)$_POST['grupo_id']; $mid = (int)$_POST['membro_id'];
         db()->prepare("INSERT IGNORE INTO membros_grupo_rel (grupo_id,membro_id) VALUES (?,?)")->execute([$gid, $mid]);
-        header("Location: /portal/membros/?grupo={$gid}");
-        exit;
+        header("Location: /portal/membros/?grupo={$gid}"); exit;
     }
-    if ($acao === 'toggle_ativo') {
-        $mid = (int)$_POST['membro_id'];
-        db()->prepare("UPDATE membros SET ativo = NOT ativo WHERE id=?")->execute([$mid]);
-        header("Location: /portal/membros/" . ($grupo_id ? "?grupo={$grupo_id}" : ''));
-        exit;
+    if ($acao === 'remover_cargo') {
+        $cid = (int)$_POST['cargo_id']; $mid = (int)$_POST['membro_id'];
+        db()->prepare("DELETE FROM membros_cargo_rel WHERE cargo_id=? AND membro_id=?")->execute([$cid, $mid]);
+        header("Location: /portal/membros/?cargo={$cid}"); exit;
+    }
+    if ($acao === 'adicionar_cargo') {
+        $cid = (int)$_POST['cargo_id']; $mid = (int)$_POST['membro_id'];
+        db()->prepare("INSERT IGNORE INTO membros_cargo_rel (cargo_id,membro_id) VALUES (?,?)")->execute([$cid, $mid]);
+        header("Location: /portal/membros/?cargo={$cid}"); exit;
     }
 }
 
 $grupos = db()->query("SELECT g.*, COUNT(r.membro_id) as total FROM membros_grupos g LEFT JOIN membros_grupo_rel r ON r.grupo_id=g.id GROUP BY g.id ORDER BY g.nome")->fetchAll();
+$cargos = db()->query("SELECT c.*, COUNT(r.membro_id) as total FROM membros_cargos c LEFT JOIN membros_cargo_rel r ON r.cargo_id=c.id GROUP BY c.id ORDER BY c.nome")->fetchAll();
 
 $grupo_atual = null;
-if ($grupo_id) {
-    foreach ($grupos as $g) { if ($g['id'] == $grupo_id) { $grupo_atual = $g; break; } }
-}
+$cargo_atual = null;
+foreach ($grupos as $g) { if ($g['id'] == $grupo_id) { $grupo_atual = $g; break; } }
+foreach ($cargos as $c) { if ($c['id'] == $cargo_id) { $cargo_atual = $c; break; } }
+
+// Título da view
+$titulo_view = 'Todos os membros';
+if ($grupo_atual) $titulo_view = $grupo_atual['nome'];
+if ($cargo_atual) $titulo_view = $cargo_atual['nome'];
 
 // Buscar membros
 $where  = "WHERE m.ativo = 1";
 $params = [];
-
 if ($grupo_id) {
     $where .= " AND EXISTS (SELECT 1 FROM membros_grupo_rel r WHERE r.grupo_id=? AND r.membro_id=m.id)";
     $params[] = $grupo_id;
+}
+if ($cargo_id) {
+    $where .= " AND EXISTS (SELECT 1 FROM membros_cargo_rel r WHERE r.cargo_id=? AND r.membro_id=m.id)";
+    $params[] = $cargo_id;
 }
 if ($busca) {
     $where .= " AND (m.nome LIKE ? OR m.cidade LIKE ? OR m.telefone LIKE ?)";
@@ -59,12 +70,16 @@ $membros = $st->fetchAll();
 
 $total_geral = (int)db()->query("SELECT COUNT(*) FROM membros WHERE ativo=1")->fetchColumn();
 
-// Para o modal de adicionar ao grupo: membros que ainda NÃO estão no grupo
+// Membros fora do grupo/cargo atual (para modal de adicionar)
 $nao_no_grupo = [];
 if ($grupo_id) {
     $st2 = db()->prepare("SELECT id,nome FROM membros WHERE ativo=1 AND id NOT IN (SELECT membro_id FROM membros_grupo_rel WHERE grupo_id=?) ORDER BY nome");
-    $st2->execute([$grupo_id]);
-    $nao_no_grupo = $st2->fetchAll();
+    $st2->execute([$grupo_id]); $nao_no_grupo = $st2->fetchAll();
+}
+$nao_no_cargo = [];
+if ($cargo_id) {
+    $st2 = db()->prepare("SELECT id,nome FROM membros WHERE ativo=1 AND id NOT IN (SELECT membro_id FROM membros_cargo_rel WHERE cargo_id=?) ORDER BY nome");
+    $st2->execute([$cargo_id]); $nao_no_cargo = $st2->fetchAll();
 }
 
 include dirname(__DIR__) . '/_layout.php';
@@ -78,17 +93,19 @@ include dirname(__DIR__) . '/_layout.php';
   overflow:hidden;align-self:start;position:sticky;top:calc(var(--topbar-h)+24px);
 }
 .mb-sidebar-head{
-  padding:14px 16px 10px;border-bottom:1px solid var(--border);background:var(--off);
+  padding:11px 16px 9px;border-bottom:1px solid var(--border);background:var(--off);
   display:flex;align-items:center;justify-content:space-between;
 }
 .mb-sidebar-head span{
-  font-family:'Cinzel',serif;font-size:.62rem;font-weight:700;
+  font-family:'Cinzel',serif;font-size:.6rem;font-weight:700;
   text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
 }
-.mb-grupos-list{list-style:none;padding:6px 0}
+.mb-sidebar-section{border-top:1px solid var(--border)}
+.mb-sidebar-section:first-child{border-top:none}
+.mb-grupos-list{list-style:none;padding:4px 0}
 .mb-grupos-list li a{
   display:flex;align-items:center;gap:10px;
-  padding:8px 14px;font-size:.84rem;color:var(--txt);
+  padding:7px 14px;font-size:.83rem;color:var(--txt);
   transition:background var(--ease),color var(--ease);
   border-left:3px solid transparent;
 }
@@ -97,7 +114,7 @@ include dirname(__DIR__) . '/_layout.php';
 .mb-grupos-list li a.todos{font-weight:600;color:var(--muted)}
 .mb-grupos-list li a.todos.sel{color:var(--green-dk);border-left-color:var(--green)}
 .grupo-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.grupo-count{margin-left:auto;font-size:.72rem;color:var(--muted);background:var(--bg);padding:1px 7px;border-radius:20px}
+.grupo-count{margin-left:auto;font-size:.7rem;color:var(--muted);background:var(--bg);padding:1px 7px;border-radius:20px;flex-shrink:0}
 .mb-grupos-list li a.sel .grupo-count{background:rgba(30,107,53,.12);color:var(--green-dk)}
 
 /* ── área de conteúdo ── */
@@ -124,43 +141,26 @@ include dirname(__DIR__) . '/_layout.php';
 .mb-card-photo{
   width:100%;aspect-ratio:1;background:var(--green-pale);
   display:flex;align-items:center;justify-content:center;overflow:hidden;
-  position:relative;
 }
 .mb-card-photo img{width:100%;height:100%;object-fit:cover}
-.mb-card-photo .mb-inicial{
-  font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;
-  color:var(--green);opacity:.5;
-}
+.mb-card-photo .mb-inicial{font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:var(--green);opacity:.5}
 .mb-card-body{padding:14px 14px 10px}
 .mb-card-nome{font-size:.9rem;font-weight:700;color:var(--green-dk);line-height:1.3;margin-bottom:8px}
 .mb-card-info{display:flex;flex-direction:column;gap:4px}
 .mb-info-row{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted)}
 .mb-info-row svg{flex-shrink:0;opacity:.6}
-.mb-card-footer{
-  margin-top:auto;padding:10px 14px;border-top:1px solid var(--border);
-  display:flex;gap:6px;justify-content:flex-end;background:var(--off);
-}
-
-/* ── grupos na parte inferior do card ── */
-.mb-card-grupos{padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:4px}
-.mb-gtag{
-  font-size:.64rem;font-weight:600;padding:2px 8px;border-radius:20px;
-  color:#fff;white-space:nowrap;
-}
+.mb-card-tags{padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:4px}
+.mb-gtag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:20px;color:#fff;white-space:nowrap}
+.mb-ctag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;border:1.5px solid}
+.mb-card-footer{margin-top:auto;padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end;background:var(--off)}
 
 /* ── vazio ── */
-.mb-empty{
-  grid-column:1/-1;text-align:center;padding:60px 20px;
-  color:var(--muted);
-}
+.mb-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)}
 .mb-empty svg{width:48px;height:48px;stroke:var(--border);margin:0 auto 16px}
 .mb-empty p{font-size:.88rem}
 
 /* ── modal ── */
-.modal-bg{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
-  z-index:500;align-items:center;justify-content:center;padding:20px;
-}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:20px}
 .modal-bg.open{display:flex}
 .modal{background:#fff;border-radius:var(--rl);width:100%;max-width:420px;box-shadow:var(--sh)}
 .modal-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
@@ -176,9 +176,10 @@ include dirname(__DIR__) . '/_layout.php';
 @media(max-width:860px){
   .mb-layout{grid-template-columns:1fr;gap:16px}
   .mb-sidebar{position:static}
+  .mb-sidebar-section{border-top:none;border-left:3px solid var(--border)}
   .mb-grupos-list{display:flex;overflow-x:auto;padding:6px;gap:6px}
   .mb-grupos-list li a{
-    white-space:nowrap;border-left:none;border-bottom:2px solid transparent;
+    white-space:nowrap;border-left:none;
     border-radius:20px;padding:5px 13px;
     background:var(--off);border:1px solid var(--border);
   }
@@ -195,55 +196,82 @@ include dirname(__DIR__) . '/_layout.php';
 <!-- cabeçalho da página -->
 <div class="mb-header">
   <div>
-    <div class="mb-titulo"><?= $grupo_atual ? htmlspecialchars($grupo_atual['nome']) : 'Todos os membros' ?></div>
+    <div class="mb-titulo"><?= htmlspecialchars($titulo_view) ?></div>
     <div class="mb-sub"><?= count($membros) ?> <?= count($membros) === 1 ? 'membro' : 'membros' ?> encontrado<?= count($membros) === 1 ? '' : 's' ?></div>
   </div>
   <div class="mb-actions">
     <form method="get" style="display:contents">
       <?php if ($grupo_id): ?><input type="hidden" name="grupo" value="<?= $grupo_id ?>"><?php endif; ?>
+      <?php if ($cargo_id): ?><input type="hidden" name="cargo" value="<?= $cargo_id ?>"><?php endif; ?>
       <input type="text" name="q" class="mb-search" placeholder="Buscar membro…" value="<?= htmlspecialchars($busca) ?>">
     </form>
     <?php if ($grupo_id && !empty($nao_no_grupo)): ?>
-      <button class="btn btn-ouro btn-sm" onclick="document.getElementById('modal-add').classList.add('open')">+ Adicionar ao grupo</button>
+      <button class="btn btn-ouro btn-sm" onclick="document.getElementById('modal-add-grupo').classList.add('open')">+ Adicionar ao grupo</button>
     <?php endif; ?>
-    <a href="/portal/membros/novo.php<?= $grupo_id ? "?grupo={$grupo_id}" : '' ?>" class="btn btn-primary btn-sm">+ Novo membro</a>
-    <a href="/portal/membros/grupos.php" class="btn btn-ghost btn-sm">Gerenciar grupos</a>
+    <?php if ($cargo_id && !empty($nao_no_cargo)): ?>
+      <button class="btn btn-ouro btn-sm" onclick="document.getElementById('modal-add-cargo').classList.add('open')">+ Adicionar ao cargo</button>
+    <?php endif; ?>
+    <a href="/portal/membros/novo.php<?= $grupo_id ? "?grupo={$grupo_id}" : ($cargo_id ? "?cargo={$cargo_id}" : '') ?>" class="btn btn-primary btn-sm">+ Novo membro</a>
   </div>
 </div>
 
 <div class="mb-layout">
 
-  <!-- SIDEBAR GRUPOS -->
+  <!-- SIDEBAR -->
   <div>
     <div class="mb-sidebar">
-      <div class="mb-sidebar-head">
-        <span>Grupos</span>
-        <a href="/portal/membros/grupos.php" title="Gerenciar grupos" style="color:var(--muted);font-size:.72rem">⚙</a>
-      </div>
-      <ul class="mb-grupos-list">
-        <li>
-          <a href="/portal/membros/" class="todos <?= !$grupo_id ? 'sel' : '' ?>">
-            <span class="grupo-dot" style="background:var(--green)"></span>
-            Todos
-            <span class="grupo-count"><?= $total_geral ?></span>
-          </a>
-        </li>
-        <?php foreach ($grupos as $g): ?>
-        <li>
-          <a href="/portal/membros/?grupo=<?= $g['id'] ?>" class="<?= $grupo_id == $g['id'] ? 'sel' : '' ?>">
-            <span class="grupo-dot" style="background:<?= htmlspecialchars($g['cor']) ?>"></span>
-            <?= htmlspecialchars($g['nome']) ?>
-            <span class="grupo-count"><?= $g['total'] ?></span>
-          </a>
-        </li>
-        <?php endforeach; ?>
-      </ul>
-      <?php if (empty($grupos)): ?>
-        <div style="padding:16px;font-size:.78rem;color:var(--muted);text-align:center">
-          Nenhum grupo criado.<br>
-          <a href="/portal/membros/grupos.php" style="color:var(--green)">Criar agora →</a>
+
+      <!-- Grupos -->
+      <div class="mb-sidebar-section">
+        <div class="mb-sidebar-head">
+          <span>Grupos</span>
+          <a href="/portal/membros/grupos.php" title="Gerenciar grupos" style="color:var(--muted);font-size:.72rem">⚙</a>
         </div>
-      <?php endif; ?>
+        <ul class="mb-grupos-list">
+          <li>
+            <a href="/portal/membros/" class="todos <?= !$grupo_id && !$cargo_id ? 'sel' : '' ?>">
+              <span class="grupo-dot" style="background:var(--green)"></span>
+              Todos
+              <span class="grupo-count"><?= $total_geral ?></span>
+            </a>
+          </li>
+          <?php foreach ($grupos as $g): ?>
+          <li>
+            <a href="/portal/membros/?grupo=<?= $g['id'] ?>" class="<?= $grupo_id == $g['id'] ? 'sel' : '' ?>">
+              <span class="grupo-dot" style="background:<?= htmlspecialchars($g['cor']) ?>"></span>
+              <?= htmlspecialchars($g['nome']) ?>
+              <span class="grupo-count"><?= $g['total'] ?></span>
+            </a>
+          </li>
+          <?php endforeach; ?>
+          <?php if (empty($grupos)): ?>
+            <li><div style="padding:10px 14px;font-size:.75rem;color:var(--muted)"><a href="/portal/membros/grupos.php" style="color:var(--green)">+ Criar grupo</a></div></li>
+          <?php endif; ?>
+        </ul>
+      </div>
+
+      <!-- Cargos -->
+      <div class="mb-sidebar-section">
+        <div class="mb-sidebar-head">
+          <span>Cargos</span>
+          <a href="/portal/membros/cargos.php" title="Gerenciar cargos" style="color:var(--muted);font-size:.72rem">⚙</a>
+        </div>
+        <ul class="mb-grupos-list">
+          <?php foreach ($cargos as $c): ?>
+          <li>
+            <a href="/portal/membros/?cargo=<?= $c['id'] ?>" class="<?= $cargo_id == $c['id'] ? 'sel' : '' ?>">
+              <span class="grupo-dot" style="background:<?= htmlspecialchars($c['cor']) ?>"></span>
+              <?= htmlspecialchars($c['nome']) ?>
+              <span class="grupo-count"><?= $c['total'] ?></span>
+            </a>
+          </li>
+          <?php endforeach; ?>
+          <?php if (empty($cargos)): ?>
+            <li><div style="padding:10px 14px;font-size:.75rem;color:var(--muted)"><a href="/portal/membros/cargos.php" style="color:var(--green)">+ Criar cargo</a></div></li>
+          <?php endif; ?>
+        </ul>
+      </div>
+
     </div>
   </div>
 
@@ -262,7 +290,10 @@ include dirname(__DIR__) . '/_layout.php';
             Nenhum membro encontrado para "<strong><?= htmlspecialchars($busca) ?></strong>".
           <?php elseif ($grupo_id): ?>
             Este grupo ainda não tem membros.<br>
-            <a href="#" onclick="document.getElementById('modal-add').classList.add('open');return false" style="color:var(--green)">Adicionar membros →</a>
+            <a href="#" onclick="document.getElementById('modal-add-grupo').classList.add('open');return false" style="color:var(--green)">Adicionar membros →</a>
+          <?php elseif ($cargo_id): ?>
+            Nenhum membro com este cargo ainda.<br>
+            <a href="#" onclick="document.getElementById('modal-add-cargo').classList.add('open');return false" style="color:var(--green)">Adicionar membros →</a>
           <?php else: ?>
             Nenhum membro cadastrado ainda.<br>
             <a href="/portal/membros/novo.php" style="color:var(--green)">Cadastrar primeiro membro →</a>
@@ -270,33 +301,31 @@ include dirname(__DIR__) . '/_layout.php';
         </p>
       </div>
 
-      <?php else: ?>
-      <?php
-        // Pega grupos de cada membro para exibir as tags
+      <?php else:
         $ids = array_column($membros, 'id');
-        $grupo_map = []; // membro_id => [{nome, cor}]
+        $grupo_map = []; $cargo_map = [];
         if ($ids) {
             $ph = implode(',', array_fill(0, count($ids), '?'));
             $st3 = db()->prepare("SELECT r.membro_id, g.nome, g.cor FROM membros_grupo_rel r JOIN membros_grupos g ON g.id=r.grupo_id WHERE r.membro_id IN ($ph)");
             $st3->execute($ids);
-            foreach ($st3->fetchAll() as $row) {
-                $grupo_map[$row['membro_id']][] = $row;
-            }
+            foreach ($st3->fetchAll() as $row) $grupo_map[$row['membro_id']][] = $row;
+
+            $st4 = db()->prepare("SELECT r.membro_id, c.nome, c.cor FROM membros_cargo_rel r JOIN membros_cargos c ON c.id=r.cargo_id WHERE r.membro_id IN ($ph)");
+            $st4->execute($ids);
+            foreach ($st4->fetchAll() as $row) $cargo_map[$row['membro_id']][] = $row;
         }
       ?>
-      <?php foreach ($membros as $m): ?>
-      <?php
+      <?php foreach ($membros as $m):
         $inicial = mb_strtoupper(mb_substr(trim($m['nome']), 0, 1));
         $idade = '';
         if ($m['data_nasc']) {
-            $nasc = new DateTime($m['data_nasc']);
-            $hoje = new DateTime();
+            $nasc = new DateTime($m['data_nasc']); $hoje = new DateTime();
             $idade = $nasc->diff($hoje)->y . ' anos';
         }
         $gtags = $grupo_map[$m['id']] ?? [];
+        $ctags = $cargo_map[$m['id']] ?? [];
       ?>
       <div class="mb-card">
-        <!-- foto -->
         <div class="mb-card-photo">
           <?php if (!empty($m['foto'])): ?>
             <img src="/portal/membros/fotos/<?= htmlspecialchars($m['foto']) ?>" alt="<?= htmlspecialchars($m['nome']) ?>" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
@@ -306,7 +335,6 @@ include dirname(__DIR__) . '/_layout.php';
           <?php endif; ?>
         </div>
 
-        <!-- body -->
         <div class="mb-card-body">
           <div class="mb-card-nome"><?= htmlspecialchars($m['nome']) ?></div>
           <div class="mb-card-info">
@@ -331,22 +359,33 @@ include dirname(__DIR__) . '/_layout.php';
           </div>
         </div>
 
-        <!-- tags de grupos -->
-        <?php if ($gtags): ?>
-        <div class="mb-card-grupos">
+        <!-- tags grupos (pílulas coloridas) + cargos (retângulo com borda) -->
+        <?php if ($gtags || $ctags): ?>
+        <div class="mb-card-tags">
+          <?php foreach ($ctags as $ct): ?>
+            <span class="mb-ctag" style="color:<?= htmlspecialchars($ct['cor']) ?>;border-color:<?= htmlspecialchars($ct['cor']) ?>;background:<?= htmlspecialchars($ct['cor']) ?>18"><?= htmlspecialchars($ct['nome']) ?></span>
+          <?php endforeach; ?>
           <?php foreach ($gtags as $gt): ?>
             <span class="mb-gtag" style="background:<?= htmlspecialchars($gt['cor']) ?>"><?= htmlspecialchars($gt['nome']) ?></span>
           <?php endforeach; ?>
         </div>
         <?php endif; ?>
 
-        <!-- ações -->
         <div class="mb-card-footer">
           <?php if ($grupo_id): ?>
           <form method="post" onsubmit="return confirm('Remover <?= htmlspecialchars(addslashes($m['nome'])) ?> do grupo?')">
             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
             <input type="hidden" name="acao" value="remover_grupo">
             <input type="hidden" name="grupo_id" value="<?= $grupo_id ?>">
+            <input type="hidden" name="membro_id" value="<?= $m['id'] ?>">
+            <button type="submit" class="btn btn-danger btn-sm">Remover</button>
+          </form>
+          <?php endif; ?>
+          <?php if ($cargo_id): ?>
+          <form method="post" onsubmit="return confirm('Remover <?= htmlspecialchars(addslashes($m['nome'])) ?> do cargo?')">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+            <input type="hidden" name="acao" value="remover_cargo">
+            <input type="hidden" name="cargo_id" value="<?= $cargo_id ?>">
             <input type="hidden" name="membro_id" value="<?= $m['id'] ?>">
             <button type="submit" class="btn btn-danger btn-sm">Remover</button>
           </form>
@@ -359,16 +398,16 @@ include dirname(__DIR__) . '/_layout.php';
       <?php endif; ?>
 
     </div>
-  </div><!-- /.mb-main -->
-</div><!-- /.mb-layout -->
+  </div>
+</div>
 
-<!-- Modal: adicionar membro ao grupo -->
+<!-- Modal: adicionar ao grupo -->
 <?php if ($grupo_id && !empty($nao_no_grupo)): ?>
-<div class="modal-bg" id="modal-add">
+<div class="modal-bg" id="modal-add-grupo">
   <div class="modal">
     <div class="modal-head">
       <h3>Adicionar ao grupo</h3>
-      <button class="modal-close" onclick="document.getElementById('modal-add').classList.remove('open')">✕</button>
+      <button class="modal-close" onclick="document.getElementById('modal-add-grupo').classList.remove('open')">✕</button>
     </div>
     <form method="post">
       <div class="modal-body">
@@ -384,17 +423,44 @@ include dirname(__DIR__) . '/_layout.php';
         </select>
       </div>
       <div class="modal-foot">
-        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-add').classList.remove('open')">Cancelar</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-add-grupo').classList.remove('open')">Cancelar</button>
         <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
       </div>
     </form>
   </div>
 </div>
-<script>
-document.getElementById('modal-add').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
-});
-</script>
+<script>document.getElementById('modal-add-grupo').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})</script>
+<?php endif; ?>
+
+<!-- Modal: adicionar ao cargo -->
+<?php if ($cargo_id && !empty($nao_no_cargo)): ?>
+<div class="modal-bg" id="modal-add-cargo">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Adicionar ao cargo</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-add-cargo').classList.remove('open')">✕</button>
+    </div>
+    <form method="post">
+      <div class="modal-body">
+        <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+        <input type="hidden" name="acao" value="adicionar_cargo">
+        <input type="hidden" name="cargo_id" value="<?= $cargo_id ?>">
+        <label style="margin-bottom:8px;display:block">Selecione o membro:</label>
+        <select name="membro_id" required>
+          <option value="">— escolha —</option>
+          <?php foreach ($nao_no_cargo as $nm): ?>
+            <option value="<?= $nm['id'] ?>"><?= htmlspecialchars($nm['nome']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-add-cargo').classList.remove('open')">Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>document.getElementById('modal-add-cargo').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})</script>
 <?php endif; ?>
 
 <?php include dirname(__DIR__) . '/_layout_end.php'; ?>

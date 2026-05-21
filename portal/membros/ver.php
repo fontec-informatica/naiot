@@ -17,6 +17,10 @@ $st2 = db()->prepare("SELECT g.* FROM membros_grupos g JOIN membros_grupo_rel r 
 $st2->execute([$id]);
 $grupos = $st2->fetchAll();
 
+$st3 = db()->prepare("SELECT c.* FROM membros_cargos c JOIN membros_cargo_rel r ON r.cargo_id=c.id WHERE r.membro_id=? ORDER BY c.nome");
+$st3->execute([$id]);
+$cargos = $st3->fetchAll();
+
 $idade = '';
 if ($m['data_nasc']) {
     $nasc  = new DateTime($m['data_nasc']);
@@ -77,8 +81,11 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
     <div class="ver-nome-wrap">
       <div class="ver-nome"><?= htmlspecialchars($m['nome']) ?></div>
-      <?php if ($grupos): ?>
+      <?php if ($cargos || $grupos): ?>
       <div class="ver-grupos">
+        <?php foreach ($cargos as $c): ?>
+          <a href="/portal/membros/?cargo=<?= $c['id'] ?>" style="display:inline-block;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:4px;border:1.5px solid <?= htmlspecialchars($c['cor']) ?>;color:<?= htmlspecialchars($c['cor']) ?>;background:<?= htmlspecialchars($c['cor']) ?>18;text-decoration:none;white-space:nowrap"><?= htmlspecialchars($c['nome']) ?></a>
+        <?php endforeach; ?>
         <?php foreach ($grupos as $g): ?>
           <a href="/portal/membros/?grupo=<?= $g['id'] ?>" class="ver-gtag" style="background:<?= htmlspecialchars($g['cor']) ?>"><?= htmlspecialchars($g['nome']) ?></a>
         <?php endforeach; ?>
@@ -87,6 +94,11 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
     <div class="ver-acoes">
       <a href="/portal/membros/editar.php?id=<?= $id ?>" class="btn btn-primary btn-sm">Editar dados</a>
+      <?php foreach ($cargos as $c): ?>
+        <a href="/portal/membros/?cargo=<?= $c['id'] ?>" class="btn btn-ghost btn-sm" style="border-color:<?= htmlspecialchars($c['cor']) ?>;color:<?= htmlspecialchars($c['cor']) ?>">
+          Ver cargo: <?= htmlspecialchars($c['nome']) ?>
+        </a>
+      <?php endforeach; ?>
       <?php foreach ($grupos as $g): ?>
         <a href="/portal/membros/?grupo=<?= $g['id'] ?>" class="btn btn-ghost btn-sm" style="border-color:<?= htmlspecialchars($g['cor']) ?>;color:<?= htmlspecialchars($g['cor']) ?>">
           Ver grupo: <?= htmlspecialchars($g['nome']) ?>
@@ -165,6 +177,22 @@ include dirname(__DIR__) . '/_layout.php';
 
       </div>
     </div>
+
+    <!-- Cargos -->
+    <?php if ($cargos): ?>
+    <div class="ver-info" style="margin-top:18px">
+      <div class="ver-info-head"><h3>Cargos</h3></div>
+      <div style="padding:14px 20px;display:flex;flex-wrap:wrap;gap:8px">
+        <?php foreach ($cargos as $c): ?>
+          <a href="/portal/membros/?cargo=<?= $c['id'] ?>"
+             style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:6px;background:<?= htmlspecialchars($c['cor']) ?>18;border:1.5px solid <?= htmlspecialchars($c['cor']) ?>;color:<?= htmlspecialchars($c['cor']) ?>;font-size:.82rem;font-weight:600;text-decoration:none">
+            <span style="width:9px;height:9px;border-radius:2px;background:<?= htmlspecialchars($c['cor']) ?>"></span>
+            <?= htmlspecialchars($c['nome']) ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Grupos -->
     <?php if ($grupos): ?>

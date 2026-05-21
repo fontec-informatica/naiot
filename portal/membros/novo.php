@@ -6,10 +6,12 @@ $titulo       = 'Novo Membro';
 $pagina_ativa = 'membros';
 
 $grupo_id = (int)($_GET['grupo'] ?? 0);
+$cargo_id = (int)($_GET['cargo'] ?? 0);
 $erros    = [];
 $dados    = ['nome'=>'','telefone'=>'','data_nasc'=>'','endereco'=>'','bairro'=>'','cidade'=>''];
 
 $grupos = db()->query("SELECT * FROM membros_grupos ORDER BY nome")->fetchAll();
+$cargos = db()->query("SELECT * FROM membros_cargos ORDER BY nome")->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['nome']      = trim($_POST['nome']      ?? '');
@@ -19,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
     $dados['cidade']    = trim($_POST['cidade']    ?? '');
     $grupos_sel         = array_map('intval', (array)($_POST['grupos'] ?? []));
+    $cargos_sel         = array_map('intval', (array)($_POST['cargos'] ?? []));
 
     if (!$dados['nome']) $erros[] = 'O nome é obrigatório.';
 
@@ -48,7 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         foreach ($grupos_sel as $gid) {
             if ($gid) db()->prepare("INSERT IGNORE INTO membros_grupo_rel (grupo_id,membro_id) VALUES (?,?)")->execute([$gid, $novo_id]);
         }
-        $redir = $grupo_id ? "/portal/membros/?grupo={$grupo_id}" : "/portal/membros/?ok=1";
+        foreach ($cargos_sel as $cid) {
+            if ($cid) db()->prepare("INSERT IGNORE INTO membros_cargo_rel (cargo_id,membro_id) VALUES (?,?)")->execute([$cid, $novo_id]);
+        }
+        $redir = $grupo_id ? "/portal/membros/?grupo={$grupo_id}" : ($cargo_id ? "/portal/membros/?cargo={$cargo_id}" : "/portal/membros/?ok=1");
         header("Location: $redir");
         exit;
     }
@@ -128,11 +134,26 @@ include dirname(__DIR__) . '/_layout.php';
         <label>Grupos</label>
         <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0">
           <?php foreach ($grupos as $g): ?>
-          <?php $checked = in_array($g['id'], [$grupo_id]); ?>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:500;color:var(--txt)">
-            <input type="checkbox" name="grupos[]" value="<?= $g['id'] ?>" <?= $checked ? 'checked' : '' ?>>
+            <input type="checkbox" name="grupos[]" value="<?= $g['id'] ?>" <?= $g['id'] == $grupo_id ? 'checked' : '' ?>>
             <span style="width:10px;height:10px;border-radius:50%;background:<?= htmlspecialchars($g['cor']) ?>;display:inline-block;flex-shrink:0"></span>
             <?= htmlspecialchars($g['nome']) ?>
+          </label>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <!-- Cargos -->
+      <?php if ($cargos): ?>
+      <div class="form-group">
+        <label>Cargos</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0">
+          <?php foreach ($cargos as $c): ?>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:500;color:var(--txt)">
+            <input type="checkbox" name="cargos[]" value="<?= $c['id'] ?>" <?= $c['id'] == $cargo_id ? 'checked' : '' ?>>
+            <span style="width:10px;height:10px;border-radius:3px;background:<?= htmlspecialchars($c['cor']) ?>;display:inline-block;flex-shrink:0"></span>
+            <?= htmlspecialchars($c['nome']) ?>
           </label>
           <?php endforeach; ?>
         </div>
