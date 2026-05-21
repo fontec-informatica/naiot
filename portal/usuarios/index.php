@@ -45,9 +45,11 @@ include dirname(__DIR__) . '/_layout.php';
         <td><?= htmlspecialchars($u['nome']) ?></td>
         <td><?= htmlspecialchars($u['email']) ?></td>
         <td>
-          <span class="badge badge-<?= $u['perfil'] ?>">
-            <?= htmlspecialchars($u['perfil']) ?>
-          </span>
+          <?php
+            $lbl = label_perfil($u['perfil']);
+            $cls = $u['perfil'] === 'admin' ? 'badge-admin' : 'badge-secretaria';
+          ?>
+          <span class="badge <?= $cls ?>"><?= htmlspecialchars($lbl) ?></span>
         </td>
         <td style="color:var(--cinza3);font-size:.82rem">
           <?= $u['ultimo_acesso'] ? date('d/m/Y H:i', strtotime($u['ultimo_acesso'])) : '—' ?>

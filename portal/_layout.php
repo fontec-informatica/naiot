@@ -2,8 +2,7 @@
 $nome   = $_SESSION['usuario_nome']   ?? '';
 $perfil = $_SESSION['usuario_perfil'] ?? '';
 $inicial = mb_strtoupper(mb_substr(trim($nome), 0, 1)) ?: 'U';
-$perfis_label = ['admin' => 'Administrador', 'financeiro' => 'Financeiro', 'secretaria' => 'Secretaria'];
-$perfil_label = $perfis_label[$perfil] ?? ucfirst($perfil);
+$perfil_label = label_perfil($perfil);
 
 /* ── SVG icons (width/height obrigatórios) ── */
 $icons = [
@@ -17,25 +16,25 @@ $icons = [
 
 // Dashboard aponta para a home correta de cada perfil
 $home_href  = home_por_perfil($perfil);
-$home_label = match($perfil) {
-    'financeiro' => 'Financeiro',
-    'secretaria' => 'Inscrições',
-    default      => 'Dashboard',
-};
-// Para não-admin, o item "ativo" do dashboard deve refletir sua seção home
-$pagina_ativa_sidebar = ($pagina_ativa ?? '') === 'dashboard' ? match($perfil) {
-    'financeiro' => 'financeiro',
-    'secretaria' => 'inscricoes',
-    default      => 'dashboard',
-} : ($pagina_ativa ?? '');
+$mods_usuario = _modulos_do_usuario();
+$home_label = $perfil === 'admin' ? 'Dashboard'
+    : (in_array('financeiro', $mods_usuario) && !in_array('inscricoes', $mods_usuario) ? 'Financeiro'
+    : (in_array('inscricoes', $mods_usuario) ? 'Inscrições' : 'Dashboard'));
 
+// Para não-admin, o item "ativo" do dashboard deve refletir sua seção home
+$pagina_ativa_sidebar = ($pagina_ativa ?? '') === 'dashboard'
+    ? ($home_href === '/portal/financeiro/' ? 'financeiro'
+    : ($home_href === '/portal/inscricoes/' ? 'inscricoes' : 'dashboard'))
+    : ($pagina_ativa ?? '');
+
+// Menu: 'modulo'=>null = sempre visível | 'modulo'=>'chave' = usa tem_modulo() | 'admin'=>true = só admin
 $menu = [
-  'dashboard'  => ['icon' => $icons['dashboard'],  'label' => $home_label,      'href' => $home_href,            'perfis' => ['admin','financeiro','secretaria']],
-  'eventos'    => ['icon' => $icons['eventos'],    'label' => 'Próx. Eventos',  'href' => '/portal/eventos/',    'perfis' => ['admin','secretaria']],
-  'inscricoes' => ['icon' => $icons['inscricoes'], 'label' => 'Inscrições',     'href' => '/portal/inscricoes/', 'perfis' => ['admin','secretaria']],
-  'financeiro' => ['icon' => $icons['financeiro'], 'label' => 'Financeiro',     'href' => '/portal/financeiro/', 'perfis' => ['admin','financeiro']],
-  'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',       'href' => '/portal/usuarios/',   'perfis' => ['admin']],
-  'membros'    => ['icon' => $icons['membros'],    'label' => 'Membros',        'href' => '/portal/membros/',    'perfis' => ['admin','secretaria']],
+  'dashboard'  => ['icon' => $icons['dashboard'],  'label' => $home_label,     'href' => $home_href,            'modulo' => null],
+  'eventos'    => ['icon' => $icons['eventos'],    'label' => 'Próx. Eventos', 'href' => '/portal/eventos/',    'modulo' => 'eventos'],
+  'inscricoes' => ['icon' => $icons['inscricoes'], 'label' => 'Inscrições',    'href' => '/portal/inscricoes/', 'modulo' => 'inscricoes'],
+  'financeiro' => ['icon' => $icons['financeiro'], 'label' => 'Financeiro',    'href' => '/portal/financeiro/', 'modulo' => 'financeiro'],
+  'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'modulo' => null, 'admin' => true],
+  'membros'    => ['icon' => $icons['membros'],    'label' => 'Membros',       'href' => '/portal/membros/',    'modulo' => 'membros'],
 ];
 ?>
 <!DOCTYPE html>
@@ -66,7 +65,12 @@ $menu = [
     <span class="nav-section">Menu</span>
     <ul class="sidebar-nav">
       <?php foreach ($menu as $chave => $item): ?>
-        <?php if (in_array($perfil, $item['perfis'], true)): ?>
+        <?php
+          $visivel = ($item['modulo'] === null && empty($item['admin']))
+                  || (!empty($item['admin']) && $perfil === 'admin')
+                  || (!empty($item['modulo']) && tem_modulo($item['modulo']));
+        ?>
+        <?php if ($visivel): ?>
           <li>
             <a href="<?= $item['href'] ?>"
                class="<?= $pagina_ativa_sidebar === $chave ? 'ativo' : '' ?>">
