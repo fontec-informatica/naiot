@@ -2,28 +2,24 @@
   'use strict';
 
   var cidadesCache = null;
-  var CACHE_KEY    = 'naiot_cidades_br_v1';
+  var CACHE_KEY = 'naiot_cidades_br_v1';
 
-  /* ── normaliza string para comparação (remove acentos, lowercase) ── */
+  /* regex construida em runtime para evitar problemas de encoding no upload FTP */
+  var RE_COMBINING = new RegExp(
+    '[' + String.fromCharCode(0x0300) + '-' + String.fromCharCode(0x036f) + ']', 'g'
+  );
+
   function norm(s) {
-    return s.toLowerCase()
-            .normalize('NFD')
-            .replace(/[̀-ͯ]/g, '');
+    return s.toLowerCase().normalize('NFD').replace(RE_COMBINING, '');
   }
 
-  /* ── filtra cidades que COMEÇAM com a query; se não achar, tenta contém ── */
   function filtrar(lista, q) {
     var nq = norm(q);
-    var começa = lista.filter(function (c) {
-      return norm(c.nome).indexOf(nq) === 0;
-    });
-    if (começa.length) return começa.slice(0, 10);
-    return lista.filter(function (c) {
-      return norm(c.nome).indexOf(nq) !== -1;
-    }).slice(0, 10);
+    var inicio = lista.filter(function (c) { return norm(c.nome).indexOf(nq) === 0; });
+    if (inicio.length) return inicio.slice(0, 10);
+    return lista.filter(function (c) { return norm(c.nome).indexOf(nq) !== -1; }).slice(0, 10);
   }
 
-  /* ── cria o widget de sugestões ── */
   function initInput(input) {
     var wrapper = input.parentNode;
     wrapper.style.position = 'relative';
@@ -33,7 +29,7 @@
     wrapper.appendChild(box);
 
     var debounce;
-    var selecionando = false;
+    var clicando = false;
 
     function fechar() { box.innerHTML = ''; box.style.display = 'none'; }
 
@@ -48,11 +44,11 @@
           '<span class="cidade-ac-uf">' + c.uf + '</span>';
         li.addEventListener('mousedown', function (e) {
           e.preventDefault();
-          selecionando = true;
+          clicando = true;
           input.value = c.nome;
           fechar();
-          input.dispatchEvent(new Event('change'));
-          selecionando = false;
+          input.focus();
+          clicando = false;
         });
         box.appendChild(li);
       });
@@ -63,20 +59,16 @@
       if (q.length < 2) { fechar(); return; }
       if (cidadesCache) { mostrar(filtrar(cidadesCache, q)); return; }
 
-      /* primeiro uso: carrega da API do IBGE */
       fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome')
         .then(function (r) { return r.json(); })
         .then(function (data) {
           cidadesCache = data.map(function (m) {
-            return {
-              nome: m.nome,
-              uf:   m.microrregiao.mesorregiao.UF.sigla
-            };
+            return { nome: m.nome, uf: m.microrregiao.mesorregiao.UF.sigla };
           });
           try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(cidadesCache)); } catch (_) {}
           mostrar(filtrar(cidadesCache, q));
         })
-        .catch(function () { /* offline: sem sugestões */ });
+        .catch(function () {});
     }
 
     input.addEventListener('input', function () {
@@ -90,24 +82,23 @@
     });
 
     input.addEventListener('blur', function () {
-      if (!selecionando) setTimeout(fechar, 150);
+      if (!clicando) setTimeout(fechar, 160);
     });
 
-    /* teclado: ↑ ↓ Enter Esc */
     input.addEventListener('keydown', function (e) {
       var items = box.querySelectorAll('.cidade-ac-item');
       var ativo = box.querySelector('.cidade-ac-item.ativo');
-      var idx   = Array.prototype.indexOf.call(items, ativo);
+      var idx = Array.prototype.indexOf.call(items, ativo);
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         if (ativo) ativo.classList.remove('ativo');
-        var next = items[idx + 1] || items[0];
-        if (next) next.classList.add('ativo');
+        var prox = items[idx + 1] || items[0];
+        if (prox) prox.classList.add('ativo');
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         if (ativo) ativo.classList.remove('ativo');
-        var prev = items[idx - 1] || items[items.length - 1];
-        if (prev) prev.classList.add('ativo');
+        var ant = items[idx - 1] || items[items.length - 1];
+        if (ant) ant.classList.add('ativo');
       } else if (e.key === 'Enter' && ativo) {
         e.preventDefault();
         input.value = ativo.querySelector('.cidade-ac-nome').textContent;
@@ -118,14 +109,12 @@
     });
   }
 
-  /* ── inicializa ao carregar ── */
   document.addEventListener('DOMContentLoaded', function () {
-    /* tenta carregar do sessionStorage (evita re-fetch na mesma sessão) */
     try {
       var stored = sessionStorage.getItem(CACHE_KEY);
       if (stored) cidadesCache = JSON.parse(stored);
     } catch (_) {}
-
-    document.querySelectorAll('[data-cidade-ac]').forEach(initInput);
+    document.querySelectorAll('[data-cidade-ac]').forEach(function (el) { initInput(el); });
   });
+
 })();
