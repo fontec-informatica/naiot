@@ -62,6 +62,24 @@ $cargos      = db()->query("SELECT c.*, COUNT(r.membro_id) as total FROM membros
 $habilidades = db()->query("SELECT h.*, COUNT(r.membro_id) as total FROM membros_habilidades h LEFT JOIN membros_habilidade_rel r ON r.habilidade_id=h.id GROUP BY h.id ORDER BY h.nome")->fetchAll();
 $pastoreios  = db()->query("SELECT p.*, COUNT(r.membro_id) as total FROM membros_pastoreio p LEFT JOIN membros_pastoreio_rel r ON r.pastoreio_id=p.id GROUP BY p.id ORDER BY p.nome")->fetchAll();
 
+// Aniversariantes — próximos 30 dias
+$_hoje_bday = new DateTime();
+$_todos_nasc = db()->query("SELECT id, nome, data_nasc, DAY(data_nasc) as dia, MONTH(data_nasc) as mes FROM membros WHERE ativo=1 AND data_nasc IS NOT NULL ORDER BY MONTH(data_nasc), DAY(data_nasc)")->fetchAll();
+$aniversariantes = [];
+foreach ($_todos_nasc as $_m) {
+    try {
+        $_bday = DateTime::createFromFormat('Y-n-j', $_hoje_bday->format('Y') . '-' . $_m['mes'] . '-' . $_m['dia']);
+        if ($_bday === false) continue;
+        if ($_bday < $_hoje_bday) $_bday->modify('+1 year');
+        $_diff = (int)$_hoje_bday->diff($_bday)->days;
+        if ($_diff <= 30) {
+            $_m['dias'] = $_diff;
+            $aniversariantes[] = $_m;
+        }
+    } catch (\Exception $_e) {}
+}
+usort($aniversariantes, fn($a, $b) => $a['dias'] <=> $b['dias']);
+
 $grupo_atual      = null;
 $cargo_atual      = null;
 $habilidade_atual = null;
@@ -222,6 +240,21 @@ include dirname(__DIR__) . '/_layout.php';
 .modal-body select:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px rgba(30,107,53,.1)}
 .modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
 
+/* ── aniversariantes ── */
+.mb-bday-list{list-style:none;padding:4px 0}
+.mb-bday-item{display:flex;align-items:center;gap:9px;padding:6px 14px;font-size:.8rem;color:var(--txt)}
+.mb-bday-item.hoje{background:var(--green-pale);color:var(--green-dk);font-weight:700}
+.mb-bday-item.passado{opacity:.45}
+.mb-bday-ball{width:26px;height:26px;border-radius:50%;background:var(--off);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:var(--muted);flex-shrink:0;line-height:1}
+.mb-bday-ball.hoje{background:var(--green);border-color:var(--green);color:#fff}
+.mb-bday-ball.breve{background:var(--green-pale);border-color:var(--green);color:var(--green-dk)}
+.mb-bday-nome{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mb-bday-dias{font-size:.68rem;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.mb-bday-dias.hoje{color:var(--green-dk)}
+.mb-bday-verlink{display:block;padding:8px 14px;font-size:.75rem;color:var(--green);border-top:1px solid var(--border);text-align:center}
+.mb-bday-verlink:hover{background:var(--green-pale)}
+.mb-bday-vazio{padding:10px 14px;font-size:.75rem;color:var(--muted)}
+
 /* ── responsivo ── */
 @media(max-width:860px){
   .mb-layout{grid-template-columns:1fr;gap:16px}
@@ -270,6 +303,8 @@ include dirname(__DIR__) . '/_layout.php';
     <?php if ($pastoreio_id && !empty($nao_no_pastoreio)): ?>
       <button class="btn btn-ouro btn-sm" onclick="document.getElementById('modal-add-pastoreio').classList.add('open')">+ Adicionar ao pastoreio</button>
     <?php endif; ?>
+    <a href="/portal/membros/importar.php" class="btn btn-ghost btn-sm" title="Importar membros de planilha">↑ Importar</a>
+    <a href="/portal/membros/exportar.php" class="btn btn-ghost btn-sm" title="Exportar para Excel">↓ Exportar</a>
     <a href="/portal/membros/novo.php<?= $grupo_id ? "?grupo={$grupo_id}" : ($cargo_id ? "?cargo={$cargo_id}" : ($habilidade_id ? "?habilidade={$habilidade_id}" : ($pastoreio_id ? "?pastoreio={$pastoreio_id}" : ''))) ?>" class="btn btn-primary btn-sm">+ Novo membro</a>
   </div>
 </div>
@@ -279,6 +314,38 @@ include dirname(__DIR__) . '/_layout.php';
   <!-- SIDEBAR -->
   <div>
     <div class="mb-sidebar">
+
+      <!-- Aniversariantes -->
+      <div class="mb-sidebar-section">
+        <div class="mb-sidebar-head">
+          <span>Aniversariantes</span>
+          <span style="font-size:.85rem" title="Próximos 30 dias">🎂</span>
+        </div>
+        <?php if (empty($aniversariantes)): ?>
+          <div class="mb-bday-vazio">Nenhum aniversariante nos próximos 30 dias.</div>
+        <?php else: ?>
+          <ul class="mb-bday-list">
+            <?php $exibidos = 0; foreach ($aniversariantes as $bday): if ($exibidos >= 8) break; $exibidos++; ?>
+            <?php
+              $ehHoje = $bday['dias'] === 0;
+              $ehBreve = $bday['dias'] <= 7 && !$ehHoje;
+              $ehPassado = false; // nunca — só mostramos próximos 30 dias
+              $diaMes = str_pad($bday['dia'], 2, '0', STR_PAD_LEFT) . '/' . str_pad($bday['mes'], 2, '0', STR_PAD_LEFT);
+              $ballClass = $ehHoje ? 'hoje' : ($ehBreve ? 'breve' : '');
+              $itemClass = $ehHoje ? 'hoje' : '';
+            ?>
+            <li class="mb-bday-item <?= $itemClass ?>">
+              <span class="mb-bday-ball <?= $ballClass ?>"><?= $diaMes ?></span>
+              <a href="/portal/membros/ver.php?id=<?= $bday['id'] ?>" class="mb-bday-nome" style="color:inherit;text-decoration:none" title="<?= htmlspecialchars($bday['nome']) ?>"><?= htmlspecialchars($bday['nome']) ?></a>
+              <span class="mb-bday-dias <?= $ehHoje ? 'hoje' : '' ?>"><?= $ehHoje ? 'Hoje!' : ($bday['dias'] === 1 ? 'amanhã' : 'em ' . $bday['dias'] . ' dias') ?></span>
+            </li>
+            <?php endforeach; ?>
+          </ul>
+          <?php if (count($aniversariantes) > 8): ?>
+            <span class="mb-bday-verlink" style="cursor:default">+ <?= count($aniversariantes) - 8 ?> outro<?= (count($aniversariantes) - 8) !== 1 ? 's' : '' ?> este mês</span>
+          <?php endif; ?>
+        <?php endif; ?>
+      </div>
 
       <!-- Grupos -->
       <div class="mb-sidebar-section">
