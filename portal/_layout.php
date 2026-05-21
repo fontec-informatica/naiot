@@ -29,12 +29,12 @@ $pagina_ativa_sidebar = ($pagina_ativa ?? '') === 'dashboard'
 
 // Menu: 'modulo'=>null = sempre visível | 'modulo'=>'chave' = usa tem_modulo() | 'admin'=>true = só admin
 $menu = [
-  'dashboard'  => ['icon' => $icons['dashboard'],  'label' => $home_label,     'href' => $home_href,            'modulo' => null],
+  'dashboard'  => ['icon' => $icons['dashboard'],  'label' => $home_label,     'href' => $home_href,            'modulo' => 'dashboard'],
   'eventos'    => ['icon' => $icons['eventos'],    'label' => 'Próx. Eventos', 'href' => '/portal/eventos/',    'modulo' => 'eventos'],
   'inscricoes' => ['icon' => $icons['inscricoes'], 'label' => 'Inscrições',    'href' => '/portal/inscricoes/', 'modulo' => 'inscricoes'],
   'financeiro' => ['icon' => $icons['financeiro'], 'label' => 'Financeiro',    'href' => '/portal/financeiro/', 'modulo' => 'financeiro'],
-  'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'modulo' => null, 'admin' => true],
   'membros'    => ['icon' => $icons['membros'],    'label' => 'Membros',       'href' => '/portal/membros/',    'modulo' => 'membros'],
+  'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'modulo' => 'usuarios'],
 ];
 ?>
 <!DOCTYPE html>
@@ -65,11 +65,7 @@ $menu = [
     <span class="nav-section">Menu</span>
     <ul class="sidebar-nav">
       <?php foreach ($menu as $chave => $item): ?>
-        <?php
-          $visivel = ($item['modulo'] === null && empty($item['admin']))
-                  || (!empty($item['admin']) && $perfil === 'admin')
-                  || (!empty($item['modulo']) && tem_modulo($item['modulo']));
-        ?>
+        <?php $visivel = !empty($item['modulo']) && tem_modulo($item['modulo']); ?>
         <?php if ($visivel): ?>
           <li>
             <a href="<?= $item['href'] ?>"

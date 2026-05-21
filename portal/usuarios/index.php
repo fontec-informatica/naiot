@@ -1,6 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/auth.php';
-requer_perfil(['admin']);
+requer_perfil(['admin', 'usuarios']);
 
 $titulo       = 'Usuários';
 $pagina_ativa = 'usuarios';

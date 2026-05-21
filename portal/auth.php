@@ -11,17 +11,18 @@ if (session_status() === PHP_SESSION_NONE) {
    Chave = identificador único | valor = rótulo exibido na interface
 ──────────────────────────────────────────────────────────────────────────── */
 const MODULOS_PORTAL = [
+    'dashboard'  => 'Dashboard',
     'eventos'    => 'Próx. Eventos',
     'inscricoes' => 'Inscrições',
     'financeiro' => 'Financeiro',
     'membros'    => 'Membros',
+    'usuarios'   => 'Usuários',
 ];
-// 'usuarios' é sempre admin-only e não entra no array acima
 
 /* Mapeamento backward-compat: perfis antigos → módulos equivalentes */
 const PERFIL_LEGADO = [
-    'secretaria' => ['eventos', 'inscricoes', 'membros'],
-    'financeiro' => ['financeiro'],
+    'secretaria' => ['dashboard', 'eventos', 'inscricoes', 'membros'],
+    'financeiro' => ['dashboard', 'financeiro'],
 ];
 
 /* ── Helpers de sessão ───────────────────────────────────────────────────── */
