@@ -175,7 +175,8 @@ include dirname(__DIR__) . '/_layout.php';
 /* ── responsivo ── */
 @media(max-width:860px){
   .mb-layout{grid-template-columns:1fr;gap:16px}
-  .mb-sidebar{position:static}
+  .mb-layout > div{min-width:0}
+  .mb-sidebar{position:static;min-width:0}
   .mb-sidebar-section{border-top:none;border-left:3px solid var(--border)}
   .mb-grupos-list{display:flex;overflow-x:auto;padding:6px;gap:6px;-webkit-overflow-scrolling:touch;touch-action:pan-x}
   .mb-grupos-list li a{
