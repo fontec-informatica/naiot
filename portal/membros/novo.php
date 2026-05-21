@@ -124,7 +124,7 @@ include dirname(__DIR__) . '/_layout.php';
         </div>
         <div class="form-group">
           <label>Cidade</label>
-          <input type="text" name="cidade" value="<?= htmlspecialchars($dados['cidade']) ?>" maxlength="100">
+          <input type="text" name="cidade" value="<?= htmlspecialchars($dados['cidade']) ?>" maxlength="100" autocomplete="off" placeholder="Digite para buscar…" data-cidade-ac>
         </div>
       </div>
 
@@ -167,6 +167,7 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
   </form>
 
+<script src="/portal/assets/js/cidade-autocomplete.js"></script>
 <script>
 function previewFoto(input) {
   var file = input.files[0];

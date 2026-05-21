@@ -432,3 +432,42 @@ input[type=checkbox]{accent-color:var(--g);width:14px;height:14px;cursor:pointer
   /* Alertas */
   .alerta{font-size:.8rem}
 }
+
+/* ══════════════════════════
+   AUTOCOMPLETE CIDADES
+══════════════════════════ */
+.cidade-ac-box{
+  display:none;
+  position:absolute;
+  top:100%;left:0;right:0;
+  background:#fff;
+  border:1.5px solid var(--green);
+  border-top:none;
+  border-radius:0 0 var(--r) var(--r);
+  box-shadow:var(--sh-sm);
+  list-style:none;
+  z-index:300;
+  max-height:260px;
+  overflow-y:auto;
+}
+.cidade-ac-box::-webkit-scrollbar{width:4px}
+.cidade-ac-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.cidade-ac-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 12px;
+  cursor:pointer;
+  font-size:.85rem;
+  transition:background var(--ease);
+  gap:8px;
+}
+.cidade-ac-item:hover,
+.cidade-ac-item.ativo{background:var(--green-pale)}
+.cidade-ac-nome{color:var(--txt);font-weight:500}
+.cidade-ac-uf{
+  font-size:.7rem;font-weight:700;
+  color:#fff;background:var(--green);
+  padding:1px 6px;border-radius:4px;
+  flex-shrink:0;
+}
