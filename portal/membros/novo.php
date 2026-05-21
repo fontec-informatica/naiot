@@ -26,7 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     if (!$dados['nome']) $erros[] = 'O nome é obrigatório.';
 
     $foto_nome = null;
-    if (!empty($_FILES['foto']['tmp_name'])) {
+    // Foto via webcam (base64)
+    $foto_b64 = trim($_POST['foto_webcam'] ?? '');
+    if ($foto_b64 && preg_match('/^data:image\/(jpeg|png|webp);base64,/', $foto_b64, $m_ext)) {
+        $ext       = $m_ext[1] === 'jpeg' ? 'jpg' : $m_ext[1];
+        $foto_nome = uniqid('mb_', true) . '.' . $ext;
+        $img_data  = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $foto_b64));
+        $dir_fotos = __DIR__ . '/fotos/';
+        if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
+        file_put_contents($dir_fotos . $foto_nome, $img_data);
+    } elseif (!empty($_FILES['foto']['tmp_name'])) {
         $f = $_FILES['foto'];
         $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
         if (!in_array($ext, ['jpg','jpeg','png','webp'])) {
@@ -39,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     }
 
     if (!$erros) {
-        if ($foto_nome) {
+        if ($foto_nome && empty($foto_b64) && !empty($_FILES['foto']['tmp_name'])) {
             $dir_fotos = __DIR__ . '/fotos/';
             if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $foto_nome);
@@ -79,14 +88,18 @@ include dirname(__DIR__) . '/_layout.php';
       <!-- Foto -->
       <div class="form-group">
         <label>Foto</label>
+        <input type="hidden" name="foto_webcam" id="foto_webcam">
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <div id="preview-wrap" style="width:90px;height:90px;border-radius:50%;border:2px dashed var(--border);overflow:hidden;background:var(--green-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <span style="font-family:'Cinzel',serif;font-size:2rem;color:var(--green);opacity:.4" id="preview-inicial"><?= mb_strtoupper(mb_substr($dados['nome'],0,1)) ?: '?' ?></span>
             <img id="preview-img" src="" style="display:none;width:100%;height:100%;object-fit:cover">
           </div>
-          <div>
-            <input type="file" name="foto" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
-            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('foto-input').click()">Escolher foto</button>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="file" name="foto" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
+              <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('foto-input').click()">📁 Arquivo</button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="abrirWebcam()">📷 Webcam</button>
+            </div>
             <div class="form-hint">JPG, PNG ou WEBP · Máx. 5 MB</div>
           </div>
         </div>
@@ -167,6 +180,22 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
   </form>
 
+<!-- Modal Webcam -->
+<div id="webcam-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:24px;max-width:480px;width:90%;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h3 style="margin:0;font-size:1rem;font-family:'Cinzel',serif;color:var(--green-dk)">Capturar foto</h3>
+      <button type="button" onclick="fecharWebcam()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
+    </div>
+    <video id="webcam-video" autoplay playsinline muted style="width:100%;border-radius:8px;background:#111;aspect-ratio:4/3;object-fit:cover"></video>
+    <canvas id="webcam-canvas" style="display:none"></canvas>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button type="button" class="btn btn-primary" onclick="capturarFoto()">📸 Capturar</button>
+      <button type="button" class="btn btn-ghost" onclick="fecharWebcam()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   var cache=null,KEY='naiot_cidades_v1';
@@ -227,6 +256,46 @@ function atualizarInicial() {
   var nome = document.getElementById('nome-input').value.trim();
   var ini = nome ? nome.charAt(0).toUpperCase() : '?';
   document.getElementById('preview-inicial').textContent = ini;
+}
+
+var _webcamStream = null;
+function abrirWebcam() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert('Seu navegador não suporta acesso à câmera.');
+    return;
+  }
+  var modal = document.getElementById('webcam-modal');
+  modal.style.display = 'flex';
+  navigator.mediaDevices.getUserMedia({video: {facingMode: 'user', width: {ideal: 640}, height: {ideal: 480}}})
+    .then(function(stream) {
+      _webcamStream = stream;
+      document.getElementById('webcam-video').srcObject = stream;
+    })
+    .catch(function(err) {
+      alert('Não foi possível acessar a câmera: ' + (err.message || err));
+      modal.style.display = 'none';
+    });
+}
+function fecharWebcam() {
+  if (_webcamStream) {
+    _webcamStream.getTracks().forEach(function(t) { t.stop(); });
+    _webcamStream = null;
+  }
+  document.getElementById('webcam-modal').style.display = 'none';
+  document.getElementById('webcam-video').srcObject = null;
+}
+function capturarFoto() {
+  var video = document.getElementById('webcam-video');
+  var canvas = document.getElementById('webcam-canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  document.getElementById('foto_webcam').value = dataUrl;
+  document.getElementById('preview-img').src = dataUrl;
+  document.getElementById('preview-img').style.display = 'block';
+  document.getElementById('preview-inicial').style.display = 'none';
+  fecharWebcam();
 }
 </script>
 

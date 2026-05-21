@@ -46,8 +46,10 @@ include dirname(__DIR__) . '/_layout.php';
 .ver-nome{font-size:1.05rem;font-weight:700;color:var(--green-dk);line-height:1.3}
 .ver-grupos{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:10px}
 .ver-gtag{font-size:.68rem;font-weight:600;padding:3px 10px;border-radius:20px;color:#fff}
-.ver-acoes{padding:14px 18px;display:flex;flex-direction:column;gap:6px}
-.ver-acoes .btn{justify-content:center}
+.ver-acoes{padding:14px 18px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.ver-acoes .btn{justify-content:center;min-width:0;width:100%;box-sizing:border-box}
+.ver-acao-link{overflow:hidden}
+.ver-acao-txt{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
 
 .ver-info{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh-sm)}
 .ver-info-head{padding:14px 20px;background:var(--off);border-bottom:1px solid var(--border)}
@@ -95,13 +97,19 @@ include dirname(__DIR__) . '/_layout.php';
     <div class="ver-acoes">
       <a href="/portal/membros/editar.php?id=<?= $id ?>" class="btn btn-primary btn-sm">Editar dados</a>
       <?php foreach ($cargos as $c): ?>
-        <a href="/portal/membros/?cargo=<?= $c['id'] ?>" class="btn btn-ghost btn-sm" style="border-color:<?= htmlspecialchars($c['cor']) ?>;color:<?= htmlspecialchars($c['cor']) ?>">
-          Ver cargo: <?= htmlspecialchars($c['nome']) ?>
+        <a href="/portal/membros/?cargo=<?= $c['id'] ?>"
+           class="btn btn-ghost btn-sm ver-acao-link"
+           style="border-color:<?= htmlspecialchars($c['cor']) ?>;color:<?= htmlspecialchars($c['cor']) ?>"
+           title="Ver cargo: <?= htmlspecialchars($c['nome']) ?>">
+          <span class="ver-acao-txt">Ver cargo: <?= htmlspecialchars($c['nome']) ?></span>
         </a>
       <?php endforeach; ?>
       <?php foreach ($grupos as $g): ?>
-        <a href="/portal/membros/?grupo=<?= $g['id'] ?>" class="btn btn-ghost btn-sm" style="border-color:<?= htmlspecialchars($g['cor']) ?>;color:<?= htmlspecialchars($g['cor']) ?>">
-          Ver grupo: <?= htmlspecialchars($g['nome']) ?>
+        <a href="/portal/membros/?grupo=<?= $g['id'] ?>"
+           class="btn btn-ghost btn-sm ver-acao-link"
+           style="border-color:<?= htmlspecialchars($g['cor']) ?>;color:<?= htmlspecialchars($g['cor']) ?>"
+           title="Ver grupo: <?= htmlspecialchars($g['nome']) ?>">
+          <span class="ver-acao-txt">Ver grupo: <?= htmlspecialchars($g['nome']) ?></span>
         </a>
       <?php endforeach; ?>
     </div>
