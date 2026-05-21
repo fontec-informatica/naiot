@@ -1,7 +1,5 @@
 <?php
-require_once __DIR__ . '/config.php';
-
-if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/auth.php';
 
 if (isset($_SESSION['usuario_id'])) {
     header('Location: ' . home_por_perfil($_SESSION['usuario_perfil'] ?? ''));
