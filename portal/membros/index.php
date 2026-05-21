@@ -177,7 +177,7 @@ include dirname(__DIR__) . '/_layout.php';
   .mb-layout{grid-template-columns:1fr;gap:16px}
   .mb-sidebar{position:static}
   .mb-sidebar-section{border-top:none;border-left:3px solid var(--border)}
-  .mb-grupos-list{display:flex;overflow-x:auto;padding:6px;gap:6px}
+  .mb-grupos-list{display:flex;overflow-x:auto;padding:6px;gap:6px;-webkit-overflow-scrolling:touch;touch-action:pan-x}
   .mb-grupos-list li a{
     white-space:nowrap;border-left:none;
     border-radius:20px;padding:5px 13px;
