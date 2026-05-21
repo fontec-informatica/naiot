@@ -12,6 +12,7 @@ $icons = [
   'inscricoes' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
   'financeiro' => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
   'usuarios'   => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  'membros'    => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>',
 ];
 
 // Dashboard aponta para a home correta de cada perfil
@@ -34,6 +35,7 @@ $menu = [
   'inscricoes' => ['icon' => $icons['inscricoes'], 'label' => 'Inscrições',     'href' => '/portal/inscricoes/', 'perfis' => ['admin','secretaria']],
   'financeiro' => ['icon' => $icons['financeiro'], 'label' => 'Financeiro',     'href' => '/portal/financeiro/', 'perfis' => ['admin','financeiro']],
   'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',       'href' => '/portal/usuarios/',   'perfis' => ['admin']],
+  'membros'    => ['icon' => $icons['membros'],    'label' => 'Membros',        'href' => '/portal/membros/',    'perfis' => ['admin','secretaria']],
 ];
 ?>
 <!DOCTYPE html>

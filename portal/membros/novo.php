@@ -1,0 +1,168 @@
+<?php
+require_once dirname(__DIR__) . '/auth.php';
+requer_perfil(['admin', 'secretaria']);
+
+$titulo       = 'Novo Membro';
+$pagina_ativa = 'membros';
+
+$grupo_id = (int)($_GET['grupo'] ?? 0);
+$erros    = [];
+$dados    = ['nome'=>'','telefone'=>'','data_nasc'=>'','endereco'=>'','bairro'=>'','cidade'=>''];
+
+$grupos = db()->query("SELECT * FROM membros_grupos ORDER BY nome")->fetchAll();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
+    $dados['nome']      = trim($_POST['nome']      ?? '');
+    $dados['telefone']  = trim($_POST['telefone']  ?? '');
+    $dados['data_nasc'] = trim($_POST['data_nasc'] ?? '');
+    $dados['endereco']  = trim($_POST['endereco']  ?? '');
+    $dados['bairro']    = trim($_POST['bairro']    ?? '');
+    $dados['cidade']    = trim($_POST['cidade']    ?? '');
+    $grupos_sel         = array_map('intval', (array)($_POST['grupos'] ?? []));
+
+    if (!$dados['nome']) $erros[] = 'O nome é obrigatório.';
+
+    $foto_nome = null;
+    if (!empty($_FILES['foto']['tmp_name'])) {
+        $f = $_FILES['foto'];
+        $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, ['jpg','jpeg','png','webp'])) {
+            $erros[] = 'Foto: somente JPG, PNG ou WEBP.';
+        } elseif ($f['size'] > 5 * 1024 * 1024) {
+            $erros[] = 'Foto: máximo 5 MB.';
+        } else {
+            $foto_nome = uniqid('mb_', true) . '.' . $ext;
+        }
+    }
+
+    if (!$erros) {
+        if ($foto_nome) {
+            move_uploaded_file($_FILES['foto']['tmp_name'], __DIR__ . '/fotos/' . $foto_nome);
+        }
+        $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,bairro,cidade,telefone) VALUES (?,?,?,?,?,?,?)");
+        $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone']]);
+        $novo_id = (int)db()->lastInsertId();
+
+        foreach ($grupos_sel as $gid) {
+            if ($gid) db()->prepare("INSERT IGNORE INTO membros_grupo_rel (grupo_id,membro_id) VALUES (?,?)")->execute([$gid, $novo_id]);
+        }
+        $redir = $grupo_id ? "/portal/membros/?grupo={$grupo_id}" : "/portal/membros/?ok=1";
+        header("Location: $redir");
+        exit;
+    }
+}
+
+include dirname(__DIR__) . '/_layout.php';
+?>
+
+<div style="max-width:640px">
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
+    <a href="/portal/membros/<?= $grupo_id ? "?grupo={$grupo_id}" : '' ?>" class="btn btn-ghost btn-sm">← Voltar</a>
+  </div>
+
+  <?php if ($erros): ?>
+    <div class="alerta alerta-erro"><?= implode('<br>', array_map('htmlspecialchars', $erros)) ?></div>
+  <?php endif; ?>
+
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-wrap">
+      <h2>Novo Membro</h2>
+      <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+
+      <!-- Foto -->
+      <div class="form-group">
+        <label>Foto</label>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <div id="preview-wrap" style="width:90px;height:90px;border-radius:50%;border:2px dashed var(--border);overflow:hidden;background:var(--green-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <span style="font-family:'Cinzel',serif;font-size:2rem;color:var(--green);opacity:.4" id="preview-inicial"><?= mb_strtoupper(mb_substr($dados['nome'],0,1)) ?: '?' ?></span>
+            <img id="preview-img" src="" style="display:none;width:100%;height:100%;object-fit:cover">
+          </div>
+          <div>
+            <input type="file" name="foto" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('foto-input').click()">Escolher foto</button>
+            <div class="form-hint">JPG, PNG ou WEBP · Máx. 5 MB</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nome -->
+      <div class="form-group">
+        <label>Nome completo <span style="color:var(--red)">*</span></label>
+        <input type="text" name="nome" value="<?= htmlspecialchars($dados['nome']) ?>" required maxlength="150" id="nome-input" oninput="atualizarInicial()">
+      </div>
+
+      <div class="form-row">
+        <!-- Data de nascimento -->
+        <div class="form-group">
+          <label>Data de nascimento</label>
+          <input type="date" name="data_nasc" value="<?= htmlspecialchars($dados['data_nasc']) ?>">
+        </div>
+        <!-- Telefone -->
+        <div class="form-group">
+          <label>Telefone / WhatsApp</label>
+          <input type="tel" name="telefone" value="<?= htmlspecialchars($dados['telefone']) ?>" maxlength="30" placeholder="(00) 90000-0000">
+        </div>
+      </div>
+
+      <!-- Endereço -->
+      <div class="form-group">
+        <label>Endereço</label>
+        <input type="text" name="endereco" value="<?= htmlspecialchars($dados['endereco']) ?>" maxlength="255" placeholder="Rua, número…">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Bairro</label>
+          <input type="text" name="bairro" value="<?= htmlspecialchars($dados['bairro']) ?>" maxlength="100">
+        </div>
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" name="cidade" value="<?= htmlspecialchars($dados['cidade']) ?>" maxlength="100">
+        </div>
+      </div>
+
+      <!-- Grupos -->
+      <?php if ($grupos): ?>
+      <div class="form-group">
+        <label>Grupos</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0">
+          <?php foreach ($grupos as $g): ?>
+          <?php $checked = in_array($g['id'], [$grupo_id]); ?>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:500;color:var(--txt)">
+            <input type="checkbox" name="grupos[]" value="<?= $g['id'] ?>" <?= $checked ? 'checked' : '' ?>>
+            <span style="width:10px;height:10px;border-radius:50%;background:<?= htmlspecialchars($g['cor']) ?>;display:inline-block;flex-shrink:0"></span>
+            <?= htmlspecialchars($g['nome']) ?>
+          </label>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button type="submit" class="btn btn-primary">Salvar membro</button>
+        <a href="/portal/membros/<?= $grupo_id ? "?grupo={$grupo_id}" : '' ?>" class="btn btn-ghost">Cancelar</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+function previewFoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('preview-img').style.display = 'block';
+    document.getElementById('preview-inicial').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function atualizarInicial() {
+  var nome = document.getElementById('nome-input').value.trim();
+  var ini = nome ? nome.charAt(0).toUpperCase() : '?';
+  document.getElementById('preview-inicial').textContent = ini;
+}
+</script>
+
+<?php include dirname(__DIR__) . '/_layout_end.php'; ?>
