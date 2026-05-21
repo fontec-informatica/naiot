@@ -8,6 +8,7 @@ $pagina_ativa = 'membros';
 $grupo_id      = (int)($_GET['grupo']      ?? 0);
 $cargo_id      = (int)($_GET['cargo']      ?? 0);
 $habilidade_id = (int)($_GET['habilidade'] ?? 0);
+$pastoreio_id  = (int)($_GET['pastoreio']  ?? 0);
 $busca         = trim($_GET['q'] ?? '');
 
 // Ações POST
@@ -44,24 +45,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         db()->prepare("INSERT IGNORE INTO membros_habilidade_rel (habilidade_id,membro_id) VALUES (?,?)")->execute([$hid, $mid]);
         header("Location: /portal/membros/?habilidade={$hid}"); exit;
     }
+    if ($acao === 'remover_pastoreio') {
+        $pid = (int)$_POST['pastoreio_id']; $mid = (int)$_POST['membro_id'];
+        db()->prepare("DELETE FROM membros_pastoreio_rel WHERE pastoreio_id=? AND membro_id=?")->execute([$pid, $mid]);
+        header("Location: /portal/membros/?pastoreio={$pid}"); exit;
+    }
+    if ($acao === 'adicionar_pastoreio') {
+        $pid = (int)$_POST['pastoreio_id']; $mid = (int)$_POST['membro_id'];
+        db()->prepare("INSERT IGNORE INTO membros_pastoreio_rel (pastoreio_id,membro_id) VALUES (?,?)")->execute([$pid, $mid]);
+        header("Location: /portal/membros/?pastoreio={$pid}"); exit;
+    }
 }
 
 $grupos      = db()->query("SELECT g.*, COUNT(r.membro_id) as total FROM membros_grupos g LEFT JOIN membros_grupo_rel r ON r.grupo_id=g.id GROUP BY g.id ORDER BY g.nome")->fetchAll();
 $cargos      = db()->query("SELECT c.*, COUNT(r.membro_id) as total FROM membros_cargos c LEFT JOIN membros_cargo_rel r ON r.cargo_id=c.id GROUP BY c.id ORDER BY c.nome")->fetchAll();
 $habilidades = db()->query("SELECT h.*, COUNT(r.membro_id) as total FROM membros_habilidades h LEFT JOIN membros_habilidade_rel r ON r.habilidade_id=h.id GROUP BY h.id ORDER BY h.nome")->fetchAll();
+$pastoreios  = db()->query("SELECT p.*, COUNT(r.membro_id) as total FROM membros_pastoreio p LEFT JOIN membros_pastoreio_rel r ON r.pastoreio_id=p.id GROUP BY p.id ORDER BY p.nome")->fetchAll();
 
 $grupo_atual      = null;
 $cargo_atual      = null;
 $habilidade_atual = null;
+$pastoreio_atual  = null;
 foreach ($grupos      as $g) { if ($g['id'] == $grupo_id)      { $grupo_atual      = $g; break; } }
 foreach ($cargos      as $c) { if ($c['id'] == $cargo_id)      { $cargo_atual      = $c; break; } }
 foreach ($habilidades as $h) { if ($h['id'] == $habilidade_id) { $habilidade_atual = $h; break; } }
+foreach ($pastoreios  as $p) { if ($p['id'] == $pastoreio_id)  { $pastoreio_atual  = $p; break; } }
 
 // Título da view
 $titulo_view = 'Todos os membros';
 if ($grupo_atual)      $titulo_view = $grupo_atual['nome'];
 if ($cargo_atual)      $titulo_view = $cargo_atual['nome'];
 if ($habilidade_atual) $titulo_view = $habilidade_atual['nome'];
+if ($pastoreio_atual)  $titulo_view = $pastoreio_atual['nome'];
 
 // Buscar membros
 $where  = "WHERE m.ativo = 1";
@@ -77,6 +92,10 @@ if ($cargo_id) {
 if ($habilidade_id) {
     $where .= " AND EXISTS (SELECT 1 FROM membros_habilidade_rel r WHERE r.habilidade_id=? AND r.membro_id=m.id)";
     $params[] = $habilidade_id;
+}
+if ($pastoreio_id) {
+    $where .= " AND EXISTS (SELECT 1 FROM membros_pastoreio_rel r WHERE r.pastoreio_id=? AND r.membro_id=m.id)";
+    $params[] = $pastoreio_id;
 }
 if ($busca) {
     $where .= " AND (m.nome LIKE ? OR m.cidade LIKE ? OR m.telefone LIKE ?)";
@@ -104,6 +123,11 @@ $nao_na_habilidade = [];
 if ($habilidade_id) {
     $st2 = db()->prepare("SELECT id,nome FROM membros WHERE ativo=1 AND id NOT IN (SELECT membro_id FROM membros_habilidade_rel WHERE habilidade_id=?) ORDER BY nome");
     $st2->execute([$habilidade_id]); $nao_na_habilidade = $st2->fetchAll();
+}
+$nao_no_pastoreio = [];
+if ($pastoreio_id) {
+    $st2 = db()->prepare("SELECT id,nome FROM membros WHERE ativo=1 AND id NOT IN (SELECT membro_id FROM membros_pastoreio_rel WHERE pastoreio_id=?) ORDER BY nome");
+    $st2->execute([$pastoreio_id]); $nao_no_pastoreio = $st2->fetchAll();
 }
 
 include dirname(__DIR__) . '/_layout.php';
@@ -177,6 +201,7 @@ include dirname(__DIR__) . '/_layout.php';
 .mb-gtag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:20px;color:#fff;white-space:nowrap}
 .mb-ctag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;border:1.5px solid}
 .mb-htag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap;border:1.5px dashed;background:transparent}
+.mb-ptag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;border:1.5px solid;background:transparent}
 .mb-card-footer{margin-top:auto;padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end;background:var(--off)}
 
 /* ── vazio ── */
@@ -230,6 +255,7 @@ include dirname(__DIR__) . '/_layout.php';
       <?php if ($grupo_id): ?><input type="hidden" name="grupo" value="<?= $grupo_id ?>"><?php endif; ?>
       <?php if ($cargo_id): ?><input type="hidden" name="cargo" value="<?= $cargo_id ?>"><?php endif; ?>
       <?php if ($habilidade_id): ?><input type="hidden" name="habilidade" value="<?= $habilidade_id ?>"><?php endif; ?>
+      <?php if ($pastoreio_id): ?><input type="hidden" name="pastoreio" value="<?= $pastoreio_id ?>"><?php endif; ?>
       <input type="text" name="q" class="mb-search" placeholder="Buscar membro…" value="<?= htmlspecialchars($busca) ?>">
     </form>
     <?php if ($grupo_id && !empty($nao_no_grupo)): ?>
@@ -241,7 +267,10 @@ include dirname(__DIR__) . '/_layout.php';
     <?php if ($habilidade_id && !empty($nao_na_habilidade)): ?>
       <button class="btn btn-ouro btn-sm" onclick="document.getElementById('modal-add-habilidade').classList.add('open')">+ Adicionar à habilidade</button>
     <?php endif; ?>
-    <a href="/portal/membros/novo.php<?= $grupo_id ? "?grupo={$grupo_id}" : ($cargo_id ? "?cargo={$cargo_id}" : ($habilidade_id ? "?habilidade={$habilidade_id}" : '')) ?>" class="btn btn-primary btn-sm">+ Novo membro</a>
+    <?php if ($pastoreio_id && !empty($nao_no_pastoreio)): ?>
+      <button class="btn btn-ouro btn-sm" onclick="document.getElementById('modal-add-pastoreio').classList.add('open')">+ Adicionar ao pastoreio</button>
+    <?php endif; ?>
+    <a href="/portal/membros/novo.php<?= $grupo_id ? "?grupo={$grupo_id}" : ($cargo_id ? "?cargo={$cargo_id}" : ($habilidade_id ? "?habilidade={$habilidade_id}" : ($pastoreio_id ? "?pastoreio={$pastoreio_id}" : ''))) ?>" class="btn btn-primary btn-sm">+ Novo membro</a>
   </div>
 </div>
 
@@ -324,6 +353,28 @@ include dirname(__DIR__) . '/_layout.php';
         </ul>
       </div>
 
+      <!-- Pastoreio -->
+      <div class="mb-sidebar-section">
+        <div class="mb-sidebar-head">
+          <span>Pastoreio</span>
+          <a href="/portal/membros/pastoreio.php" title="Gerenciar pastoreio" style="color:var(--muted);font-size:1rem">⚙</a>
+        </div>
+        <ul class="mb-grupos-list">
+          <?php foreach ($pastoreios as $p): ?>
+          <li>
+            <a href="/portal/membros/?pastoreio=<?= $p['id'] ?>" class="<?= $pastoreio_id == $p['id'] ? 'sel' : '' ?>">
+              <span style="width:9px;height:9px;border-radius:50%;border:2px solid <?= htmlspecialchars($p['cor']) ?>;background:transparent;flex-shrink:0;display:inline-block;box-sizing:border-box"></span>
+              <?= htmlspecialchars($p['nome']) ?>
+              <span class="grupo-count"><?= $p['total'] ?></span>
+            </a>
+          </li>
+          <?php endforeach; ?>
+          <?php if (empty($pastoreios)): ?>
+            <li><div style="padding:10px 14px;font-size:.75rem;color:var(--muted)"><a href="/portal/membros/pastoreio.php" style="color:var(--green)">+ Criar pastoreio</a></div></li>
+          <?php endif; ?>
+        </ul>
+      </div>
+
     </div>
   </div>
 
@@ -349,6 +400,9 @@ include dirname(__DIR__) . '/_layout.php';
           <?php elseif ($habilidade_id): ?>
             Nenhum membro com esta habilidade ainda.<br>
             <a href="#" onclick="document.getElementById('modal-add-habilidade').classList.add('open');return false" style="color:var(--green)">Adicionar membros →</a>
+          <?php elseif ($pastoreio_id): ?>
+            Nenhum membro neste pastoreio ainda.<br>
+            <a href="#" onclick="document.getElementById('modal-add-pastoreio').classList.add('open');return false" style="color:var(--green)">Adicionar membros →</a>
           <?php else: ?>
             Nenhum membro cadastrado ainda.<br>
             <a href="/portal/membros/novo.php" style="color:var(--green)">Cadastrar primeiro membro →</a>
@@ -358,7 +412,7 @@ include dirname(__DIR__) . '/_layout.php';
 
       <?php else:
         $ids = array_column($membros, 'id');
-        $grupo_map = []; $cargo_map = []; $hab_map = [];
+        $grupo_map = []; $cargo_map = []; $hab_map = []; $pastoreio_map = [];
         if ($ids) {
             $ph = implode(',', array_fill(0, count($ids), '?'));
             $st3 = db()->prepare("SELECT r.membro_id, g.nome, g.cor FROM membros_grupo_rel r JOIN membros_grupos g ON g.id=r.grupo_id WHERE r.membro_id IN ($ph)");
@@ -372,6 +426,10 @@ include dirname(__DIR__) . '/_layout.php';
             $st5 = db()->prepare("SELECT r.membro_id, h.nome, h.cor FROM membros_habilidade_rel r JOIN membros_habilidades h ON h.id=r.habilidade_id WHERE r.membro_id IN ($ph)");
             $st5->execute($ids);
             foreach ($st5->fetchAll() as $row) $hab_map[$row['membro_id']][] = $row;
+
+            $st6 = db()->prepare("SELECT r.membro_id, p.nome, p.cor FROM membros_pastoreio_rel r JOIN membros_pastoreio p ON p.id=r.pastoreio_id WHERE r.membro_id IN ($ph)");
+            $st6->execute($ids);
+            foreach ($st6->fetchAll() as $row) $pastoreio_map[$row['membro_id']][] = $row;
         }
       ?>
       <?php foreach ($membros as $m):
@@ -381,9 +439,10 @@ include dirname(__DIR__) . '/_layout.php';
             $nasc = new DateTime($m['data_nasc']); $hoje = new DateTime();
             $idade = $nasc->diff($hoje)->y . ' anos';
         }
-        $gtags = $grupo_map[$m['id']] ?? [];
-        $ctags = $cargo_map[$m['id']] ?? [];
-        $htags = $hab_map[$m['id']]   ?? [];
+        $gtags = $grupo_map[$m['id']]   ?? [];
+        $ctags = $cargo_map[$m['id']]   ?? [];
+        $htags = $hab_map[$m['id']]     ?? [];
+        $ptags = $pastoreio_map[$m['id']] ?? [];
       ?>
       <div class="mb-card">
         <div class="mb-card-photo">
@@ -419,8 +478,8 @@ include dirname(__DIR__) . '/_layout.php';
           </div>
         </div>
 
-        <!-- tags: cargos (retângulo sólido) + grupos (pílula colorida) + habilidades (pílula tracejada) -->
-        <?php if ($gtags || $ctags || $htags): ?>
+        <!-- tags: cargos (retângulo sólido) + grupos (pílula colorida) + habilidades (pílula tracejada) + pastoreio (pílula outline) -->
+        <?php if ($gtags || $ctags || $htags || $ptags): ?>
         <div class="mb-card-tags">
           <?php foreach ($ctags as $ct): ?>
             <span class="mb-ctag" style="color:<?= htmlspecialchars($ct['cor']) ?>;border-color:<?= htmlspecialchars($ct['cor']) ?>;background:<?= htmlspecialchars($ct['cor']) ?>18"><?= htmlspecialchars($ct['nome']) ?></span>
@@ -430,6 +489,9 @@ include dirname(__DIR__) . '/_layout.php';
           <?php endforeach; ?>
           <?php foreach ($htags as $ht): ?>
             <span class="mb-htag" style="color:<?= htmlspecialchars($ht['cor']) ?>;border-color:<?= htmlspecialchars($ht['cor']) ?>"><?= htmlspecialchars($ht['nome']) ?></span>
+          <?php endforeach; ?>
+          <?php foreach ($ptags as $pt): ?>
+            <span class="mb-ptag" style="color:<?= htmlspecialchars($pt['cor']) ?>;border-color:<?= htmlspecialchars($pt['cor']) ?>"><?= htmlspecialchars($pt['nome']) ?></span>
           <?php endforeach; ?>
         </div>
         <?php endif; ?>
@@ -458,6 +520,15 @@ include dirname(__DIR__) . '/_layout.php';
             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
             <input type="hidden" name="acao" value="remover_habilidade">
             <input type="hidden" name="habilidade_id" value="<?= $habilidade_id ?>">
+            <input type="hidden" name="membro_id" value="<?= $m['id'] ?>">
+            <button type="submit" class="btn btn-danger btn-sm">Remover</button>
+          </form>
+          <?php endif; ?>
+          <?php if ($pastoreio_id): ?>
+          <form method="post" onsubmit="return confirm('Remover <?= htmlspecialchars(addslashes($m['nome'])) ?> do pastoreio?')">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+            <input type="hidden" name="acao" value="remover_pastoreio">
+            <input type="hidden" name="pastoreio_id" value="<?= $pastoreio_id ?>">
             <input type="hidden" name="membro_id" value="<?= $m['id'] ?>">
             <button type="submit" class="btn btn-danger btn-sm">Remover</button>
           </form>
@@ -564,6 +635,37 @@ include dirname(__DIR__) . '/_layout.php';
   </div>
 </div>
 <script>document.getElementById('modal-add-habilidade').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})</script>
+<?php endif; ?>
+
+<!-- Modal: adicionar ao pastoreio -->
+<?php if ($pastoreio_id && !empty($nao_no_pastoreio)): ?>
+<div class="modal-bg" id="modal-add-pastoreio">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Adicionar ao pastoreio</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-add-pastoreio').classList.remove('open')">✕</button>
+    </div>
+    <form method="post">
+      <div class="modal-body">
+        <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+        <input type="hidden" name="acao" value="adicionar_pastoreio">
+        <input type="hidden" name="pastoreio_id" value="<?= $pastoreio_id ?>">
+        <label style="margin-bottom:8px;display:block">Selecione o membro:</label>
+        <select name="membro_id" required>
+          <option value="">— escolha —</option>
+          <?php foreach ($nao_no_pastoreio as $nm): ?>
+            <option value="<?= $nm['id'] ?>"><?= htmlspecialchars($nm['nome']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-add-pastoreio').classList.remove('open')">Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>document.getElementById('modal-add-pastoreio').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})</script>
 <?php endif; ?>
 
 <?php include dirname(__DIR__) . '/_layout_end.php'; ?>

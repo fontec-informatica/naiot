@@ -2,6 +2,21 @@
 require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin', 'secretaria']);
 
+/* ── AJAX: criação inline ── */
+if (($_GET['ajax'] ?? '') === '1' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!csrf_valido()) { echo json_encode(['ok'=>false,'erro'=>'Token inválido.']); exit; }
+    $nome = trim($_POST['nome'] ?? '');
+    $desc = trim($_POST['descricao'] ?? '');
+    $cor  = $_POST['cor'] ?? '#1e6b35';
+    if (!preg_match('/^#[0-9a-f]{6}$/i', $cor)) $cor = '#1e6b35';
+    if (!$nome) { echo json_encode(['ok'=>false,'erro'=>'O nome é obrigatório.']); exit; }
+    db()->prepare("INSERT INTO membros_grupos (nome,descricao,cor) VALUES (?,?,?)")->execute([$nome,$desc,$cor]);
+    $id = (int)db()->lastInsertId();
+    echo json_encode(['ok'=>true,'id'=>$id,'nome'=>$nome,'cor'=>$cor]);
+    exit;
+}
+
 $titulo       = 'Grupos de Membros';
 $pagina_ativa = 'membros';
 
