@@ -104,7 +104,7 @@ button{cursor:pointer;font:inherit;border:none;background:none}
   width:var(--sidebar-w);
   background:linear-gradient(175deg,var(--green) 0%,#1a5c2e 40%,var(--green-dk) 100%);
   display:flex;flex-direction:column;flex-shrink:0;
-  position:fixed;top:0;left:0;height:100vh;
+  position:fixed;top:0;left:0;height:100vh;height:100svh;
   overflow-y:auto;z-index:200;
   transition:transform var(--ease);
 }
@@ -389,7 +389,7 @@ input[type=checkbox]{accent-color:var(--g);width:14px;height:14px;cursor:pointer
   .t-role{display:none}
 
   /* Somente o conteúdo rola — não a página inteira */
-  html,body        {height:100%;overflow:hidden}
+  html,body        {height:100vh;height:100svh;overflow:hidden}
   .layout          {height:100%;min-height:unset;overflow:hidden}
   .main            {height:100%;overflow:hidden}
   .content         {padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
