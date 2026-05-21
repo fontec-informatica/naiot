@@ -60,4 +60,24 @@ CREATE TABLE IF NOT EXISTS membros_cargo_rel (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
+$pdo->exec("
+CREATE TABLE IF NOT EXISTS membros_habilidades (
+  id        INT AUTO_INCREMENT PRIMARY KEY,
+  nome      VARCHAR(100) NOT NULL,
+  descricao TEXT,
+  cor       VARCHAR(7) NOT NULL DEFAULT '#1a6b8a',
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
+
+$pdo->exec("
+CREATE TABLE IF NOT EXISTS membros_habilidade_rel (
+  habilidade_id INT NOT NULL,
+  membro_id     INT NOT NULL,
+  PRIMARY KEY (habilidade_id, membro_id),
+  FOREIGN KEY (habilidade_id) REFERENCES membros_habilidades(id) ON DELETE CASCADE,
+  FOREIGN KEY (membro_id)     REFERENCES membros(id)             ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+");
+
 echo '<p style="font-family:sans-serif;padding:20px;color:green">✓ Tabelas criadas/verificadas com sucesso. <a href="/portal/membros/">Ir para Membros</a></p>';

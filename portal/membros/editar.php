@@ -23,8 +23,9 @@ $dados = [
     'cidade'    => $m['cidade'],
 ];
 
-$grupos = db()->query("SELECT * FROM membros_grupos ORDER BY nome")->fetchAll();
-$cargos = db()->query("SELECT * FROM membros_cargos ORDER BY nome")->fetchAll();
+$grupos      = db()->query("SELECT * FROM membros_grupos ORDER BY nome")->fetchAll();
+$cargos      = db()->query("SELECT * FROM membros_cargos ORDER BY nome")->fetchAll();
+$habilidades = db()->query("SELECT * FROM membros_habilidades ORDER BY nome")->fetchAll();
 
 $st_rel = db()->prepare("SELECT grupo_id FROM membros_grupo_rel WHERE membro_id=?");
 $st_rel->execute([$id]);
@@ -33,6 +34,10 @@ $grupos_do_membro = array_column($st_rel->fetchAll(), 'grupo_id');
 $st_rel2 = db()->prepare("SELECT cargo_id FROM membros_cargo_rel WHERE membro_id=?");
 $st_rel2->execute([$id]);
 $cargos_do_membro = array_column($st_rel2->fetchAll(), 'cargo_id');
+
+$st_rel3 = db()->prepare("SELECT habilidade_id FROM membros_habilidade_rel WHERE membro_id=?");
+$st_rel3->execute([$id]);
+$habilidades_do_membro = array_column($st_rel3->fetchAll(), 'habilidade_id');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $acao = $_POST['acao'] ?? 'salvar';
@@ -52,8 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['endereco']  = trim($_POST['endereco']  ?? '');
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
     $dados['cidade']    = trim($_POST['cidade']    ?? '');
-    $grupos_sel         = array_map('intval', (array)($_POST['grupos'] ?? []));
-    $cargos_sel         = array_map('intval', (array)($_POST['cargos'] ?? []));
+    $grupos_sel         = array_map('intval', (array)($_POST['grupos']      ?? []));
+    $cargos_sel         = array_map('intval', (array)($_POST['cargos']      ?? []));
+    $habilidades_sel    = array_map('intval', (array)($_POST['habilidades'] ?? []));
 
     if (!$dados['nome']) $erros[] = 'O nome é obrigatório.';
 
@@ -96,6 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         db()->prepare("DELETE FROM membros_cargo_rel WHERE membro_id=?")->execute([$id]);
         foreach ($cargos_sel as $cid) {
             if ($cid) db()->prepare("INSERT IGNORE INTO membros_cargo_rel (cargo_id,membro_id) VALUES (?,?)")->execute([$cid, $id]);
+        }
+        db()->prepare("DELETE FROM membros_habilidade_rel WHERE membro_id=?")->execute([$id]);
+        foreach ($habilidades_sel as $hid) {
+            if ($hid) db()->prepare("INSERT IGNORE INTO membros_habilidade_rel (habilidade_id,membro_id) VALUES (?,?)")->execute([$hid, $id]);
         }
 
         header("Location: /portal/membros/ver.php?id={$id}&ok=1");
@@ -206,6 +216,26 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
       <?php endif; ?>
 
+      <!-- Habilidades -->
+      <div class="form-group">
+        <label style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          Habilidades
+          <button type="button" onclick="abrirModalHabilidade()" style="font-size:.72rem;padding:3px 10px;border:1px solid var(--green);border-radius:6px;background:none;color:var(--green);cursor:pointer;font-family:inherit;font-weight:600">+ Nova habilidade</button>
+        </label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 0" id="habilidades-lista">
+          <?php foreach ($habilidades as $h): ?>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:500;color:var(--txt)">
+            <input type="checkbox" name="habilidades[]" value="<?= $h['id'] ?>" <?= in_array($h['id'], $habilidades_do_membro) ? 'checked' : '' ?>>
+            <span style="width:10px;height:10px;border-radius:2px;transform:rotate(45deg);background:<?= htmlspecialchars($h['cor']) ?>;display:inline-block;flex-shrink:0"></span>
+            <?= htmlspecialchars($h['nome']) ?>
+          </label>
+          <?php endforeach; ?>
+          <?php if (empty($habilidades)): ?>
+            <span class="sem-hab" style="font-size:.78rem;color:var(--muted)">Nenhuma habilidade criada. <a href="/portal/membros/habilidades.php" target="_blank" style="color:var(--green)">Gerenciar →</a></span>
+          <?php endif; ?>
+        </div>
+      </div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px">
         <div style="display:flex;gap:10px">
           <button type="submit" class="btn btn-primary">Salvar alterações</button>
@@ -223,6 +253,38 @@ include dirname(__DIR__) . '/_layout.php';
     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="hidden" name="acao" value="excluir">
   </form>
+
+<!-- Modal Nova Habilidade -->
+<div id="modal-habilidade" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:900;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;padding:24px;max-width:400px;width:100%;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h3 style="margin:0;font-size:1rem;font-family:'Cinzel',serif;color:var(--green-dk)">Nova habilidade</h3>
+      <button type="button" onclick="fecharModalHabilidade()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
+    </div>
+    <div>
+      <label style="font-size:.8rem;font-weight:600;color:var(--txt);display:block;margin-bottom:5px">Nome <span style="color:var(--red)">*</span></label>
+      <input type="text" id="nova-hab-nome" placeholder="Ex.: Musicalidade, Liderança…" maxlength="100"
+        style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;font-family:inherit;outline:none;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();salvarNovaHabilidade(document.getElementById('btn-criar-hab'));}">
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div>
+        <label style="font-size:.8rem;font-weight:600;color:var(--txt);display:block;margin-bottom:5px">Cor</label>
+        <input type="color" id="nova-hab-cor" value="#1a6b8a"
+          style="width:44px;height:36px;padding:2px 4px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:.8rem;font-weight:600;color:var(--txt);display:block;margin-bottom:5px">Descrição <span style="font-weight:400;color:var(--muted)">(opcional)</span></label>
+        <input type="text" id="nova-hab-desc" placeholder="Observação breve…"
+          style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.85rem;font-family:inherit;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="fecharModalHabilidade()">Cancelar</button>
+      <button type="button" id="btn-criar-hab" class="btn btn-primary btn-sm" onclick="salvarNovaHabilidade(this)">Criar habilidade</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal Webcam -->
 <div id="webcam-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center">
@@ -284,6 +346,57 @@ include dirname(__DIR__) . '/_layout.php';
     document.querySelectorAll('[data-cidade-ac]').forEach(function(el){init(el);});
   });
 })();
+
+function abrirModalHabilidade() {
+  var m = document.getElementById('modal-habilidade');
+  m.style.display = 'flex';
+  setTimeout(function(){ document.getElementById('nova-hab-nome').focus(); }, 50);
+}
+function fecharModalHabilidade() {
+  document.getElementById('modal-habilidade').style.display = 'none';
+  document.getElementById('nova-hab-nome').value = '';
+  document.getElementById('nova-hab-desc').value = '';
+  document.getElementById('nova-hab-cor').value = '#1a6b8a';
+}
+function salvarNovaHabilidade(btn) {
+  var nome = document.getElementById('nova-hab-nome').value.trim();
+  if (!nome) { document.getElementById('nova-hab-nome').focus(); return; }
+  var cor  = document.getElementById('nova-hab-cor').value;
+  var desc = document.getElementById('nova-hab-desc').value.trim();
+  var csrf = document.querySelector('[name=csrf_token]').value;
+  btn.disabled = true; btn.textContent = 'Criando…';
+  fetch('/portal/membros/habilidades.php?ajax=1', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'csrf_token='+encodeURIComponent(csrf)+'&acao=criar&nome='+encodeURIComponent(nome)+'&cor='+encodeURIComponent(cor)+'&descricao='+encodeURIComponent(desc)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    btn.disabled = false; btn.textContent = 'Criar habilidade';
+    if (data.ok) {
+      var lista = document.getElementById('habilidades-lista');
+      var semHab = lista.querySelector('.sem-hab');
+      if (semHab) semHab.remove();
+      var lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.83rem;font-weight:500;color:var(--txt)';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.name = 'habilidades[]'; cb.value = data.id; cb.checked = true;
+      var dot = document.createElement('span');
+      dot.style.cssText = 'width:10px;height:10px;border-radius:2px;transform:rotate(45deg);background:'+data.cor+';display:inline-block;flex-shrink:0';
+      lbl.appendChild(cb);
+      lbl.appendChild(dot);
+      lbl.appendChild(document.createTextNode(data.nome));
+      lista.appendChild(lbl);
+      fecharModalHabilidade();
+    } else {
+      alert(data.erro || 'Erro ao criar habilidade.');
+    }
+  })
+  .catch(function(){
+    btn.disabled = false; btn.textContent = 'Criar habilidade';
+    alert('Erro de conexão. Tente novamente.');
+  });
+}
 
 function previewFoto(input) {
   var file = input.files[0];

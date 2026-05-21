@@ -21,6 +21,10 @@ $st3 = db()->prepare("SELECT c.* FROM membros_cargos c JOIN membros_cargo_rel r 
 $st3->execute([$id]);
 $cargos = $st3->fetchAll();
 
+$st4 = db()->prepare("SELECT h.* FROM membros_habilidades h JOIN membros_habilidade_rel r ON r.habilidade_id=h.id WHERE r.membro_id=? ORDER BY h.nome");
+$st4->execute([$id]);
+$habilidades = $st4->fetchAll();
+
 $idade = '';
 if ($m['data_nasc']) {
     $nasc  = new DateTime($m['data_nasc']);
@@ -83,13 +87,16 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
     <div class="ver-nome-wrap">
       <div class="ver-nome"><?= htmlspecialchars($m['nome']) ?></div>
-      <?php if ($cargos || $grupos): ?>
+      <?php if ($cargos || $grupos || $habilidades): ?>
       <div class="ver-grupos">
         <?php foreach ($cargos as $c): ?>
           <a href="/portal/membros/?cargo=<?= $c['id'] ?>" style="display:inline-block;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:4px;border:1.5px solid <?= htmlspecialchars($c['cor']) ?>;color:<?= htmlspecialchars($c['cor']) ?>;background:<?= htmlspecialchars($c['cor']) ?>18;text-decoration:none;white-space:nowrap"><?= htmlspecialchars($c['nome']) ?></a>
         <?php endforeach; ?>
         <?php foreach ($grupos as $g): ?>
           <a href="/portal/membros/?grupo=<?= $g['id'] ?>" class="ver-gtag" style="background:<?= htmlspecialchars($g['cor']) ?>"><?= htmlspecialchars($g['nome']) ?></a>
+        <?php endforeach; ?>
+        <?php foreach ($habilidades as $h): ?>
+          <a href="/portal/membros/?habilidade=<?= $h['id'] ?>" style="display:inline-block;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:10px;border:1.5px solid <?= htmlspecialchars($h['cor']) ?>;color:<?= htmlspecialchars($h['cor']) ?>;background:<?= htmlspecialchars($h['cor']) ?>18;text-decoration:none;white-space:nowrap"><?= htmlspecialchars($h['nome']) ?></a>
         <?php endforeach; ?>
       </div>
       <?php endif; ?>
@@ -110,6 +117,14 @@ include dirname(__DIR__) . '/_layout.php';
            style="border-color:<?= htmlspecialchars($g['cor']) ?>;color:<?= htmlspecialchars($g['cor']) ?>"
            title="Ver grupo: <?= htmlspecialchars($g['nome']) ?>">
           <span class="ver-acao-txt">Ver grupo: <?= htmlspecialchars($g['nome']) ?></span>
+        </a>
+      <?php endforeach; ?>
+      <?php foreach ($habilidades as $h): ?>
+        <a href="/portal/membros/?habilidade=<?= $h['id'] ?>"
+           class="btn btn-ghost btn-sm ver-acao-link"
+           style="border-color:<?= htmlspecialchars($h['cor']) ?>;color:<?= htmlspecialchars($h['cor']) ?>"
+           title="Ver habilidade: <?= htmlspecialchars($h['nome']) ?>">
+          <span class="ver-acao-txt">Ver habilidade: <?= htmlspecialchars($h['nome']) ?></span>
         </a>
       <?php endforeach; ?>
     </div>
@@ -212,6 +227,22 @@ include dirname(__DIR__) . '/_layout.php';
              style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;background:<?= htmlspecialchars($g['cor']) ?>18;border:1.5px solid <?= htmlspecialchars($g['cor']) ?>;color:<?= htmlspecialchars($g['cor']) ?>;font-size:.82rem;font-weight:600;text-decoration:none">
             <span style="width:9px;height:9px;border-radius:50%;background:<?= htmlspecialchars($g['cor']) ?>"></span>
             <?= htmlspecialchars($g['nome']) ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Habilidades -->
+    <?php if ($habilidades): ?>
+    <div class="ver-info" style="margin-top:18px">
+      <div class="ver-info-head"><h3>Habilidades</h3></div>
+      <div style="padding:14px 20px;display:flex;flex-wrap:wrap;gap:8px">
+        <?php foreach ($habilidades as $h): ?>
+          <a href="/portal/membros/?habilidade=<?= $h['id'] ?>"
+             style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:10px;background:<?= htmlspecialchars($h['cor']) ?>18;border:1.5px solid <?= htmlspecialchars($h['cor']) ?>;color:<?= htmlspecialchars($h['cor']) ?>;font-size:.82rem;font-weight:600;text-decoration:none">
+            <span style="width:8px;height:8px;border-radius:2px;transform:rotate(45deg);background:<?= htmlspecialchars($h['cor']) ?>;flex-shrink:0"></span>
+            <?= htmlspecialchars($h['nome']) ?>
           </a>
         <?php endforeach; ?>
       </div>
