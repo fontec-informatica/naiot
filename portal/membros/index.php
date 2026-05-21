@@ -225,7 +225,7 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="mb-sidebar-section">
         <div class="mb-sidebar-head">
           <span>Grupos</span>
-          <a href="/portal/membros/grupos.php" title="Gerenciar grupos" style="color:var(--muted);font-size:.72rem">⚙</a>
+          <a href="/portal/membros/grupos.php" title="Gerenciar grupos" style="color:var(--muted);font-size:1rem">⚙</a>
         </div>
         <ul class="mb-grupos-list">
           <li>
@@ -254,7 +254,7 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="mb-sidebar-section">
         <div class="mb-sidebar-head">
           <span>Cargos</span>
-          <a href="/portal/membros/cargos.php" title="Gerenciar cargos" style="color:var(--muted);font-size:.72rem">⚙</a>
+          <a href="/portal/membros/cargos.php" title="Gerenciar cargos" style="color:var(--muted);font-size:1rem">⚙</a>
         </div>
         <ul class="mb-grupos-list">
           <?php foreach ($cargos as $c): ?>
