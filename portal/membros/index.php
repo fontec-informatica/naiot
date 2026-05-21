@@ -298,8 +298,9 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="mb-card">
         <!-- foto -->
         <div class="mb-card-photo">
-          <?php if ($m['foto'] && file_exists(__DIR__ . '/fotos/' . $m['foto'])): ?>
-            <img src="/portal/membros/fotos/<?= htmlspecialchars($m['foto']) ?>?v=<?= filemtime(__DIR__.'/fotos/'.$m['foto']) ?>" alt="<?= htmlspecialchars($m['nome']) ?>">
+          <?php if (!empty($m['foto'])): ?>
+            <img src="/portal/membros/fotos/<?= htmlspecialchars($m['foto']) ?>" alt="<?= htmlspecialchars($m['nome']) ?>" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span class="mb-inicial" style="display:none"><?= $inicial ?></span>
           <?php else: ?>
             <span class="mb-inicial"><?= $inicial ?></span>
           <?php endif; ?>

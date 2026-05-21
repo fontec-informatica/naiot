@@ -66,10 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 
     if (!$erros) {
         if ($nova_foto !== $m['foto'] && !empty($_FILES['foto']['tmp_name'])) {
-            if ($m['foto'] && file_exists(__DIR__ . '/fotos/' . $m['foto'])) {
-                @unlink(__DIR__ . '/fotos/' . $m['foto']);
-            }
-            move_uploaded_file($_FILES['foto']['tmp_name'], __DIR__ . '/fotos/' . $nova_foto);
+            $dir_fotos = __DIR__ . '/fotos/';
+            if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
+            if ($m['foto']) @unlink($dir_fotos . $m['foto']);
+            move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $nova_foto);
         }
         db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=? WHERE id=?")
            ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $id]);
@@ -87,16 +87,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div style="max-width:640px">
-  <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
-    <a href="/portal/membros/ver.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">← Voltar</a>
-  </div>
+<div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
+  <a href="/portal/membros/ver.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">← Voltar</a>
+</div>
 
-  <?php if ($erros): ?>
-    <div class="alerta alerta-erro"><?= implode('<br>', array_map('htmlspecialchars', $erros)) ?></div>
-  <?php endif; ?>
+<?php if ($erros): ?>
+<div class="alerta alerta-erro"><?= implode('<br>', array_map('htmlspecialchars', $erros)) ?></div>
+<?php endif; ?>
 
-  <form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data">
     <div class="form-wrap">
       <h2>Editar — <?= htmlspecialchars($m['nome']) ?></h2>
       <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
@@ -107,8 +106,8 @@ include dirname(__DIR__) . '/_layout.php';
         <label>Foto</label>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <div style="width:90px;height:90px;border-radius:50%;border:2px solid var(--border);overflow:hidden;background:var(--green-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <?php if ($m['foto'] && file_exists(__DIR__ . '/fotos/' . $m['foto'])): ?>
-              <img id="preview-img" src="/portal/membros/fotos/<?= htmlspecialchars($m['foto']) ?>?v=<?= filemtime(__DIR__.'/fotos/'.$m['foto']) ?>" style="width:100%;height:100%;object-fit:cover">
+            <?php if (!empty($m['foto'])): ?>
+              <img id="preview-img" src="/portal/membros/fotos/<?= htmlspecialchars($m['foto']) ?>" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';document.getElementById('preview-inicial').style.display='flex'">
             <?php else: ?>
               <span style="font-family:'Cinzel',serif;font-size:2rem;color:var(--green);opacity:.4" id="preview-inicial"><?= mb_strtoupper(mb_substr($m['nome'],0,1)) ?></span>
               <img id="preview-img" src="" style="display:none;width:100%;height:100%;object-fit:cover">
@@ -186,7 +185,6 @@ include dirname(__DIR__) . '/_layout.php';
     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
     <input type="hidden" name="acao" value="excluir">
   </form>
-</div>
 
 <script>
 function previewFoto(input) {

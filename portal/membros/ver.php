@@ -69,8 +69,8 @@ include dirname(__DIR__) . '/_layout.php';
   <!-- card lateral -->
   <div class="ver-card">
     <div class="ver-foto">
-      <?php if ($m['foto'] && file_exists(__DIR__ . '/fotos/' . $m['foto'])): ?>
-        <img src="/portal/membros/fotos/<?= htmlspecialchars($m['foto']) ?>?v=<?= filemtime(__DIR__.'/fotos/'.$m['foto']) ?>" alt="<?= htmlspecialchars($m['nome']) ?>">
+      <?php if (!empty($m['foto'])): ?>
+        <img src="/portal/membros/fotos/<?= htmlspecialchars($m['foto']) ?>" alt="<?= htmlspecialchars($m['nome']) ?>" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
       <?php else: ?>
         <span class="ver-inicial"><?= mb_strtoupper(mb_substr($m['nome'],0,1)) ?></span>
       <?php endif; ?>

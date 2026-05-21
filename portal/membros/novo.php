@@ -37,7 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 
     if (!$erros) {
         if ($foto_nome) {
-            move_uploaded_file($_FILES['foto']['tmp_name'], __DIR__ . '/fotos/' . $foto_nome);
+            $dir_fotos = __DIR__ . '/fotos/';
+            if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
+            move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $foto_nome);
         }
         $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,bairro,cidade,telefone) VALUES (?,?,?,?,?,?,?)");
         $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone']]);
@@ -55,10 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div style="max-width:640px">
-  <div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
-    <a href="/portal/membros/<?= $grupo_id ? "?grupo={$grupo_id}" : '' ?>" class="btn btn-ghost btn-sm">← Voltar</a>
-  </div>
+<div style="margin-bottom:20px;display:flex;align-items:center;gap:10px">
+  <a href="/portal/membros/<?= $grupo_id ? "?grupo={$grupo_id}" : '' ?>" class="btn btn-ghost btn-sm">← Voltar</a>
+</div>
 
   <?php if ($erros): ?>
     <div class="alerta alerta-erro"><?= implode('<br>', array_map('htmlspecialchars', $erros)) ?></div>
@@ -144,7 +145,6 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
   </form>
-</div>
 
 <script>
 function previewFoto(input) {
