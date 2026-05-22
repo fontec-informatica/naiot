@@ -108,7 +108,11 @@ include dirname(__DIR__) . '/_layout.php';
   <span>Lançamentos</span>
   <a href="/portal/financeiro/recorrentes.php">Recorrentes</a>
   <a href="/portal/financeiro/balanco.php?mes=<?= $mes ?>&ano=<?= $ano ?>">Balanço</a>
-  <a href="/portal/financeiro/novo.php" style="margin-left:auto;background:var(--green-dk);color:#fff;border-color:var(--green-dk)">+ Novo lançamento</a>
+  <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+    <a href="/portal/financeiro/importar.php?mes=<?= $mes ?>&ano=<?= $ano ?>">↑ Importar</a>
+    <a href="/portal/financeiro/exportar.php?mes=<?= $mes ?>&ano=<?= $ano ?>">↓ Exportar</a>
+    <a href="/portal/financeiro/novo.php" style="background:var(--green-dk);color:#fff;border-color:var(--green-dk)">+ Novo lançamento</a>
+  </div>
 </div>
 
 <?php if (!empty($_GET['deletado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Lançamento excluído.</div><?php endif; ?>

@@ -1,351 +1,288 @@
 <?php
 require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin','financeiro']);
+require_once dirname(__DIR__) . '/lib/XlsxWriter.php';
 
-$exp    = $_GET['exp']    ?? 'lancamentos'; // lancamentos | balanco
 $mes    = (int)($_GET['mes']    ?? date('n'));
 $ano    = (int)($_GET['ano']    ?? date('Y'));
 $tipo   = $_GET['tipo']   ?? '';
 $status = $_GET['status'] ?? '';
 $cat_id = (int)($_GET['cat']   ?? 0);
 $busca  = trim($_GET['q'] ?? '');
-$mes = max(1,min(12,$mes)); $ano = max(2020,min(2099,$ano));
+$mes = max(1, min(12, $mes));
+$ano = max(2020, min(2099, $ano));
 
-$meses_nomes = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-$forma_labels = ['dinheiro'=>'Dinheiro','pix'=>'PIX','transferencia'=>'Transferência','boleto'=>'Boleto','cartao'=>'Cartão','cheque'=>'Cheque','outro'=>'Outro'];
-$orig_labels  = ['doacao'=>'Doação','dizimo'=>'Dízimo','contribuicao'=>'Contribuição','inscricao'=>'Inscrição','mensalidade'=>'Mensalidade','outro'=>'Outro'];
+$meses_nomes = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+$forma_labels = ['dinheiro'=>'Dinheiro','pix'=>'PIX','transferencia'=>'Transferência',
+                 'boleto'=>'Boleto','cartao'=>'Cartão','cheque'=>'Cheque','outro'=>'Outro'];
 
-// ── Busca lançamentos filtrados ──────────────────────────────────────────────
+$pdo = db();
+$periodo = $meses_nomes[$mes] . ' / ' . $ano;
+$hoje = new DateTime();
+
+// ── Lançamentos filtrados ─────────────────────────────────────────────────
 $where  = "WHERE l.competencia_mes=? AND l.competencia_ano=?";
-$params = [$mes,$ano];
+$params = [$mes, $ano];
 if ($tipo)   { $where .= " AND l.tipo=?";           $params[] = $tipo; }
 if ($status) { $where .= " AND l.status=?";         $params[] = $status; }
 if ($cat_id) { $where .= " AND l.categoria_id=?";   $params[] = $cat_id; }
 if ($busca)  { $where .= " AND l.descricao LIKE ?";  $params[] = "%$busca%"; }
 
-$sql = "SELECT l.*, c.nome as cat_nome FROM financeiro_lancamentos l
-        LEFT JOIN financeiro_categorias c ON c.id=l.categoria_id
-        $where ORDER BY l.tipo, l.data_lancamento, l.id";
-$st = db()->prepare($sql); $st->execute($params);
+$st = $pdo->prepare("
+    SELECT l.*, c.nome as cat_nome, c.cor as cat_cor
+    FROM financeiro_lancamentos l
+    LEFT JOIN financeiro_categorias c ON c.id = l.categoria_id
+    $where
+    ORDER BY l.data_lancamento ASC, l.id ASC
+");
+$st->execute($params);
 $lancamentos = $st->fetchAll();
 
-// ── Balanço por categoria ─────────────────────────────────────────────────────
+// ── KPIs ─────────────────────────────────────────────────────────────────
+$total_rec = 0; $total_desp = 0; $total_pend = 0; $a_receber = 0;
 $rec_por_cat = []; $desp_por_cat = [];
-$total_rec = 0; $total_desp = 0;
 foreach ($lancamentos as $l) {
     if ($l['status'] === 'cancelado') continue;
     if ($l['tipo'] === 'receita') {
-        $k = $l['cat_nome'] ?? 'Sem categoria';
-        $rec_por_cat[$k] = ($rec_por_cat[$k] ?? 0) + $l['valor'];
         $total_rec += $l['valor'];
+        $rec_por_cat[$l['cat_nome'] ?? 'Sem categoria'] = ($rec_por_cat[$l['cat_nome'] ?? 'Sem categoria'] ?? 0) + $l['valor'];
+        if ($l['status'] === 'pendente') $a_receber += $l['valor'];
     } else {
-        $k = $l['cat_nome'] ?? 'Sem categoria';
-        $desp_por_cat[$k] = ($desp_por_cat[$k] ?? 0) + $l['valor'];
         $total_desp += $l['valor'];
+        $desp_por_cat[$l['cat_nome'] ?? 'Sem categoria'] = ($desp_por_cat[$l['cat_nome'] ?? 'Sem categoria'] ?? 0) + $l['valor'];
+        if ($l['status'] === 'pendente') $total_pend += $l['valor'];
     }
 }
 arsort($rec_por_cat); arsort($desp_por_cat);
+$saldo = $total_rec - $total_desp;
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  Gerador XLSX (nativo — sem dependências externas)
-// ══════════════════════════════════════════════════════════════════════════════
+// ── Todas as categorias ───────────────────────────────────────────────────
+$categorias = $pdo->query("SELECT * FROM financeiro_categorias ORDER BY tipo, ordem, nome")->fetchAll();
 
-function _col($n) {
-    $r = '';
-    while ($n > 0) { $r = chr(64 + (($n - 1) % 26 + 1)) . $r; $n = intdiv($n - 1, 26); }
-    return $r;
+// ── Recorrentes ativos ────────────────────────────────────────────────────
+$recorrentes = $pdo->query("
+    SELECT r.*, c.nome as cat_nome
+    FROM financeiro_recorrentes r
+    LEFT JOIN financeiro_categorias c ON c.id = r.categoria_id
+    WHERE r.status = 'ativo'
+    ORDER BY r.proximo_vencimento ASC, r.descricao ASC
+")->fetchAll();
+
+// ── Últimos 6 meses (histórico) ───────────────────────────────────────────
+$historico = [];
+for ($i = 5; $i >= 0; $i--) {
+    $m = $mes - $i; $a = $ano;
+    while ($m <= 0) { $m += 12; $a--; }
+    $r = $pdo->prepare("
+        SELECT
+          COALESCE(SUM(CASE WHEN tipo='receita' THEN valor ELSE 0 END),0) as rec,
+          COALESCE(SUM(CASE WHEN tipo='despesa' THEN valor ELSE 0 END),0) as desp
+        FROM financeiro_lancamentos
+        WHERE competencia_mes=? AND competencia_ano=? AND status!='cancelado'
+    ");
+    $r->execute([$m, $a]);
+    $row = $r->fetch();
+    $historico[] = [
+        'label' => substr($meses_nomes[$m], 0, 3) . '/' . $a,
+        'rec'   => (float)$row['rec'],
+        'desp'  => (float)$row['desp'],
+        'saldo' => (float)$row['rec'] - (float)$row['desp'],
+    ];
 }
 
-function _esc($v) { return htmlspecialchars((string)$v, ENT_XML1 | ENT_QUOTES, 'UTF-8'); }
+// ── Montar Excel ──────────────────────────────────────────────────────────
+$xlsx = new XlsxWriter();
+$fmt_val = fn($v) => 'R$ ' . number_format((float)$v, 2, ',', '.');
 
-/**
- * Gera um arquivo XLSX em memória.
- *
- * $sheets = [
- *   [
- *     'title'      => 'Nome da aba',
- *     'headers'    => ['Col A', 'Col B', ...],
- *     'rows'       => [ [val, val, ...], ... ],
- *     'col_widths' => [20, 30, ...],   // opcional, em caracteres
- *     'num_cols'   => [2, 5],          // índices (0-based) com formato numérico
- *     'cur_cols'   => [5],             // índices (0-based) com formato monetário R$
- *   ]
- * ]
- */
-function make_xlsx(array $sheets): string {
-    $ns_pkg  = 'http://schemas.openxmlformats.org/package/2006/';
-    $ns_xl   = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-    $ns_r    = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
+// ═══════════════════════════════════════════════════════
+// ABA 1 — DASHBOARD
+// ═══════════════════════════════════════════════════════
+$dash = $xlsx->addSheet('Dashboard');
+$dash->setColWidth(1, 34)->setColWidth(2, 20)->setColWidth(3, 20)->setColWidth(4, 16);
 
-    // ── [Content_Types].xml ──────────────────────────────────────────────────
-    $ct = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        . '<Types xmlns="'.$ns_pkg.'content-types">'
-        . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-        . '<Default Extension="xml"  ContentType="application/xml"/>'
-        . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-        . '<Override PartName="/xl/styles.xml"   ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
-    foreach (array_keys($sheets) as $i) {
-        $ct .= '<Override PartName="/xl/worksheets/sheet'.($i+1).'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
-    }
-    $ct .= '</Types>';
+$r = 1;
+$dash->writeCell($r, 1, 'RELATÓRIO FINANCEIRO — NAIOT', 3);
+$dash->writeCell($r, 2, '', 3)->writeCell($r, 3, '', 3)->writeCell($r, 4, '', 3);
+$r++;
+$dash->writeCell($r, 1, 'Período: ' . $periodo, 1);
+$dash->writeCell($r, 3, 'Gerado em: ' . $hoje->format('d/m/Y H:i'), 0);
+$r += 2;
 
-    // ── _rels/.rels ──────────────────────────────────────────────────────────
-    $rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-          . '<Relationships xmlns="'.$ns_pkg.'relationships">'
-          . '<Relationship Id="rId1" Type="'.$ns_r.'officeDocument" Target="xl/workbook.xml"/>'
-          . '</Relationships>';
-
-    // ── xl/workbook.xml ──────────────────────────────────────────────────────
-    $wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        . '<workbook xmlns="'.$ns_xl.'" xmlns:r="'.$ns_r.'">'
-        . '<sheets>';
-    foreach ($sheets as $i => $sh) {
-        $wb .= '<sheet name="'._esc($sh['title']).'" sheetId="'.($i+1).'" r:id="rId'.($i+1).'"/>';
-    }
-    $wb .= '</sheets></workbook>';
-
-    // ── xl/_rels/workbook.xml.rels ───────────────────────────────────────────
-    $wbr = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-         . '<Relationships xmlns="'.$ns_pkg.'relationships">';
-    foreach (array_keys($sheets) as $i) {
-        $wbr .= '<Relationship Id="rId'.($i+1).'" Type="'.$ns_r.'worksheet" Target="worksheets/sheet'.($i+1).'.xml"/>';
-    }
-    $wbr .= '<Relationship Id="rId'.(count($sheets)+1).'" Type="'.$ns_r.'styles" Target="styles.xml"/>';
-    $wbr .= '</Relationships>';
-
-    // ── xl/styles.xml ────────────────────────────────────────────────────────
-    // xf index: 0=normal, 1=bold(header), 2=currency, 3=number
-    $sty = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-         . '<styleSheet xmlns="'.$ns_xl.'">'
-         . '<numFmts count="2">'
-         .   '<numFmt numFmtId="164" formatCode="&quot;R$&quot;\ #,##0.00"/>'
-         .   '<numFmt numFmtId="165" formatCode="#,##0.00"/>'
-         . '</numFmts>'
-         . '<fonts count="3">'
-         .   '<font><sz val="10"/><name val="Calibri"/></font>'
-         .   '<font><b/><sz val="10"/><name val="Calibri"/></font>'
-         .   '<font><b/><sz val="11"/><color rgb="FF163D22"/><name val="Calibri"/></font>'
-         . '</fonts>'
-         . '<fills count="3">'
-         .   '<fill><patternFill patternType="none"/></fill>'
-         .   '<fill><patternFill patternType="gray125"/></fill>'
-         .   '<fill><patternFill patternType="solid"><fgColor rgb="FFE8F5E9"/></patternFill></fill>'
-         . '</fills>'
-         . '<borders count="2">'
-         .   '<border><left/><right/><top/><bottom/><diagonal/></border>'
-         .   '<border><left style="thin"><color rgb="FFD0D0D0"/></left>'
-         .     '<right style="thin"><color rgb="FFD0D0D0"/></right>'
-         .     '<top style="thin"><color rgb="FFD0D0D0"/></top>'
-         .     '<bottom style="thin"><color rgb="FFD0D0D0"/></bottom>'
-         .     '<diagonal/></border>'
-         . '</borders>'
-         . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-         . '<cellXfs count="5">'
-         .   '<xf numFmtId="0"   fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/>'        // 0: normal
-         .   '<xf numFmtId="0"   fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>' // 1: bold header verde
-         .   '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>'       // 2: moeda R$
-         .   '<xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>'       // 3: número
-         .   '<xf numFmtId="0"   fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>'           // 4: título
-         . '</cellXfs>'
-         . '</styleSheet>';
-
-    // ── Worksheets ───────────────────────────────────────────────────────────
-    $ws_xmls = [];
-    foreach ($sheets as $sh) {
-        $num_cols = $sh['num_cols'] ?? [];
-        $cur_cols = $sh['cur_cols'] ?? [];
-        $widths   = $sh['col_widths'] ?? [];
-
-        $xml  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-              . '<worksheet xmlns="'.$ns_xl.'" xmlns:r="'.$ns_r.'">';
-
-        if ($widths) {
-            $xml .= '<cols>';
-            foreach ($widths as $ci => $w) {
-                $xml .= '<col min="'.($ci+1).'" max="'.($ci+1).'" width="'.$w.'" customWidth="1"/>';
-            }
-            $xml .= '</cols>';
-        }
-
-        $xml .= '<sheetData>';
-        $rn = 1;
-
-        // Title row (optional)
-        if (!empty($sh['report_title'])) {
-            $ncols = max(count($sh['headers'] ?? [1]), 1);
-            $xml .= '<row r="'.$rn.'">'
-                  . '<c r="A'.$rn.'" t="inlineStr" s="4"><is><t>'._esc($sh['report_title']).'</t></is></c>'
-                  . '</row>';
-            $rn++;
-        }
-
-        // Headers
-        if (!empty($sh['headers'])) {
-            $xml .= '<row r="'.$rn.'">';
-            foreach ($sh['headers'] as $ci => $h) {
-                $xml .= '<c r="'._col($ci+1).$rn.'" t="inlineStr" s="1"><is><t>'._esc($h).'</t></is></c>';
-            }
-            $xml .= '</row>';
-            $rn++;
-        }
-
-        // Data
-        foreach ($sh['rows'] as $row) {
-            $xml .= '<row r="'.$rn.'">';
-            foreach (array_values($row) as $ci => $val) {
-                $ref = _col($ci+1).$rn;
-                if (in_array($ci, $cur_cols) && is_numeric($val)) {
-                    $xml .= '<c r="'.$ref.'" s="2"><v>'.(float)$val.'</v></c>';
-                } elseif (in_array($ci, $num_cols) && is_numeric($val)) {
-                    $xml .= '<c r="'.$ref.'" s="3"><v>'.(float)$val.'</v></c>';
-                } elseif (is_numeric($val) && !is_string($val)) {
-                    $xml .= '<c r="'.$ref.'" s="0"><v>'.$val.'</v></c>';
-                } else {
-                    $xml .= '<c r="'.$ref.'" t="inlineStr" s="0"><is><t>'._esc($val).'</t></is></c>';
-                }
-            }
-            $xml .= '</row>';
-            $rn++;
-        }
-
-        $xml .= '</sheetData>';
-
-        // AutoFilter
-        if (!empty($sh['headers']) && !empty($sh['rows'])) {
-            $last_col = _col(count($sh['headers']));
-            $header_row = !empty($sh['report_title']) ? 2 : 1;
-            $xml .= '<autoFilter ref="A'.$header_row.':'.$last_col.$header_row.'"/>';
-        }
-
-        $xml .= '</worksheet>';
-        $ws_xmls[] = $xml;
-    }
-
-    // ── Montar ZIP ───────────────────────────────────────────────────────────
-    $tmp = tempnam(sys_get_temp_dir(), 'xlsx_');
-    $zip = new ZipArchive();
-    if ($zip->open($tmp, ZipArchive::OVERWRITE) !== true) {
-        throw new RuntimeException('Não foi possível criar o arquivo XLSX.');
-    }
-    $zip->addFromString('[Content_Types].xml',       $ct);
-    $zip->addFromString('_rels/.rels',               $rels);
-    $zip->addFromString('xl/workbook.xml',           $wb);
-    $zip->addFromString('xl/_rels/workbook.xml.rels',$wbr);
-    $zip->addFromString('xl/styles.xml',             $sty);
-    foreach ($ws_xmls as $i => $ws_xml) {
-        $zip->addFromString('xl/worksheets/sheet'.($i+1).'.xml', $ws_xml);
-    }
-    $zip->close();
-    $data = file_get_contents($tmp);
-    @unlink($tmp);
-    return $data;
+// Resumo do período
+$dash->writeCell($r, 1, 'RESUMO DO PERÍODO', 2);
+$dash->writeCell($r, 2, '', 2)->writeCell($r, 3, '', 2)->writeCell($r, 4, '', 2);
+$r++;
+$kpis = [
+    ['Total de receitas realizadas',  $fmt_val($total_rec),         $total_rec  >= 0 ? 8 : 9],
+    ['Total de despesas realizadas',  $fmt_val($total_desp),        9],
+    ['Saldo do período',              $fmt_val($saldo),             $saldo >= 0 ? 8 : 9],
+    ['A receber (pendentes)',         $fmt_val($a_receber),         9],
+    ['A pagar (pendentes)',           $fmt_val($total_pend),        9],
+    ['Total de lançamentos',          count($lancamentos),          9],
+];
+foreach ($kpis as [$label, $val, $style]) {
+    $dash->writeCell($r, 1, $label, $style);
+    $dash->writeCell($r, 2, $val, $style);
+    $r++;
 }
+$r++;
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  Montar planilhas conforme tipo de exportação
-// ══════════════════════════════════════════════════════════════════════════════
-
-$periodo_label = $meses_nomes[$mes] . ' ' . $ano;
-
-if ($exp === 'balanco') {
-
-    // ── Aba 1: DRE ──────────────────────────────────────────────────────────
-    $dre_rows = [];
-    $dre_rows[] = ['RECEITAS', '', '', ''];
+// Receitas por categoria
+if ($rec_por_cat) {
+    $dash->writeCell($r, 1, 'RECEITAS POR CATEGORIA', 2);
+    $dash->writeCell($r, 2, 'Valor', 2)->writeCell($r, 3, '% do total', 2);
+    $r++;
     foreach ($rec_por_cat as $cat => $val) {
-        $pct = $total_rec > 0 ? round($val / $total_rec * 100, 2) : 0;
-        $dre_rows[] = ['  ' . $cat, 'Receita', $val, $pct];
+        $pct = $total_rec > 0 ? round($val / $total_rec * 100, 1) : 0;
+        $dash->writeCell($r, 1, $cat,                    9);
+        $dash->writeCell($r, 2, $fmt_val($val),          9);
+        $dash->writeCell($r, 3, $pct . '%',              9);
+        $r++;
     }
-    $dre_rows[] = ['TOTAL RECEITAS', '', $total_rec, ''];
-    $dre_rows[] = ['', '', '', ''];
-    $dre_rows[] = ['DESPESAS', '', '', ''];
-    foreach ($desp_por_cat as $cat => $val) {
-        $pct = $total_desp > 0 ? round($val / $total_desp * 100, 2) : 0;
-        $dre_rows[] = ['  ' . $cat, 'Despesa', $val, $pct];
-    }
-    $dre_rows[] = ['TOTAL DESPESAS', '', $total_desp, ''];
-    $dre_rows[] = ['', '', '', ''];
-    $saldo = $total_rec - $total_desp;
-    $dre_rows[] = ['RESULTADO DO MÊS', '', $saldo, $total_rec > 0 ? round($saldo / $total_rec * 100, 2) : 0];
-
-    $sheets = [
-        [
-            'title'        => 'DRE',
-            'report_title' => 'Balanço Gerencial — ' . $periodo_label,
-            'headers'      => ['Categoria', 'Tipo', 'Valor (R$)', '% do Total'],
-            'rows'         => $dre_rows,
-            'cur_cols'     => [2],
-            'num_cols'     => [3],
-            'col_widths'   => [38, 12, 18, 14],
-        ],
-        [
-            'title'        => 'Lançamentos',
-            'report_title' => 'Lançamentos — ' . $periodo_label,
-            'headers'      => ['Data', 'Descrição', 'Categoria', 'Tipo', 'Origem', 'Forma', 'Valor (R$)', 'Status', 'Observações'],
-            'rows'         => array_map(fn($l) => [
-                date('d/m/Y', strtotime($l['data_lancamento'])),
-                $l['descricao'],
-                $l['cat_nome'] ?? '—',
-                ucfirst($l['tipo']),
-                $l['origem'] ? ($orig_labels[$l['origem']] ?? $l['origem']) : '—',
-                $forma_labels[$l['forma_pagamento']] ?? ucfirst($l['forma_pagamento']),
-                (float)$l['valor'],
-                ucfirst($l['status']),
-                $l['observacoes'] ?? '',
-            ], $lancamentos),
-            'cur_cols'     => [6],
-            'col_widths'   => [12, 36, 22, 10, 16, 14, 16, 12, 30],
-        ],
-    ];
-
-    $filename = 'balanco_' . $ano . '_' . str_pad($mes,2,'0',STR_PAD_LEFT) . '.xlsx';
-
-} else {
-
-    // ── Lançamentos ──────────────────────────────────────────────────────────
-    $sheets = [
-        [
-            'title'        => 'Lançamentos',
-            'report_title' => 'Lançamentos — ' . $periodo_label,
-            'headers'      => ['Data', 'Descrição', 'Categoria', 'Tipo', 'Origem', 'Forma Pagamento', 'Valor (R$)', 'Status', 'Observações'],
-            'rows'         => array_map(fn($l) => [
-                date('d/m/Y', strtotime($l['data_lancamento'])),
-                $l['descricao'],
-                $l['cat_nome'] ?? '—',
-                ucfirst($l['tipo']),
-                $l['origem'] ? ($orig_labels[$l['origem']] ?? $l['origem']) : '—',
-                $forma_labels[$l['forma_pagamento']] ?? ucfirst($l['forma_pagamento']),
-                (float)$l['valor'],
-                ucfirst($l['status']),
-                $l['observacoes'] ?? '',
-            ], $lancamentos),
-            'cur_cols'     => [6],
-            'col_widths'   => [12, 36, 22, 10, 16, 18, 16, 12, 30],
-        ],
-        [
-            'title'   => 'Totais',
-            'headers' => ['', 'Valor (R$)'],
-            'rows'    => [
-                ['Receitas realizadas', $total_rec],
-                ['Despesas realizadas', $total_desp],
-                ['Saldo',              $total_rec - $total_desp],
-                ['Total de registros', count($lancamentos)],
-            ],
-            'cur_cols'   => [1],
-            'col_widths' => [28, 18],
-        ],
-    ];
-
-    $filename = 'lancamentos_' . $ano . '_' . str_pad($mes,2,'0',STR_PAD_LEFT) . '.xlsx';
+    $dash->writeCell($r, 1, 'TOTAL',          8);
+    $dash->writeCell($r, 2, $fmt_val($total_rec), 8);
+    $dash->writeCell($r, 3, '100%',           8);
+    $r += 2;
 }
 
-// ── Enviar arquivo ────────────────────────────────────────────────────────────
-$xlsx = make_xlsx($sheets);
+// Despesas por categoria
+if ($desp_por_cat) {
+    $dash->writeCell($r, 1, 'DESPESAS POR CATEGORIA', 4);
+    $dash->writeCell($r, 2, 'Valor', 4)->writeCell($r, 3, '% do total', 4);
+    $r++;
+    foreach ($desp_por_cat as $cat => $val) {
+        $pct = $total_desp > 0 ? round($val / $total_desp * 100, 1) : 0;
+        $dash->writeCell($r, 1, $cat,                    9);
+        $dash->writeCell($r, 2, $fmt_val($val),          9);
+        $dash->writeCell($r, 3, $pct . '%',              9);
+        $r++;
+    }
+    $dash->writeCell($r, 1, 'TOTAL',           8);
+    $dash->writeCell($r, 2, $fmt_val($total_desp), 8);
+    $dash->writeCell($r, 3, '100%',            8);
+    $r += 2;
+}
 
-header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment; filename="' . $filename . '"');
-header('Content-Length: ' . strlen($xlsx));
-header('Cache-Control: private, max-age=0');
-header('Pragma: no-cache');
-echo $xlsx;
-exit;
+// Histórico dos últimos 6 meses
+$dash->writeCell($r, 1, 'HISTÓRICO — ÚLTIMOS 6 MESES', 2);
+$dash->writeCell($r, 2, 'Receitas', 2)->writeCell($r, 3, 'Despesas', 2)->writeCell($r, 4, 'Saldo', 2);
+$r++;
+foreach ($historico as $h) {
+    $style = $h['saldo'] >= 0 ? 8 : 9;
+    $dash->writeCell($r, 1, $h['label'],          $style);
+    $dash->writeCell($r, 2, $fmt_val($h['rec']),  $style);
+    $dash->writeCell($r, 3, $fmt_val($h['desp']), $style);
+    $dash->writeCell($r, 4, $fmt_val($h['saldo']),$style);
+    $r++;
+}
+
+// ═══════════════════════════════════════════════════════
+// ABA 2 — LANÇAMENTOS
+// ═══════════════════════════════════════════════════════
+$lan = $xlsx->addSheet('Lancamentos');
+$lan->setColWidth(1, 13)->setColWidth(2, 36)->setColWidth(3, 22)
+    ->setColWidth(4, 11)->setColWidth(5, 14)->setColWidth(6, 16)
+    ->setColWidth(7, 16)->setColWidth(8, 13)->setColWidth(9, 30);
+
+$lan->writeRow(1, ['Data', 'Descrição', 'Categoria', 'Tipo', 'Forma Pagto.', 'Valor (R$)', 'Status', 'Competência', 'Observações'], 2);
+$rn = 2;
+foreach ($lancamentos as $l) {
+    $style = ($rn % 2 === 0) ? 6 : 9;
+    $dataFmt = '';
+    if (!empty($l['data_lancamento'])) {
+        $d = DateTime::createFromFormat('Y-m-d', $l['data_lancamento']);
+        if ($d) $dataFmt = $d->format('d/m/Y');
+    }
+    $lan->writeRow($rn, [
+        $dataFmt,
+        $l['descricao'],
+        $l['cat_nome']     ?? '',
+        ucfirst($l['tipo']),
+        $forma_labels[$l['forma_pagamento']] ?? ucfirst($l['forma_pagamento']),
+        'R$ ' . number_format((float)$l['valor'], 2, ',', '.'),
+        ucfirst($l['status']),
+        str_pad($l['competencia_mes'], 2, '0', STR_PAD_LEFT) . '/' . $l['competencia_ano'],
+        $l['observacoes'] ?? '',
+    ], $style);
+    $rn++;
+}
+if ($rn === 2) $lan->writeCell(2, 1, 'Nenhum lançamento no período.', 0);
+
+// ═══════════════════════════════════════════════════════
+// ABA 3 — DRE (Demonstrativo)
+// ═══════════════════════════════════════════════════════
+$dre = $xlsx->addSheet('DRE');
+$dre->setColWidth(1, 36)->setColWidth(2, 18)->setColWidth(3, 14);
+
+$dre->writeRow(1, ['DRE — ' . $periodo, 'Valor (R$)', '% do Total'], 3);
+$rn = 2;
+if ($rec_por_cat) {
+    $dre->writeRow($rn, ['RECEITAS', '', ''], 2); $rn++;
+    foreach ($rec_por_cat as $cat => $val) {
+        $pct = $total_rec > 0 ? round($val / $total_rec * 100, 1) : 0;
+        $dre->writeRow($rn, ['  ' . $cat, $fmt_val($val), $pct . '%'], 9); $rn++;
+    }
+    $dre->writeRow($rn, ['TOTAL RECEITAS', $fmt_val($total_rec), ''], 8); $rn++;
+}
+$rn++;
+if ($desp_por_cat) {
+    $dre->writeRow($rn, ['DESPESAS', '', ''], 4); $rn++;
+    foreach ($desp_por_cat as $cat => $val) {
+        $pct = $total_desp > 0 ? round($val / $total_desp * 100, 1) : 0;
+        $dre->writeRow($rn, ['  ' . $cat, $fmt_val($val), $pct . '%'], 9); $rn++;
+    }
+    $dre->writeRow($rn, ['TOTAL DESPESAS', $fmt_val($total_desp), ''], 8); $rn++;
+}
+$rn++;
+$sStyle = $saldo >= 0 ? 8 : 9;
+$dre->writeRow($rn, ['RESULTADO DO PERÍODO', $fmt_val($saldo), ''], $sStyle);
+
+// ═══════════════════════════════════════════════════════
+// ABA 4 — CATEGORIAS
+// ═══════════════════════════════════════════════════════
+$cats = $xlsx->addSheet('Categorias');
+$cats->setColWidth(1, 32)->setColWidth(2, 12)->setColWidth(3, 10);
+$cats->writeRow(1, ['Categoria', 'Tipo', 'Ativa'], 2);
+$rn = 2;
+foreach ($categorias as $c) {
+    $style = ($rn % 2 === 0) ? 6 : 9;
+    $cats->writeRow($rn, [
+        $c['nome'],
+        $c['tipo'] === 'receita' ? 'Receita' : 'Despesa',
+        $c['ativo'] ? 'Sim' : 'Não',
+    ], $style);
+    $rn++;
+}
+if ($rn === 2) $cats->writeCell(2, 1, 'Nenhuma categoria cadastrada.', 0);
+
+// ═══════════════════════════════════════════════════════
+// ABA 5 — RECORRENTES
+// ═══════════════════════════════════════════════════════
+$rec = $xlsx->addSheet('Recorrentes');
+$rec->setColWidth(1, 34)->setColWidth(2, 11)->setColWidth(3, 22)
+    ->setColWidth(4, 16)->setColWidth(5, 14)->setColWidth(6, 16);
+$rec->writeRow(1, ['Descrição', 'Tipo', 'Categoria', 'Valor', 'Dia Venc.', 'Próx. Vencimento'], 2);
+$rn = 2;
+foreach ($recorrentes as $rc) {
+    $style = ($rn % 2 === 0) ? 6 : 9;
+    $proxVenc = '';
+    if (!empty($rc['proximo_vencimento'])) {
+        $d = DateTime::createFromFormat('Y-m-d', $rc['proximo_vencimento']);
+        if ($d) $proxVenc = $d->format('d/m/Y');
+    }
+    $rec->writeRow($rn, [
+        $rc['descricao'],
+        $rc['tipo'] === 'receita' ? 'Receita' : 'Despesa',
+        $rc['cat_nome'] ?? '',
+        'R$ ' . number_format((float)$rc['valor'], 2, ',', '.'),
+        'Dia ' . $rc['dia_vencimento'],
+        $proxVenc,
+    ], $style);
+    $rn++;
+}
+if ($rn === 2) $rec->writeCell(2, 1, 'Nenhum recorrente ativo.', 0);
+
+// ── Download ──────────────────────────────────────────────────────────────
+$filename = 'financeiro-naiot-' . $ano . '-' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '.xlsx';
+$xlsx->download($filename);
