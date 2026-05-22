@@ -13,8 +13,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $senha = $_POST['senha'] ?? '';
 
     if ($login && $senha) {
-        $stmt = db()->prepare('SELECT id, nome, senha_hash, perfil, ativo FROM usuarios WHERE (email = ? OR usuario = ?) AND ativo = 1 LIMIT 1');
-        $stmt->execute([$login, $login]);
+        try {
+            $stmt = db()->prepare('SELECT id, nome, senha_hash, perfil, ativo FROM usuarios WHERE (email = ? OR usuario = ?) AND ativo = 1 LIMIT 1');
+            $stmt->execute([$login, $login]);
+        } catch (Exception $e) {
+            // Coluna usuario ainda não existe — fallback para login só por email
+            $stmt = db()->prepare('SELECT id, nome, senha_hash, perfil, ativo FROM usuarios WHERE email = ? AND ativo = 1 LIMIT 1');
+            $stmt->execute([$login]);
+        }
         $usuario = $stmt->fetch();
 
         if ($usuario && $usuario['ativo'] && password_verify($senha, $usuario['senha_hash'])) {
