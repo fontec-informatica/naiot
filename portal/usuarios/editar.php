@@ -28,23 +28,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } else {
-        $nome  = trim($_POST['nome'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $senha = $_POST['senha'] ?? '';
-        $tipo  = $_POST['tipo_acesso'] ?? 'modulos';
+        $nome    = trim($_POST['nome'] ?? '');
+        $usuario = trim($_POST['usuario'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
+        $senha   = $_POST['senha'] ?? '';
+        $tipo    = $_POST['tipo_acesso'] ?? 'modulos';
 
         if (!$nome || !$email) {
             $erro = 'Preencha nome e e-mail.';
+        } elseif ($usuario && !preg_match('/^[a-zA-Z0-9._-]{3,50}$/', $usuario)) {
+            $erro = 'Nome de usuário inválido. Use apenas letras, números, ponto, hífen e sublinhado (3–50 caracteres).';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = 'E-mail inválido.';
         } elseif ($senha && strlen($senha) < 8) {
             $erro = 'A nova senha deve ter no mínimo 8 caracteres.';
         } else {
-            $existe = db()->prepare('SELECT id FROM usuarios WHERE email = ? AND id != ?');
-            $existe->execute([$email, $id]);
-            if ($existe->fetch()) {
-                $erro = 'Esse e-mail já está em uso por outro usuário.';
-            } else {
+            if ($usuario) {
+                $dup = db()->prepare('SELECT id FROM usuarios WHERE usuario = ? AND id != ?');
+                $dup->execute([$usuario, $id]);
+                if ($dup->fetch()) { $erro = 'Esse nome de usuário já está em uso por outro usuário.'; }
+            }
+            if (!$erro) {
+                $existe = db()->prepare('SELECT id FROM usuarios WHERE email = ? AND id != ?');
+                $existe->execute([$email, $id]);
+                if ($existe->fetch()) { $erro = 'Esse e-mail já está em uso por outro usuário.'; }
+            }
+            if (!$erro) {
                 if ($eh_proprio) {
                     $novo_perfil = 'admin';
                 } elseif ($tipo === 'admin') {
@@ -58,11 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 if ($senha) {
-                    db()->prepare('UPDATE usuarios SET nome=?, email=?, perfil=?, senha_hash=? WHERE id=?')
-                        ->execute([$nome, $email, $novo_perfil, password_hash($senha, PASSWORD_DEFAULT), $id]);
+                    db()->prepare('UPDATE usuarios SET nome=?, usuario=?, email=?, perfil=?, senha_hash=? WHERE id=?')
+                        ->execute([$nome, $usuario ?: null, $email, $novo_perfil, password_hash($senha, PASSWORD_DEFAULT), $id]);
                 } else {
-                    db()->prepare('UPDATE usuarios SET nome=?, email=?, perfil=? WHERE id=?')
-                        ->execute([$nome, $email, $novo_perfil, $id]);
+                    db()->prepare('UPDATE usuarios SET nome=?, usuario=?, email=?, perfil=? WHERE id=?')
+                        ->execute([$nome, $usuario ?: null, $email, $novo_perfil, $id]);
                 }
                 header('Location: /portal/usuarios/?editado=1');
                 exit;
@@ -122,6 +131,13 @@ include dirname(__DIR__) . '/_layout.php';
     <div class="form-group">
       <label for="nome">Nome completo</label>
       <input type="text" id="nome" name="nome" value="<?= htmlspecialchars($u['nome']) ?>" required>
+    </div>
+
+    <div class="form-group">
+      <label for="usuario">Nome de usuário <span style="font-weight:400;color:var(--muted)">(opcional — para login sem e-mail)</span></label>
+      <input type="text" id="usuario" name="usuario" value="<?= htmlspecialchars($u['usuario'] ?? '') ?>"
+             autocomplete="off" placeholder="ex: joao.silva">
+      <span class="form-hint">Letras, números, ponto, hífen e sublinhado. 3–50 caracteres.</span>
     </div>
 
     <div class="form-group">

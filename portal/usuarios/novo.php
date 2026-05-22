@@ -10,23 +10,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_valido()) {
         $erro = 'Token inválido. Recarregue a página.';
     } else {
-        $nome  = trim($_POST['nome'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $senha = $_POST['senha'] ?? '';
-        $tipo  = $_POST['tipo_acesso'] ?? 'modulos';
+        $nome    = trim($_POST['nome'] ?? '');
+        $usuario = trim($_POST['usuario'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
+        $senha   = $_POST['senha'] ?? '';
+        $tipo    = $_POST['tipo_acesso'] ?? 'modulos';
 
         if (!$nome || !$email || !$senha) {
-            $erro = 'Preencha todos os campos.';
+            $erro = 'Preencha nome, e-mail e senha.';
+        } elseif ($usuario && !preg_match('/^[a-zA-Z0-9._-]{3,50}$/', $usuario)) {
+            $erro = 'Nome de usuário inválido. Use apenas letras, números, ponto, hífen e sublinhado (3–50 caracteres).';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = 'E-mail inválido.';
         } elseif (strlen($senha) < 8) {
             $erro = 'A senha deve ter no mínimo 8 caracteres.';
         } else {
-            $existe = db()->prepare('SELECT id FROM usuarios WHERE email = ?');
-            $existe->execute([$email]);
-            if ($existe->fetch()) {
-                $erro = 'Já existe um usuário com esse e-mail.';
-            } else {
+            if ($usuario) {
+                $dup = db()->prepare('SELECT id FROM usuarios WHERE usuario = ?');
+                $dup->execute([$usuario]);
+                if ($dup->fetch()) { $erro = 'Esse nome de usuário já está em uso.'; }
+            }
+            if (!$erro) {
+                $dup2 = db()->prepare('SELECT id FROM usuarios WHERE email = ?');
+                $dup2->execute([$email]);
+                if ($dup2->fetch()) {
+                    $erro = 'Já existe um usuário com esse e-mail.';
+                }
+            }
+            if (!$erro) {
                 if ($tipo === 'admin') {
                     $novo_perfil = 'admin';
                 } else {
@@ -36,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                     $novo_perfil = json_encode(array_values($modulos_sel));
                 }
-                db()->prepare('INSERT INTO usuarios (nome, email, senha_hash, perfil) VALUES (?,?,?,?)')
-                    ->execute([$nome, $email, password_hash($senha, PASSWORD_DEFAULT), $novo_perfil]);
+                db()->prepare('INSERT INTO usuarios (nome, usuario, email, senha_hash, perfil) VALUES (?,?,?,?,?)')
+                    ->execute([$nome, $usuario ?: null, $email, password_hash($senha, PASSWORD_DEFAULT), $novo_perfil]);
                 header('Location: /portal/usuarios/?criado=1');
                 exit;
             }
@@ -83,6 +94,13 @@ include dirname(__DIR__) . '/_layout.php';
     <div class="form-group">
       <label for="nome">Nome completo</label>
       <input type="text" id="nome" name="nome" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" required>
+    </div>
+
+    <div class="form-group">
+      <label for="usuario">Nome de usuário <span style="font-weight:400;color:var(--muted)">(opcional — para login sem e-mail)</span></label>
+      <input type="text" id="usuario" name="usuario" value="<?= htmlspecialchars($_POST['usuario'] ?? '') ?>"
+             autocomplete="off" placeholder="ex: joao.silva">
+      <span class="form-hint">Letras, números, ponto, hífen e sublinhado. 3–50 caracteres.</span>
     </div>
 
     <div class="form-group">
@@ -153,7 +171,11 @@ include dirname(__DIR__) . '/_layout.php';
     var isAdmin = radAdmin && radAdmin.checked;
     if (optAdmin) optAdmin.classList.toggle('sel', isAdmin);
     if (optMods)  optMods.classList.toggle('sel', !isAdmin);
-    checks.forEach(function(c) { c.classList.toggle('disabled', isAdmin); });
+    checks.forEach(function(label) {
+      label.classList.toggle('disabled', isAdmin);
+      var cb = label.querySelector('input[type=checkbox]');
+      if (cb) cb.disabled = isAdmin;
+    });
     if (area) area.style.opacity = isAdmin ? '.5' : '1';
   }
 

@@ -9,12 +9,12 @@ if (isset($_SESSION['usuario_id'])) {
 $erro = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    $login = trim($_POST['login'] ?? '');
     $senha = $_POST['senha'] ?? '';
 
-    if ($email && $senha) {
-        $stmt = db()->prepare('SELECT id, nome, senha_hash, perfil, ativo FROM usuarios WHERE email = ? LIMIT 1');
-        $stmt->execute([$email]);
+    if ($login && $senha) {
+        $stmt = db()->prepare('SELECT id, nome, senha_hash, perfil, ativo FROM usuarios WHERE (email = ? OR usuario = ?) AND ativo = 1 LIMIT 1');
+        $stmt->execute([$login, $login]);
         $usuario = $stmt->fetch();
 
         if ($usuario && $usuario['ativo'] && password_verify($senha, $usuario['senha_hash'])) {
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    $erro = 'E-mail ou senha incorretos.';
+    $erro = 'Usuário/e-mail ou senha incorretos.';
 }
 ?>
 <!DOCTYPE html>
@@ -63,10 +63,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form method="post" novalidate>
       <div class="form-group">
-        <label for="email">E-mail</label>
-        <input type="email" id="email" name="email"
-               value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-               autocomplete="email" required>
+        <label for="login">E-mail ou nome de usuário</label>
+        <input type="text" id="login" name="login"
+               value="<?= htmlspecialchars($_POST['login'] ?? '') ?>"
+               autocomplete="username" required>
       </div>
       <div class="form-group">
         <label for="senha">Senha</label>

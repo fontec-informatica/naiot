@@ -4,9 +4,10 @@
 CREATE TABLE IF NOT EXISTS usuarios (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome          VARCHAR(120)  NOT NULL,
+    usuario       VARCHAR(50)   NULL UNIQUE,
     email         VARCHAR(180)  NOT NULL UNIQUE,
     senha_hash    VARCHAR(255)  NOT NULL,
-    perfil        VARCHAR(255) NOT NULL DEFAULT 'secretaria',
+    perfil        VARCHAR(255)  NOT NULL DEFAULT 'secretaria',
     ativo         TINYINT(1)    NOT NULL DEFAULT 1,
     criado_em     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ultimo_acesso DATETIME      NULL

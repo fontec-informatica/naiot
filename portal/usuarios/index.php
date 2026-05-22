@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     exit;
 }
 
-$usuarios = db()->query('SELECT id, nome, email, perfil, ativo, criado_em, ultimo_acesso FROM usuarios ORDER BY nome')->fetchAll();
+$usuarios = db()->query('SELECT id, nome, usuario, email, perfil, ativo, criado_em, ultimo_acesso FROM usuarios ORDER BY nome')->fetchAll();
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
@@ -28,6 +28,9 @@ include dirname(__DIR__) . '/_layout.php';
 <?php endif; ?>
 <?php if (!empty($_GET['editado'])): ?>
   <div class="alerta alerta-ok" style="margin-bottom:16px">Alterações salvas com sucesso.</div>
+<?php endif; ?>
+<?php if (!empty($_GET['criado'])): ?>
+  <div class="alerta alerta-ok" style="margin-bottom:16px">Usuário criado com sucesso.</div>
 <?php endif; ?>
 
 <div class="tabela-wrap">
@@ -49,7 +52,12 @@ include dirname(__DIR__) . '/_layout.php';
     <tbody>
       <?php foreach ($usuarios as $u): ?>
       <tr>
-        <td><?= htmlspecialchars($u['nome']) ?></td>
+        <td>
+          <?= htmlspecialchars($u['nome']) ?>
+          <?php if ($u['usuario']): ?>
+            <br><span style="font-size:.75rem;color:var(--muted)">@<?= htmlspecialchars($u['usuario']) ?></span>
+          <?php endif; ?>
+        </td>
         <td><?= htmlspecialchars($u['email']) ?></td>
         <td>
           <?php
