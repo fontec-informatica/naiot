@@ -23,6 +23,13 @@ $usuarios = db()->query('SELECT id, nome, email, perfil, ativo, criado_em, ultim
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
+<?php if (!empty($_GET['deletado'])): ?>
+  <div class="alerta alerta-ok" style="margin-bottom:16px">Usuário excluído com sucesso.</div>
+<?php endif; ?>
+<?php if (!empty($_GET['editado'])): ?>
+  <div class="alerta alerta-ok" style="margin-bottom:16px">Alterações salvas com sucesso.</div>
+<?php endif; ?>
+
 <div class="tabela-wrap">
   <div class="tabela-header">
     <h2>Usuários do sistema</h2>

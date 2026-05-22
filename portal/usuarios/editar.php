@@ -19,6 +19,14 @@ $eh_proprio = ($id === ($_SESSION['usuario_id'] ?? 0));
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_valido()) {
         $erro = 'Token inválido. Recarregue a página.';
+    } elseif (($_POST['acao'] ?? '') === 'deletar') {
+        if ($eh_proprio) {
+            $erro = 'Você não pode excluir seu próprio usuário.';
+        } else {
+            db()->prepare('DELETE FROM usuarios WHERE id = ?')->execute([$id]);
+            header('Location: /portal/usuarios/?deletado=1');
+            exit;
+        }
     } else {
         $nome  = trim($_POST['nome'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -60,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         }
-    }
+    } // fim else (salvar)
 }
 
 // Determina estado atual para o formulário
@@ -183,7 +191,35 @@ include dirname(__DIR__) . '/_layout.php';
       <a href="/portal/usuarios/" class="btn btn-ghost">Cancelar</a>
     </div>
   </form>
+
+  <?php if (!$eh_proprio): ?>
+  <div style="margin-top:32px;padding-top:20px;border-top:1px solid var(--border)">
+    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:8px">Zona de perigo</div>
+    <p style="font-size:.83rem;color:var(--muted);margin:0 0 12px">A exclusão é permanente e não pode ser desfeita.</p>
+    <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('modal-deletar').style.display='flex'">Excluir usuário</button>
+  </div>
+  <?php endif; ?>
 </div>
+
+<?php if (!$eh_proprio): ?>
+<div id="modal-deletar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:#fff;border-radius:var(--rl);width:100%;max-width:400px;overflow:hidden;box-shadow:var(--sh)">
+    <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border)">
+      <div style="font-family:'Cinzel',serif;font-size:.88rem;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:.05em">Excluir usuário</div>
+    </div>
+    <div style="padding:20px 22px">
+      <p style="font-size:.88rem;margin:0 0 16px">Tem certeza que deseja excluir o usuário <strong><?= htmlspecialchars($u['nome']) ?></strong>?</p>
+      <p style="font-size:.78rem;color:var(--muted);margin:0 0 20px">Esta ação não pode ser desfeita. O usuário perderá acesso imediatamente.</p>
+      <form method="post" style="display:flex;gap:10px;justify-content:flex-end">
+        <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+        <input type="hidden" name="acao" value="deletar">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-deletar').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn btn-danger btn-sm">Excluir permanentemente</button>
+      </form>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
 
 <script>
 (function(){
@@ -196,9 +232,13 @@ include dirname(__DIR__) . '/_layout.php';
 
   function atualizar() {
     var isAdmin = radAdmin && radAdmin.checked;
-    if (optAdmin)  optAdmin.classList.toggle('sel', isAdmin);
-    if (optMods)   optMods.classList.toggle('sel', !isAdmin);
-    checks.forEach(function(c) { c.classList.toggle('disabled', isAdmin); });
+    if (optAdmin) optAdmin.classList.toggle('sel', isAdmin);
+    if (optMods)  optMods.classList.toggle('sel', !isAdmin);
+    checks.forEach(function(label) {
+      label.classList.toggle('disabled', isAdmin);
+      var cb = label.querySelector('input[type=checkbox]');
+      if (cb) cb.disabled = isAdmin; // atributo HTML disabled — impede submissão e clique
+    });
     if (area) area.style.opacity = isAdmin ? '.5' : '1';
   }
 
