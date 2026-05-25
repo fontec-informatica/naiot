@@ -10,7 +10,7 @@ $hoje = new DateTime();
 
 // Membros com categorias concatenadas
 $membros = $pdo->query("
-    SELECT m.id, m.nome, m.telefone, m.data_nasc, m.endereco, m.bairro, m.cidade, m.ativo,
+    SELECT m.id, m.nome, m.sexo, m.estado_civil, m.telefone, m.data_nasc, m.endereco, m.bairro, m.cidade, m.ativo,
            GROUP_CONCAT(DISTINCT g.nome ORDER BY g.nome SEPARATOR ', ') AS grupos,
            GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') AS cargos,
            GROUP_CONCAT(DISTINCT h.nome ORDER BY h.nome SEPARATOR ', ') AS habilidades,
@@ -112,6 +112,14 @@ $r++;
 $dash->writeCell($r, 1, 'Total de membros ativos', 9);
 $dash->writeCell($r, 2, $total, 1);
 $r++;
+$masc = count(array_filter($membros, fn($m) => $m['sexo'] === 'Masculino'));
+$fem  = count(array_filter($membros, fn($m) => $m['sexo'] === 'Feminino'));
+$dash->writeCell($r, 1, '↳ Masculino', 9);
+$dash->writeCell($r, 2, $masc, 0);
+$r++;
+$dash->writeCell($r, 1, '↳ Feminino', 9);
+$dash->writeCell($r, 2, $fem, 0);
+$r++;
 $dash->writeCell($r, 1, 'Grupos cadastrados', 9);
 $dash->writeCell($r, 2, count($grupos), 0);
 $r++;
@@ -185,11 +193,13 @@ if ($aniversariantes) {
 // ABA 2 — MEMBROS
 // ═══════════════════════════════════════════════════════
 $mem = $xlsx->addSheet('Membros');
-$mem->setColWidth(1, 30)->setColWidth(2, 18)->setColWidth(3, 16)
-    ->setColWidth(4, 30)->setColWidth(5, 20)->setColWidth(6, 20)
-    ->setColWidth(7, 28)->setColWidth(8, 28)->setColWidth(9, 28)->setColWidth(10, 28);
+$mem->setColWidth(1, 30)->setColWidth(2, 14)->setColWidth(3, 22)
+    ->setColWidth(4, 18)->setColWidth(5, 16)->setColWidth(6, 30)
+    ->setColWidth(7, 20)->setColWidth(8, 20)->setColWidth(9, 28)
+    ->setColWidth(10, 28)->setColWidth(11, 28)->setColWidth(12, 28);
 
-$mem->writeRow(1, ['Nome', 'Telefone', 'Data Nasc.', 'Endereço', 'Bairro', 'Cidade',
+$mem->writeRow(1, ['Nome', 'Sexo', 'Estado Civil', 'Telefone', 'Data Nasc.',
+                   'Endereço', 'Bairro', 'Cidade',
                    'Grupos', 'Cargos', 'Habilidades', 'Pastoreio'], 2);
 
 $rowNum = 2;
@@ -202,15 +212,17 @@ foreach ($membros as $m) {
     }
     $mem->writeRow($rowNum, [
         $m['nome'],
-        $m['telefone']   ?? '',
+        $m['sexo']        ?? '',
+        $m['estado_civil'] ?? '',
+        $m['telefone']    ?? '',
         $dataNasc,
-        $m['endereco']   ?? '',
-        $m['bairro']     ?? '',
-        $m['cidade']     ?? '',
-        $m['grupos']     ?? '',
-        $m['cargos']     ?? '',
+        $m['endereco']    ?? '',
+        $m['bairro']      ?? '',
+        $m['cidade']      ?? '',
+        $m['grupos']      ?? '',
+        $m['cargos']      ?? '',
         $m['habilidades'] ?? '',
-        $m['pastoreios'] ?? '',
+        $m['pastoreios']  ?? '',
     ], $style);
     $rowNum++;
 }

@@ -19,6 +19,7 @@ $dados = [
     'telefone'    => $m['telefone'],
     'data_nasc'   => $m['data_nasc'],
     'estado_civil'=> $m['estado_civil'] ?? '',
+    'sexo'        => $m['sexo']         ?? '',
     'endereco'    => $m['endereco'],
     'bairro'      => $m['bairro'],
     'cidade'      => $m['cidade'],
@@ -64,6 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
     $dados['cidade']       = trim($_POST['cidade']       ?? '');
     $dados['estado_civil'] = trim($_POST['estado_civil'] ?? '');
+    $dados['sexo']         = trim($_POST['sexo']         ?? '');
     $grupos_sel      = array_map('intval', (array)($_POST['grupos']      ?? []));
     $cargos_sel      = array_map('intval', (array)($_POST['cargos']      ?? []));
     $habilidades_sel = array_map('intval', (array)($_POST['habilidades'] ?? []));
@@ -100,8 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if ($m['foto']) @unlink($dir_fotos . $m['foto']);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $nova_foto);
         }
-        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=?,estado_civil=? WHERE id=?")
-           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null, $id]);
+        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=?,estado_civil=?,sexo=? WHERE id=?")
+           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $id]);
 
         db()->prepare("DELETE FROM membros_grupo_rel WHERE membro_id=?")->execute([$id]);
         foreach ($grupos_sel as $gid) {
@@ -185,6 +187,20 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="form-group">
         <label>Endereço</label>
         <input type="text" name="endereco" value="<?= htmlspecialchars($dados['endereco']) ?>" maxlength="255" placeholder="Rua, número…">
+      </div>
+
+      <div class="form-group">
+        <label>Sexo</label>
+        <div style="display:flex;gap:24px;padding:6px 0">
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.9rem;font-weight:500">
+            <input type="radio" name="sexo" value="Masculino" <?= $dados['sexo']==='Masculino' ? 'checked' : '' ?>>
+            Masculino
+          </label>
+          <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.9rem;font-weight:500">
+            <input type="radio" name="sexo" value="Feminino" <?= $dados['sexo']==='Feminino' ? 'checked' : '' ?>>
+            Feminino
+          </label>
+        </div>
       </div>
 
       <div class="form-group">

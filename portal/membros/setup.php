@@ -100,9 +100,12 @@ CREATE TABLE IF NOT EXISTS membros_pastoreio_rel (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ");
 
-// Migração: adiciona coluna estado_civil se ainda não existe
+// Migrações: adiciona colunas novas sem afetar dados existentes
 try {
     $pdo->exec("ALTER TABLE membros ADD COLUMN estado_civil VARCHAR(50) NULL DEFAULT NULL AFTER telefone");
+} catch (PDOException $e) { /* coluna já existe */ }
+try {
+    $pdo->exec("ALTER TABLE membros ADD COLUMN sexo VARCHAR(20) NULL DEFAULT NULL AFTER estado_civil");
 } catch (PDOException $e) { /* coluna já existe */ }
 
 echo '<p style="font-family:sans-serif;padding:20px;color:green">✓ Tabelas criadas/verificadas com sucesso. <a href="/portal/membros/">Ir para Membros</a></p>';
