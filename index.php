@@ -2,34 +2,57 @@
 $ao_vivo = false;
 $youtube_video_id = '';
 
-function salvar_json(string $arquivo, string $texto): void {
-    $dados = file_exists($arquivo) ? (json_decode(file_get_contents($arquivo), true) ?: []) : [];
-    $dados[] = ['texto' => $texto, 'data' => date('d/m/Y \à\s H:i')];
-    file_put_contents($arquivo, json_encode($dados, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!empty($_POST['oracao'])) {
-        $t = mb_substr(trim(strip_tags($_POST['oracao'])), 0, 1000);
-        if (mb_strlen($t) >= 5) { salvar_json('data/oracoes.json', $t); header('Location: '.strtok($_SERVER['REQUEST_URI'],'?').'?ok=oracao#oracao'); exit; }
-    }
-    if (!empty($_POST['testemunho'])) {
-        $t = mb_substr(trim(strip_tags($_POST['testemunho'])), 0, 2000);
-        if (mb_strlen($t) >= 5) { salvar_json('data/testemunhos.json', $t); header('Location: '.strtok($_SERVER['REQUEST_URI'],'?').'?ok=testemunho#testemunhos'); exit; }
-    }
-}
-
-$oracoes     = array_reverse(file_exists('data/oracoes.json')     ? (json_decode(file_get_contents('data/oracoes.json'),true)     ?: []) : []);
-$testemunhos = array_reverse(file_exists('data/testemunhos.json') ? (json_decode(file_get_contents('data/testemunhos.json'),true) ?: []) : []);
-
-$eventos = [];
+// Carrega banco de dados (necessário para orações, testemunhos e eventos)
+$db_ok = false;
 if (file_exists(__DIR__ . '/portal/config.php')) {
     try {
         require_once __DIR__ . '/portal/config.php';
-        $eventos = db()->query('SELECT * FROM eventos WHERE ativo = 1 ORDER BY ordem ASC, id ASC')->fetchAll();
-    } catch (Exception $e) {
-        $eventos = [];
+        $db_ok = true;
+    } catch (Exception $e) {}
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Honeypot: bots preenchem este campo, humanos não veem
+    if (!empty($_POST['_hp_website'])) {
+        header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
+        exit;
     }
+    $base_url = strtok($_SERVER['REQUEST_URI'], '?');
+    if (!empty($_POST['oracao']) && $db_ok) {
+        $t = mb_substr(trim(strip_tags($_POST['oracao'])), 0, 1000);
+        if (mb_strlen($t) >= 5) {
+            db()->prepare("INSERT INTO oracoes (texto) VALUES (?)")->execute([$t]);
+            header('Location: ' . $base_url . '?ok=oracao#oracao');
+            exit;
+        }
+    }
+    if (!empty($_POST['testemunho']) && $db_ok) {
+        $t = mb_substr(trim(strip_tags($_POST['testemunho'])), 0, 2000);
+        if (mb_strlen($t) >= 5) {
+            db()->prepare("INSERT INTO testemunhos (texto) VALUES (?)")->execute([$t]);
+            header('Location: ' . $base_url . '?ok=testemunho#testemunhos');
+            exit;
+        }
+    }
+}
+
+// Lê somente registros aprovados para exibição pública
+$oracoes = $testemunhos = [];
+if ($db_ok) {
+    try {
+        $rows = db()->query("SELECT texto, criado_em FROM oracoes WHERE status='aprovado' ORDER BY criado_em DESC")->fetchAll();
+        $oracoes = array_map(fn($r) => ['texto' => $r['texto'], 'data' => date('d/m/Y', strtotime($r['criado_em']))], $rows);
+
+        $rows = db()->query("SELECT texto, criado_em FROM testemunhos WHERE status='aprovado' ORDER BY criado_em DESC")->fetchAll();
+        $testemunhos = array_map(fn($r) => ['texto' => $r['texto'], 'data' => date('d/m/Y', strtotime($r['criado_em']))], $rows);
+    } catch (Exception $e) {}
+}
+
+$eventos = [];
+if ($db_ok) {
+    try {
+        $eventos = db()->query('SELECT * FROM eventos WHERE ativo = 1 ORDER BY ordem ASC, id ASC')->fetchAll();
+    } catch (Exception $e) {}
 }
 
 function formatar_periodo(string $inicio, ?string $fim): string {
@@ -799,6 +822,7 @@ footer {
         <div class="ok-msg">Seu pedido foi recebido. Vamos orar por você! 🙏</div>
         <?php endif; ?>
         <form method="POST">
+          <input type="text" name="_hp_website" style="display:none" tabindex="-1" autocomplete="off">
           <textarea name="oracao" placeholder="Escreva sua intenção de oração..." required maxlength="1000"></textarea>
           <button type="submit" class="btn-sub">Enviar Pedido de Oração</button>
         </form>
@@ -848,6 +872,7 @@ footer {
         <div class="ok-msg">Seu testemunho foi compartilhado. Que Deus seja glorificado! ✨</div>
         <?php endif; ?>
         <form method="POST">
+          <input type="text" name="_hp_website" style="display:none" tabindex="-1" autocomplete="off">
           <textarea name="testemunho" placeholder="Compartilhe o que Deus fez por você..." required maxlength="2000"></textarea>
           <button type="submit" class="btn-sub">Compartilhar Testemunho</button>
         </form>
