@@ -10,7 +10,7 @@ $cargo_id      = (int)($_GET['cargo']      ?? 0);
 $habilidade_id = (int)($_GET['habilidade'] ?? 0);
 $pastoreio_id  = (int)($_GET['pastoreio']  ?? 0);
 $erros        = [];
-$dados        = ['nome'=>'','telefone'=>'','data_nasc'=>'','endereco'=>'','bairro'=>'','cidade'=>''];
+$dados        = ['nome'=>'','telefone'=>'','data_nasc'=>'','estado_civil'=>'','endereco'=>'','bairro'=>'','cidade'=>''];
 
 $grupos      = db()->query("SELECT * FROM membros_grupos    ORDER BY nome")->fetchAll();
 $cargos      = db()->query("SELECT * FROM membros_cargos    ORDER BY nome")->fetchAll();
@@ -23,7 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['data_nasc'] = trim($_POST['data_nasc'] ?? '');
     $dados['endereco']  = trim($_POST['endereco']  ?? '');
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
-    $dados['cidade']    = trim($_POST['cidade']    ?? '');
+    $dados['cidade']       = trim($_POST['cidade']       ?? '');
+    $dados['estado_civil'] = trim($_POST['estado_civil'] ?? '');
     $grupos_sel      = array_map('intval', (array)($_POST['grupos']      ?? []));
     $cargos_sel      = array_map('intval', (array)($_POST['cargos']      ?? []));
     $habilidades_sel = array_map('intval', (array)($_POST['habilidades'] ?? []));
@@ -59,8 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $foto_nome);
         }
-        $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,bairro,cidade,telefone) VALUES (?,?,?,?,?,?,?)");
-        $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone']]);
+        $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,bairro,cidade,telefone,estado_civil) VALUES (?,?,?,?,?,?,?,?)");
+        $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null]);
         $novo_id = (int)db()->lastInsertId();
 
         foreach ($grupos_sel as $gid) {
@@ -144,6 +145,19 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="form-group">
         <label>Endereço</label>
         <input type="text" name="endereco" value="<?= htmlspecialchars($dados['endereco']) ?>" maxlength="255" placeholder="Rua, número…">
+      </div>
+
+      <div class="form-group">
+        <label>Estado civil</label>
+        <select name="estado_civil">
+          <option value="">— Não informado —</option>
+          <option value="Solteiro(a)"             <?= $dados['estado_civil']==='Solteiro(a)'             ? 'selected' : '' ?>>Solteiro(a)</option>
+          <option value="Casado(a)"               <?= $dados['estado_civil']==='Casado(a)'               ? 'selected' : '' ?>>Casado(a)</option>
+          <option value="Amasiado(a)"             <?= $dados['estado_civil']==='Amasiado(a)'             ? 'selected' : '' ?>>Amasiado(a)</option>
+          <option value="Separado(a) judicialmente" <?= $dados['estado_civil']==='Separado(a) judicialmente' ? 'selected' : '' ?>>Separado(a) judicialmente</option>
+          <option value="Divorciado(a)"           <?= $dados['estado_civil']==='Divorciado(a)'           ? 'selected' : '' ?>>Divorciado(a)</option>
+          <option value="Viúvo(a)"                <?= $dados['estado_civil']==='Viúvo(a)'                ? 'selected' : '' ?>>Viúvo(a)</option>
+        </select>
       </div>
 
       <div class="form-row">

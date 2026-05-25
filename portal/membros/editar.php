@@ -15,12 +15,13 @@ if (!$m) { header('Location: /portal/membros/'); exit; }
 
 $erros = [];
 $dados = [
-    'nome'      => $m['nome'],
-    'telefone'  => $m['telefone'],
-    'data_nasc' => $m['data_nasc'],
-    'endereco'  => $m['endereco'],
-    'bairro'    => $m['bairro'],
-    'cidade'    => $m['cidade'],
+    'nome'        => $m['nome'],
+    'telefone'    => $m['telefone'],
+    'data_nasc'   => $m['data_nasc'],
+    'estado_civil'=> $m['estado_civil'] ?? '',
+    'endereco'    => $m['endereco'],
+    'bairro'      => $m['bairro'],
+    'cidade'      => $m['cidade'],
 ];
 
 $grupos      = db()->query("SELECT * FROM membros_grupos    ORDER BY nome")->fetchAll();
@@ -61,7 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['data_nasc'] = trim($_POST['data_nasc'] ?? '');
     $dados['endereco']  = trim($_POST['endereco']  ?? '');
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
-    $dados['cidade']    = trim($_POST['cidade']    ?? '');
+    $dados['cidade']       = trim($_POST['cidade']       ?? '');
+    $dados['estado_civil'] = trim($_POST['estado_civil'] ?? '');
     $grupos_sel      = array_map('intval', (array)($_POST['grupos']      ?? []));
     $cargos_sel      = array_map('intval', (array)($_POST['cargos']      ?? []));
     $habilidades_sel = array_map('intval', (array)($_POST['habilidades'] ?? []));
@@ -98,8 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if ($m['foto']) @unlink($dir_fotos . $m['foto']);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $nova_foto);
         }
-        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=? WHERE id=?")
-           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $id]);
+        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=?,estado_civil=? WHERE id=?")
+           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null, $id]);
 
         db()->prepare("DELETE FROM membros_grupo_rel WHERE membro_id=?")->execute([$id]);
         foreach ($grupos_sel as $gid) {
@@ -183,6 +185,19 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="form-group">
         <label>Endereço</label>
         <input type="text" name="endereco" value="<?= htmlspecialchars($dados['endereco']) ?>" maxlength="255" placeholder="Rua, número…">
+      </div>
+
+      <div class="form-group">
+        <label>Estado civil</label>
+        <select name="estado_civil">
+          <option value="">— Não informado —</option>
+          <option value="Solteiro(a)"               <?= ($dados['estado_civil']==='Solteiro(a)')               ? 'selected' : '' ?>>Solteiro(a)</option>
+          <option value="Casado(a)"                 <?= ($dados['estado_civil']==='Casado(a)')                 ? 'selected' : '' ?>>Casado(a)</option>
+          <option value="Amasiado(a)"               <?= ($dados['estado_civil']==='Amasiado(a)')               ? 'selected' : '' ?>>Amasiado(a)</option>
+          <option value="Separado(a) judicialmente" <?= ($dados['estado_civil']==='Separado(a) judicialmente') ? 'selected' : '' ?>>Separado(a) judicialmente</option>
+          <option value="Divorciado(a)"             <?= ($dados['estado_civil']==='Divorciado(a)')             ? 'selected' : '' ?>>Divorciado(a)</option>
+          <option value="Viúvo(a)"                  <?= ($dados['estado_civil']==='Viúvo(a)')                  ? 'selected' : '' ?>>Viúvo(a)</option>
+        </select>
       </div>
 
       <div class="form-row">

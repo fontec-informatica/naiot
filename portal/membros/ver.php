@@ -180,6 +180,22 @@ include dirname(__DIR__) . '/_layout.php';
 
         <div class="ver-campo">
           <div class="ver-campo-icon">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          </div>
+          <div>
+            <div class="ver-campo-label">Estado civil</div>
+            <div class="ver-campo-val">
+              <?php if (!empty($m['estado_civil'])): ?>
+                <?= htmlspecialchars($m['estado_civil']) ?>
+              <?php else: ?>
+                <span class="ver-campo-vazio">Não informado</span>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+
+        <div class="ver-campo">
+          <div class="ver-campo-icon">
             <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
           </div>
           <div>
