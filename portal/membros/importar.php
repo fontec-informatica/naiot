@@ -163,10 +163,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
                         // Parse de data DD/MM/AAAA → AAAA-MM-DD
                         $data_nasc = null;
                         $raw_data  = trim($row[2] ?? '');
-                        if ($raw_data && preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $raw_data, $dm)) {
-                            $data_nasc = sprintf('%04d-%02d-%02d', $dm[3], $dm[2], $dm[1]);
-                            // Valida data
-                            if (!checkdate((int)$dm[2], (int)$dm[1], (int)$dm[3])) $data_nasc = null;
+                        if ($raw_data) {
+                            if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $raw_data, $dm)) {
+                                // Formato texto DD/MM/AAAA
+                                $data_nasc = sprintf('%04d-%02d-%02d', $dm[3], $dm[2], $dm[1]);
+                                if (!checkdate((int)$dm[2], (int)$dm[1], (int)$dm[3])) $data_nasc = null;
+                            } elseif (is_numeric($raw_data) && (int)$raw_data > 1 && (int)$raw_data < 50000) {
+                                // Serial do Excel: célula formatada como Data no Excel
+                                // Fórmula: Unix timestamp = (serial - 25569) * 86400
+                                $ts = ((int)$raw_data - 25569) * 86400;
+                                $d  = new DateTime('@' . $ts);
+                                if (checkdate((int)$d->format('m'), (int)$d->format('d'), (int)$d->format('Y'))) {
+                                    $data_nasc = $d->format('Y-m-d');
+                                }
+                            }
                         }
 
                         $telefone = trim($row[1] ?? '');
