@@ -4,108 +4,149 @@ requer_perfil(['admin', 'secretaria']);
 
 $pdo = db();
 
-// ── Ação: mesclar e remover duplicata ────────────────────────────────────
-$msg = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
-    $manter_id  = (int)($_POST['manter_id']  ?? 0);
-    $remover_id = (int)($_POST['remover_id'] ?? 0);
-    $mesclar    = !empty($_POST['mesclar']);
+// ── Helpers ──────────────────────────────────────────────────────────────
 
-    if ($manter_id && $remover_id && $manter_id !== $remover_id) {
-        // Verifica que ambos existem
-        $stCheck = $pdo->prepare("SELECT id FROM membros WHERE id IN (?,?) AND ativo=1");
-        $stCheck->execute([$manter_id, $remover_id]);
-        if ($stCheck->rowCount() === 2) {
-            if ($mesclar) {
-                // Transfere grupos
-                $pdo->prepare("INSERT IGNORE INTO membros_grupo_rel (grupo_id, membro_id)
-                    SELECT grupo_id, ? FROM membros_grupo_rel WHERE membro_id=?")
-                    ->execute([$manter_id, $remover_id]);
-                // Transfere cargos
-                $pdo->prepare("INSERT IGNORE INTO membros_cargo_rel (cargo_id, membro_id)
-                    SELECT cargo_id, ? FROM membros_cargo_rel WHERE membro_id=?")
-                    ->execute([$manter_id, $remover_id]);
-                // Transfere habilidades
-                $pdo->prepare("INSERT IGNORE INTO membros_habilidade_rel (habilidade_id, membro_id)
-                    SELECT habilidade_id, ? FROM membros_habilidade_rel WHERE membro_id=?")
-                    ->execute([$manter_id, $remover_id]);
-                // Transfere pastoreio
-                $pdo->prepare("INSERT IGNORE INTO membros_pastoreio_rel (pastoreio_id, membro_id)
-                    SELECT pastoreio_id, ? FROM membros_pastoreio_rel WHERE membro_id=?")
-                    ->execute([$manter_id, $remover_id]);
-                // Preenche campos em branco do membro mantido com dados do removido
-                $pdo->prepare("UPDATE membros m
-                    JOIN membros dup ON dup.id = ?
-                    SET
-                      m.telefone   = IF(m.telefone   IS NULL OR m.telefone=''  , dup.telefone,   m.telefone),
-                      m.data_nasc  = IF(m.data_nasc  IS NULL                   , dup.data_nasc,  m.data_nasc),
-                      m.endereco   = IF(m.endereco   IS NULL OR m.endereco=''  , dup.endereco,   m.endereco),
-                      m.bairro     = IF(m.bairro     IS NULL OR m.bairro=''    , dup.bairro,     m.bairro),
-                      m.cidade     = IF(m.cidade     IS NULL OR m.cidade=''    , dup.cidade,     m.cidade),
-                      m.estado_civil = IF(m.estado_civil IS NULL OR m.estado_civil='', dup.estado_civil, m.estado_civil),
-                      m.sexo       = IF(m.sexo       IS NULL OR m.sexo=''      , dup.sexo,       m.sexo)
-                    WHERE m.id = ?")
-                    ->execute([$remover_id, $manter_id]);
-            }
-            // Remove a duplicata (desativa)
-            $pdo->prepare("UPDATE membros SET ativo=0 WHERE id=?")->execute([$remover_id]);
-            $msg = ['ok', 'Duplicata removida com sucesso.'];
-        } else {
-            $msg = ['erro', 'IDs inválidos.'];
-        }
-    }
-}
-
-// ── Busca todos os membros ativos ────────────────────────────────────────
-$todos = $pdo->query("
-    SELECT m.id, m.nome, m.telefone, m.data_nasc, m.endereco, m.bairro, m.cidade,
-           m.estado_civil, m.sexo, m.criado_em,
-           GROUP_CONCAT(DISTINCT g.nome ORDER BY g.nome SEPARATOR ', ') AS grupos,
-           GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') AS cargos
-    FROM membros m
-    LEFT JOIN membros_grupo_rel gr ON gr.membro_id = m.id
-    LEFT JOIN membros_grupos g      ON g.id = gr.grupo_id
-    LEFT JOIN membros_cargo_rel cr  ON cr.membro_id = m.id
-    LEFT JOIN membros_cargos c      ON c.id = cr.cargo_id
-    WHERE m.ativo = 1
-    GROUP BY m.id
-    ORDER BY m.nome
-")->fetchAll();
-
-// ── Detecta grupos de duplicatas ─────────────────────────────────────────
-// Chave: string normalizada do nome (sem acentos, lowercase, sem espaços duplos)
 function normalizar(string $nome): string {
     $nome = mb_strtolower(trim($nome), 'UTF-8');
     $nome = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $nome);
-    $nome = preg_replace('/\s+/', ' ', $nome);
-    return $nome;
+    return preg_replace('/\s+/', ' ', $nome);
 }
 
-$grupos_dup = [];
-$usados     = [];
-
-for ($i = 0; $i < count($todos); $i++) {
-    if (isset($usados[$todos[$i]['id']])) continue;
-    $grupo = [$todos[$i]];
-    $normI = normalizar($todos[$i]['nome']);
-
-    for ($j = $i + 1; $j < count($todos); $j++) {
-        if (isset($usados[$todos[$j]['id']])) continue;
-        $normJ = normalizar($todos[$j]['nome']);
-
-        // Exato ou muito similar (similar_text >= 85%)
-        similar_text($normI, $normJ, $pct);
-        if ($pct >= 85) {
-            $grupo[] = $todos[$j];
-            $usados[$todos[$j]['id']] = true;
+function detectar_grupos(array $todos): array {
+    $grupos = [];
+    $usados = [];
+    for ($i = 0; $i < count($todos); $i++) {
+        if (isset($usados[$todos[$i]['id']])) continue;
+        $grupo = [$todos[$i]];
+        $normI = normalizar($todos[$i]['nome']);
+        for ($j = $i + 1; $j < count($todos); $j++) {
+            if (isset($usados[$todos[$j]['id']])) continue;
+            similar_text($normI, normalizar($todos[$j]['nome']), $pct);
+            if ($pct >= 85) {
+                $grupo[] = $todos[$j];
+                $usados[$todos[$j]['id']] = true;
+            }
+        }
+        if (count($grupo) > 1) {
+            $usados[$todos[$i]['id']] = true;
+            $grupos[] = $grupo;
         }
     }
+    return $grupos;
+}
 
-    if (count($grupo) > 1) {
-        $usados[$todos[$i]['id']] = true;
-        $grupos_dup[] = $grupo;
+// Pontuação de completude: quanto mais campos preenchidos, mais alto
+function pontuar(array $m): int {
+    $s = 0;
+    foreach (['telefone','data_nasc','endereco','bairro','cidade','estado_civil','sexo'] as $f) {
+        if (!empty($m[$f])) $s++;
+    }
+    if (!empty($m['grupos'])) $s += 2;
+    if (!empty($m['cargos'])) $s += 2;
+    return $s;
+}
+
+function mesclar_e_remover(PDO $pdo, int $manter_id, int $remover_id): void {
+    // Transfere relações
+    foreach ([
+        ['membros_grupo_rel',      'grupo_id'],
+        ['membros_cargo_rel',      'cargo_id'],
+        ['membros_habilidade_rel', 'habilidade_id'],
+        ['membros_pastoreio_rel',  'pastoreio_id'],
+    ] as [$tabela, $col]) {
+        $pdo->prepare("INSERT IGNORE INTO {$tabela} ({$col}, membro_id)
+            SELECT {$col}, ? FROM {$tabela} WHERE membro_id=?")
+            ->execute([$manter_id, $remover_id]);
+    }
+    // Preenche campos em branco do mantido com dados do removido
+    $pdo->prepare("UPDATE membros m JOIN membros dup ON dup.id=?
+        SET
+          m.telefone    = IF(m.telefone    IS NULL OR m.telefone='',    dup.telefone,    m.telefone),
+          m.data_nasc   = IF(m.data_nasc   IS NULL,                     dup.data_nasc,   m.data_nasc),
+          m.endereco    = IF(m.endereco    IS NULL OR m.endereco='',    dup.endereco,    m.endereco),
+          m.bairro      = IF(m.bairro      IS NULL OR m.bairro='',      dup.bairro,      m.bairro),
+          m.cidade      = IF(m.cidade      IS NULL OR m.cidade='',      dup.cidade,      m.cidade),
+          m.estado_civil= IF(m.estado_civil IS NULL OR m.estado_civil='',dup.estado_civil,m.estado_civil),
+          m.sexo        = IF(m.sexo        IS NULL OR m.sexo='',        dup.sexo,        m.sexo)
+        WHERE m.id=?")
+        ->execute([$remover_id, $manter_id]);
+    // Inativa duplicata
+    $pdo->prepare("UPDATE membros SET ativo=0 WHERE id=?")->execute([$remover_id]);
+}
+
+// ── Query base ───────────────────────────────────────────────────────────
+
+function buscar_membros(PDO $pdo): array {
+    return $pdo->query("
+        SELECT m.id, m.nome, m.telefone, m.data_nasc, m.endereco, m.bairro, m.cidade,
+               m.estado_civil, m.sexo, m.criado_em,
+               GROUP_CONCAT(DISTINCT g.nome ORDER BY g.nome SEPARATOR ', ') AS grupos,
+               GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') AS cargos
+        FROM membros m
+        LEFT JOIN membros_grupo_rel gr ON gr.membro_id = m.id
+        LEFT JOIN membros_grupos g      ON g.id = gr.grupo_id
+        LEFT JOIN membros_cargo_rel cr  ON cr.membro_id = m.id
+        LEFT JOIN membros_cargos c      ON c.id = cr.cargo_id
+        WHERE m.ativo = 1
+        GROUP BY m.id
+        ORDER BY m.nome
+    ")->fetchAll();
+}
+
+// ── Ações POST ───────────────────────────────────────────────────────────
+
+$msg = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
+    $acao = $_POST['acao'] ?? '';
+
+    // ── Corrigir tudo automaticamente ────────────────────────────────────
+    if ($acao === 'corrigir_tudo') {
+        $todos      = buscar_membros($pdo);
+        $grupos_dup = detectar_grupos($todos);
+        $resolvidos = 0;
+
+        foreach ($grupos_dup as $grupo) {
+            // Ordena: maior pontuação primeiro, menor ID como desempate
+            usort($grupo, function($a, $b) {
+                $pa = pontuar($a); $pb = pontuar($b);
+                return $pa !== $pb ? $pb - $pa : $a['id'] - $b['id'];
+            });
+            $manter = $grupo[0];
+            for ($i = 1; $i < count($grupo); $i++) {
+                mesclar_e_remover($pdo, $manter['id'], $grupo[$i]['id']);
+                $resolvidos++;
+            }
+        }
+
+        $msg = ['ok', "Correção automática concluída: {$resolvidos} duplicata(s) removida(s) e mesclada(s)."];
+
+    // ── Resolver duplicata individual ─────────────────────────────────────
+    } elseif ($acao === 'resolver') {
+        $manter_id  = (int)($_POST['manter_id']  ?? 0);
+        $remover_id = (int)($_POST['remover_id'] ?? 0);
+        $mesclar    = !empty($_POST['mesclar']);
+
+        if ($manter_id && $remover_id && $manter_id !== $remover_id) {
+            $stCheck = $pdo->prepare("SELECT id FROM membros WHERE id IN (?,?) AND ativo=1");
+            $stCheck->execute([$manter_id, $remover_id]);
+            if ($stCheck->rowCount() === 2) {
+                if ($mesclar) {
+                    mesclar_e_remover($pdo, $manter_id, $remover_id);
+                } else {
+                    $pdo->prepare("UPDATE membros SET ativo=0 WHERE id=?")->execute([$remover_id]);
+                }
+                $msg = ['ok', 'Duplicata removida com sucesso.'];
+            } else {
+                $msg = ['erro', 'IDs inválidos.'];
+            }
+        }
     }
 }
+
+// ── Carrega estado atual ──────────────────────────────────────────────────
+$todos      = buscar_membros($pdo);
+$grupos_dup = detectar_grupos($todos);
 
 $titulo       = 'Deduplicar Membros';
 $pagina_ativa = 'membros';
@@ -114,7 +155,7 @@ include dirname(__DIR__) . '/_layout.php';
 
 <style>
 .dup-wrap{max-width:960px;margin:0 auto;padding:0 4px}
-.dup-top{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.dup-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:24px;flex-wrap:wrap}
 .dup-title{font-family:'Cinzel',serif;font-size:.85rem;font-weight:700;color:var(--green-dk);text-transform:uppercase;letter-spacing:.06em}
 .dup-sub{font-size:.76rem;color:var(--muted);margin-top:2px}
 .dup-grupo{background:#fff;border:1px solid var(--border);border-radius:var(--rl);margin-bottom:20px;overflow:hidden;box-shadow:var(--sh-sm)}
@@ -133,8 +174,11 @@ include dirname(__DIR__) . '/_layout.php';
 .dup-form{display:contents}
 .dup-mesclar{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
 .dup-mesclar input{cursor:pointer}
-.dup-vazio{text-align:center;padding:40px 20px;color:var(--muted);font-size:.88rem}
+.dup-vazio{text-align:center;padding:48px 20px;color:var(--muted);font-size:.88rem}
 .dup-vazio strong{display:block;font-size:1.1rem;color:var(--green-dk);margin-bottom:8px}
+.dup-corrigir-box{background:#fffbeb;border:1px solid #f5d87a;border-radius:var(--rl);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dup-corrigir-txt{font-size:.82rem;color:#92400e}
+.dup-corrigir-txt strong{font-weight:700}
 @media(min-width:640px){
   .dup-cards{grid-template-columns:1fr 1fr}
   .dup-card{border-bottom:none;border-right:1px solid var(--border)}
@@ -145,6 +189,7 @@ include dirname(__DIR__) . '/_layout.php';
 </style>
 
 <div class="dup-wrap">
+
   <div class="dup-top">
     <div style="flex:1;min-width:0">
       <div class="dup-title">Deduplicar Membros</div>
@@ -158,6 +203,22 @@ include dirname(__DIR__) . '/_layout.php';
 
   <?php if ($msg): ?>
   <div class="alerta alerta-<?= $msg[0] ?>" style="margin-bottom:16px"><?= htmlspecialchars($msg[1]) ?></div>
+  <?php endif; ?>
+
+  <?php if (!empty($grupos_dup)): ?>
+  <div class="dup-corrigir-box">
+    <div class="dup-corrigir-txt">
+      <strong>Corrigir tudo automaticamente:</strong>
+      Para cada grupo, mantém o registro com mais dados preenchidos,
+      mescla grupos/cargos/habilidades/pastoreio e remove as cópias.
+    </div>
+    <form method="post"
+          onsubmit="return confirm('Confirma a correção automática de todas as <?= count($grupos_dup) ?> duplicata(s)? Esta ação mesclará e inativará os registros duplicados.')">
+      <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+      <input type="hidden" name="acao"       value="corrigir_tudo">
+      <button type="submit" class="btn btn-primary btn-sm">⚡ Corrigir tudo</button>
+    </form>
+  </div>
   <?php endif; ?>
 
   <?php if (empty($grupos_dup)): ?>
@@ -181,9 +242,7 @@ include dirname(__DIR__) . '/_layout.php';
           <?php
             $campos = [
               'Cadastro' => $m['criado_em'] ? (new DateTime($m['criado_em']))->format('d/m/Y H:i') : '—',
-              'Nasc.'    => $m['data_nasc']
-                             ? (new DateTime($m['data_nasc']))->format('d/m/Y')
-                             : '—',
+              'Nasc.'    => $m['data_nasc'] ? (new DateTime($m['data_nasc']))->format('d/m/Y') : '—',
               'Telefone' => $m['telefone'] ?: '—',
               'Cidade'   => $m['cidade']   ?: '—',
               'Sexo'     => $m['sexo']     ?: '—',
@@ -209,6 +268,7 @@ include dirname(__DIR__) . '/_layout.php';
           <form method="post" class="dup-form"
                 onsubmit="return confirm('Confirma manter «<?= htmlspecialchars(addslashes($m['nome'])) ?>» e remover a outra entrada?')">
             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+            <input type="hidden" name="acao"       value="resolver">
             <input type="hidden" name="manter_id"  value="<?= $m['id'] ?>">
             <input type="hidden" name="remover_id" value="<?= $outro['id'] ?>">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
