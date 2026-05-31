@@ -305,6 +305,7 @@ include dirname(__DIR__) . '/_layout.php';
     <?php endif; ?>
     <a href="/portal/membros/importar.php" class="btn btn-ghost btn-sm" title="Importar membros de planilha">↑ Importar</a>
     <a href="/portal/membros/exportar.php" class="btn btn-ghost btn-sm" title="Exportar para Excel">↓ Exportar</a>
+    <a href="/portal/membros/deduplicar.php" class="btn btn-ghost btn-sm" title="Localizar e remover duplicatas">⊘ Duplicatas</a>
     <a href="/portal/membros/novo.php<?= $grupo_id ? "?grupo={$grupo_id}" : ($cargo_id ? "?cargo={$cargo_id}" : ($habilidade_id ? "?habilidade={$habilidade_id}" : ($pastoreio_id ? "?pastoreio={$pastoreio_id}" : ''))) ?>" class="btn btn-primary btn-sm">+ Novo membro</a>
   </div>
 </div>
