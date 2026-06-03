@@ -370,8 +370,9 @@ input[type=checkbox]{accent-color:var(--g);width:14px;height:14px;cursor:pointer
    ALERTAS
 ══════════════════════════ */
 .alerta{padding:11px 15px;border-radius:8px;margin-bottom:18px;font-size:.84rem}
-.alerta-erro{background:#fef2f2;color:var(--vermelho);border:1px solid rgba(220,38,38,.18);border-left:3px solid var(--vermelho)}
-.alerta-ok  {background:#f0fdf4;color:#166534;border:1px solid rgba(22,163,74,.18);border-left:3px solid var(--verde)}
+.alerta-erro  {background:#fef2f2;color:var(--vermelho);border:1px solid rgba(220,38,38,.18);border-left:3px solid var(--vermelho)}
+.alerta-ok    {background:#f0fdf4;color:#166534;border:1px solid rgba(22,163,74,.18);border-left:3px solid var(--verde)}
+.alerta-aviso {background:#fffbeb;color:#92400e;border:1px solid rgba(217,119,6,.18);border-left:3px solid #d97706}
 
 /* ══════════════════════════════════════════
    MOBILE — responsividade global do portal

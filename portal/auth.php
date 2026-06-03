@@ -1,15 +1,35 @@
 <?php
 require_once __DIR__ . '/config.php';
 
+define('SESSION_TIMEOUT', 1800); // 30 minutos de inatividade
+
 if (session_status() === PHP_SESSION_NONE) {
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+          || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+          || (($_SERVER['SERVER_PORT'] ?? 80) == 443);
+
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => $https,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
     session_start();
 }
 
-/* ── Módulos do portal ─────────────────────────────────────────────────────
-   Adicione novos módulos AQUI. Eles aparecerão automaticamente no formulário
-   de permissões de usuários.
-   Chave = identificador único | valor = rótulo exibido na interface
-──────────────────────────────────────────────────────────────────────────── */
+// Headers de segurança HTTP (aplicados a todas as páginas do portal)
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; base-uri 'self'; form-action 'self'");
+}
+
+/* ── Módulos do portal ───────────────────────────────────────────────────── */
 const MODULOS_PORTAL = [
     'dashboard'  => 'Dashboard',
     'eventos'    => 'Próx. Eventos',
@@ -20,7 +40,6 @@ const MODULOS_PORTAL = [
     'usuarios'   => 'Usuários',
 ];
 
-/* Mapeamento backward-compat: perfis antigos → módulos equivalentes */
 const PERFIL_LEGADO = [
     'secretaria' => ['dashboard', 'eventos', 'inscricoes', 'membros'],
     'financeiro' => ['dashboard', 'financeiro'],
@@ -50,6 +69,15 @@ function requer_login(): void {
         header('Location: /portal/login.php');
         exit;
     }
+    // Verificar timeout de inatividade
+    $ultimo = $_SESSION['_ultimo_ativo'] ?? time();
+    if (time() - $ultimo > SESSION_TIMEOUT) {
+        session_unset();
+        session_destroy();
+        header('Location: /portal/login.php?expirado=1');
+        exit;
+    }
+    $_SESSION['_ultimo_ativo'] = time();
 }
 
 function requer_perfil(array $perfis): void {
@@ -57,7 +85,6 @@ function requer_perfil(array $perfis): void {
     $p = $_SESSION['usuario_perfil'] ?? '';
     if ($p === 'admin') return;
     if (in_array($p, $perfis, true)) return;
-    // Verifica se algum perfil solicitado corresponde a módulos do usuário
     $modulos = _modulos_do_usuario();
     foreach ($perfis as $req) {
         if (in_array($req, $modulos, true)) return;
@@ -119,5 +146,6 @@ function csrf_token(): string {
 
 function csrf_valido(): bool {
     return isset($_POST['csrf_token'])
-        && hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token']);
+        && !empty($_SESSION['csrf_token'])
+        && hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
 }

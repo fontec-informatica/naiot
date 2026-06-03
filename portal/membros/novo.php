@@ -37,21 +37,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     // Foto via webcam (base64)
     $foto_b64 = trim($_POST['foto_webcam'] ?? '');
     if ($foto_b64 && preg_match('/^data:image\/(jpeg|png|webp);base64,/', $foto_b64, $m_ext)) {
-        $ext       = $m_ext[1] === 'jpeg' ? 'jpg' : $m_ext[1];
-        $foto_nome = uniqid('mb_', true) . '.' . $ext;
-        $img_data  = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $foto_b64));
-        $dir_fotos = __DIR__ . '/fotos/';
-        if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
-        file_put_contents($dir_fotos . $foto_nome, $img_data);
+        $img_data = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $foto_b64), true);
+        // Validar que o conteúdo é realmente uma imagem
+        $finfo_b64 = new finfo(FILEINFO_MIME_TYPE);
+        $mime_b64  = $finfo_b64->buffer($img_data ?: '');
+        $mimes_ok  = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!$img_data || !isset($mimes_ok[$mime_b64])) {
+            $erros[] = 'Foto inválida.';
+        } else {
+            $ext       = $mimes_ok[$mime_b64];
+            $foto_nome = uniqid('mb_', true) . '.' . $ext;
+            $dir_fotos = __DIR__ . '/fotos/';
+            if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
+            file_put_contents($dir_fotos . $foto_nome, $img_data);
+        }
     } elseif (!empty($_FILES['foto']['tmp_name'])) {
         $f = $_FILES['foto'];
-        $ext = strtolower(pathinfo($f['name'], PATHINFO_EXTENSION));
-        if (!in_array($ext, ['jpg','jpeg','png','webp'])) {
-            $erros[] = 'Foto: somente JPG, PNG ou WEBP.';
+        if ($f['error'] !== UPLOAD_ERR_OK) {
+            $erros[] = 'Erro ao receber a foto.';
         } elseif ($f['size'] > 5 * 1024 * 1024) {
             $erros[] = 'Foto: máximo 5 MB.';
         } else {
-            $foto_nome = uniqid('mb_', true) . '.' . $ext;
+            $finfo_up = new finfo(FILEINFO_MIME_TYPE);
+            $mime_up  = $finfo_up->file($f['tmp_name']);
+            $mimes_ok = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+            if (!isset($mimes_ok[$mime_up])) {
+                $erros[] = 'Foto: somente JPG, PNG ou WEBP.';
+            } else {
+                $foto_nome = uniqid('mb_', true) . '.' . $mimes_ok[$mime_up];
+            }
         }
     }
 

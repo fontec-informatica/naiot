@@ -1,0 +1,50 @@
+# ── Segurança: redirecionar HTTP → HTTPS ─────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP_HOST} !^localhost [NC]
+    RewriteCond %{HTTP_HOST} !^127\.0\.0\.1
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ── Desabilitar listagem de diretórios ────────────────────────────────────
+Options -Indexes
+
+# ── Headers de segurança HTTP ─────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    # Remover header que revela versão do servidor
+    Header always unset X-Powered-By
+    Header unset X-Powered-By
+</IfModule>
+
+# ── Bloquear acesso a arquivos sensíveis ──────────────────────────────────
+<FilesMatch "\.(env|sql|log|sh|bak|swp|orig|dist)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Bloquear acesso a arquivos ocultos (exceto .well-known para HTTPS)
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    RewriteRule (^|/)\.(?!well-known) - [F,L]
+</IfModule>
+
+# ── Cache de assets estáticos ─────────────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png  "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType text/css   "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>

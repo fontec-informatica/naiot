@@ -1,3 +1,6 @@
+# Credenciais e configurações sensíveis
+.env
+
 # macOS
 .DS_Store
 .DS_Store?
@@ -9,9 +12,11 @@
 .vscode/
 .idea/
 
-# Uploads e fotos locais
-portal/membros/fotos/
-portal/eventos/fotos/
+# Uploads e fotos locais (ignora imagens mas rastreia .htaccess)
+portal/membros/fotos/*
+!portal/membros/fotos/.htaccess
+portal/eventos/fotos/*
+!portal/eventos/fotos/.htaccess
 
 # Dependências / build
 node_modules/
