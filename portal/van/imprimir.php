@@ -181,10 +181,22 @@ body {
 @media print {
   body { background: #fff }
   .barra-acoes { display: none }
-  .pagina { margin: 0 !important; box-shadow: none; padding: 10mm 14mm;
-            transform: none !important; zoom: 1 !important }
   @page { size: A4; margin: 0 }
   .quebra { page-break-before: always }
+  .pagina {
+    /* altura EXATA de uma folha A4 — impede páginas em branco */
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: unset !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+    padding: 10mm 14mm !important;
+    box-shadow: none !important;
+    transform: none !important;
+    zoom: 1 !important;
+  }
 }
 </style>
 </head>
@@ -334,23 +346,71 @@ body {
 
 <script>
 (function(){
+  var paginas = document.querySelectorAll('.pagina');
+  var backup  = [];
+
   function ajustar(){
-    var paginas = document.querySelectorAll('.pagina');
     if (!paginas.length) return;
     var avail = window.innerWidth - 8;
     var natW  = paginas[0].scrollWidth;
     if (!natW || avail >= natW) return;
     var scale = avail / natW;
     paginas.forEach(function(p){
-      var h = p.offsetHeight;
-      var w = p.offsetWidth;
+      var h = p.offsetHeight, w = p.offsetWidth;
       p.style.transform       = 'scale(' + scale + ')';
       p.style.transformOrigin = 'top left';
-      /* Colapsa o espaço extra que o transform não afeta no layout */
-      p.style.marginBottom = '-' + (h * (1 - scale) - 12) + 'px';
-      p.style.marginRight  = '-' + (w * (1 - scale)) + 'px';
+      p.style.marginBottom    = '-' + (h * (1 - scale) - 12) + 'px';
+      p.style.marginRight     = '-' + (w * (1 - scale)) + 'px';
     });
   }
+
+  /* Limpa estilos inline antes de imprimir para não interferir no PDF */
+  function limpar(){
+    backup = [];
+    paginas.forEach(function(p){
+      backup.push({
+        transform: p.style.transform, marginBottom: p.style.marginBottom,
+        marginRight: p.style.marginRight, transformOrigin: p.style.transformOrigin
+      });
+      p.style.transform = p.style.marginBottom = p.style.marginRight = p.style.transformOrigin = '';
+    });
+  }
+
+  function restaurar(){
+    paginas.forEach(function(p, i){
+      if (!backup[i]) return;
+      p.style.transform       = backup[i].transform;
+      p.style.transformOrigin = backup[i].transformOrigin;
+      p.style.marginBottom    = backup[i].marginBottom;
+      p.style.marginRight     = backup[i].marginRight;
+    });
+  }
+
+  /* beforeprint: suportado no Safari iOS 13+ */
+  window.addEventListener('beforeprint', limpar);
+  window.addEventListener('afterprint',  restaurar);
+
+  /* matchMedia fallback para cobrir variações do Safari */
+  try {
+    var mq = window.matchMedia('print');
+    var fn = function(e){ if (e.matches) limpar(); else restaurar(); };
+    if (mq.addEventListener) mq.addEventListener('change', fn);
+    else if (mq.addListener) mq.addListener(fn);
+  } catch(e){}
+
+  /* Botão imprimir: garante limpeza síncrona antes do window.print() */
+  var btnImp = document.querySelector('.btn-imp');
+  if (btnImp) {
+    btnImp.addEventListener('click', function(e){
+      e.preventDefault();
+      limpar();
+      requestAnimationFrame(function(){
+        window.print();
+        setTimeout(restaurar, 1500);
+      });
+    });
+  }
+
   window.addEventListener('load',   ajustar);
   window.addEventListener('resize', ajustar);
   ajustar();
