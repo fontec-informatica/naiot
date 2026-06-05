@@ -772,6 +772,17 @@ $lista.addEventListener('input', function(){ sincJson(); $pjson.value = JSON.str
 
 function addPass(p){
   p.tipo = p.tipo || 'normal';
+
+  // Bloqueia duplicata
+  var jaExiste = passengers.some(function(x){
+    if (p.membro_id && x.membro_id) return x.membro_id === p.membro_id;
+    return x.nome.trim().toLowerCase() === p.nome.trim().toLowerCase();
+  });
+  if (jaExiste) {
+    alert('"' + p.nome + '" já está na lista.');
+    return;
+  }
+
   if (p.tipo !== 'colo' && contarAssentos() >= MAX_ASSENTOS) {
     alert('Limite de ' + MAX_ASSENTOS + ' assentos atingido.\nUse o botão "Criança / Bebê" para adicionar passageiros no colo.');
     return;
