@@ -37,7 +37,7 @@ $erros = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $destino         = trim($_POST['destino']         ?? '');
     $data_texto      = trim($_POST['data_texto']      ?? '');
-    $data_tipo       = in_array($_POST['data_tipo'] ?? '', ['unico','bate_volta','periodo','livre']) ? $_POST['data_tipo'] : 'livre';
+    $data_retorno    = trim($_POST['data_retorno'] ?? '') ?: null;
     $mot_tipo        = $_POST['motorista_tipo']        ?? 'membro';
     $mot_id          = (int)($_POST['motorista_id']   ?? 0) ?: null;
     $mot_nome        = trim($_POST['motorista_nome']  ?? '');
@@ -70,21 +70,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         if (!$id) {
             $pdo->prepare("
                 INSERT INTO van_viagens
-                  (destino,data_texto,data_saida,data_tipo,motorista_id,motorista_nome,motorista_cpf,
+                  (destino,data_texto,data_saida,data_retorno,motorista_id,motorista_nome,motorista_cpf,
                    coordenador_id,coordenador_nome,coordenador_cpf,status)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?)
-            ")->execute([$destino,$data_texto,$data_saida,$data_tipo,
+            ")->execute([$destino,$data_texto,$data_saida,$data_retorno,
                          $mot_id,$mot_nome?:null,$mot_cpf?:null,
                          $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status]);
             $id = (int)$pdo->lastInsertId();
         } else {
             $pdo->prepare("
                 UPDATE van_viagens SET
-                  destino=?,data_texto=?,data_saida=?,data_tipo=?,
+                  destino=?,data_texto=?,data_saida=?,data_retorno=?,
                   motorista_id=?,motorista_nome=?,motorista_cpf=?,
                   coordenador_id=?,coordenador_nome=?,coordenador_cpf=?,status=?
                 WHERE id=?
-            ")->execute([$destino,$data_texto,$data_saida,$data_tipo,
+            ")->execute([$destino,$data_texto,$data_saida,$data_retorno,
                          $mot_id,$mot_nome?:null,$mot_cpf?:null,
                          $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status,$id]);
         }
@@ -238,60 +238,26 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
-    <!-- Tipo de data -->
-    <div class="form-group" style="margin-bottom:10px">
-      <label>Tipo de data</label>
-      <div class="dtipo" id="dtipo">
-        <?php $dtipo = $viagem['data_tipo'] ?? 'livre'; ?>
-        <label><input type="radio" name="data_tipo" value="unico"      <?= $dtipo==='unico'      ? 'checked' : '' ?>> Dia único</label>
-        <label><input type="radio" name="data_tipo" value="bate_volta" <?= $dtipo==='bate_volta' ? 'checked' : '' ?>> Ida e volta</label>
-        <label><input type="radio" name="data_tipo" value="periodo"    <?= $dtipo==='periodo'    ? 'checked' : '' ?>> Período</label>
-        <label><input type="radio" name="data_tipo" value="livre"      <?= $dtipo==='livre'      ? 'checked' : '' ?>> Livre</label>
-      </div>
-    </div>
-
-    <!-- Campos de data dinâmicos -->
-    <div id="secaoDatas">
-
-      <div id="sdUnico"     style="display:none">
-        <div class="form-group" style="max-width:200px;margin:0">
-          <label>Data da viagem</label>
-          <input type="date" id="d1Unico">
+    <!-- Data -->
+    <div class="form-group" style="margin:0">
+      <label>Data <span style="color:var(--red)">*</span></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0">
+        <div>
+          <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:4px">Saída</div>
+          <input type="date" id="dSaida" required
+            value="<?= htmlspecialchars($viagem['data_saida'] ?? '') ?>">
         </div>
-      </div>
-
-      <div id="sdBate"      style="display:none">
-        <div class="form-group" style="max-width:200px;margin:0">
-          <label>Data (ida e volta)</label>
-          <input type="date" id="d1Bate">
-        </div>
-      </div>
-
-      <div id="sdPeriodo"   style="display:none">
-        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end">
-          <div class="form-group" style="margin:0">
-            <label>Data de saída</label>
-            <input type="date" id="d1Per">
+        <div>
+          <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:4px">
+            Retorno <span style="font-weight:400">(vazio = missão de um dia)</span>
           </div>
-          <div class="form-group" style="margin:0">
-            <label>Data de retorno</label>
-            <input type="date" id="d2Per">
-          </div>
-          <div id="prevData" style="font-size:.82rem;color:var(--muted);padding-bottom:8px"></div>
+          <input type="date" id="dRetorno"
+            value="<?= htmlspecialchars($viagem['data_retorno'] ?? '') ?>">
         </div>
       </div>
-
-      <div id="sdLivre"     style="display:none">
-        <div class="form-group" style="margin:0">
-          <label>Data (texto livre)</label>
-          <input type="text" name="data_texto" id="inputDataLivre" maxlength="100"
-            placeholder="Ex.: 05-06-07/06/2026"
-            value="<?= htmlspecialchars($viagem['data_texto'] ?? '') ?>">
-        </div>
-      </div>
-
-      <!-- Campo oculto que recebe o valor final de data -->
-      <input type="hidden" name="data_texto" id="inputDataFinal" value="<?= htmlspecialchars($viagem['data_texto'] ?? '') ?>">
+      <div id="prevDataTexto" style="margin-top:8px;font-size:.82rem;color:var(--muted);min-height:18px"></div>
+      <input type="hidden" name="data_texto"  id="inputDataFinal"   value="<?= htmlspecialchars($viagem['data_texto']  ?? '') ?>">
+      <input type="hidden" name="data_retorno" id="inputDataRetorno" value="<?= htmlspecialchars($viagem['data_retorno'] ?? '') ?>">
     </div>
 
   </div>
@@ -541,106 +507,46 @@ $dest.addEventListener('keydown', function(e){
 document.addEventListener('click', function(e){ if(!$drop.contains(e.target)&&e.target!==$dest) destFecha(); });
 
 /* ════════════════════════════════════════════
-   Seletor de tipo de data
+   Datas: saída + retorno
 ════════════════════════════════════════════ */
-var $dataFinal = document.getElementById('inputDataFinal');
-var $dataLivre = document.getElementById('inputDataLivre');
+var $dataFinal   = document.getElementById('inputDataFinal');
+var $dataRetorno = document.getElementById('inputDataRetorno');
+var $prevTexto   = document.getElementById('prevDataTexto');
 
 function pad(n){ return String(n).padStart(2,'0'); }
+
 function gerarDataTexto(){
-  var tipo = (document.querySelector('[name=data_tipo]:checked') || {}).value || 'livre';
-  if (tipo === 'livre'){
-    $dataFinal.value = $dataLivre.value;
-    return;
-  }
-  if (tipo === 'unico'){
-    var d = document.getElementById('d1Unico').value;
-    if (!d){ $dataFinal.value=''; return; }
-    var [y,m,dd] = d.split('-');
-    $dataFinal.value = dd+'/'+m+'/'+y;
-    return;
-  }
-  if (tipo === 'bate_volta'){
-    var d = document.getElementById('d1Bate').value;
-    if (!d){ $dataFinal.value=''; return; }
-    var [y,m,dd] = d.split('-');
-    $dataFinal.value = dd+'/'+m+'/'+y+' (Ida e Volta)';
-    return;
-  }
-  if (tipo === 'periodo'){
-    var d1 = document.getElementById('d1Per').value;
-    var d2 = document.getElementById('d2Per').value;
-    if (!d1){ $dataFinal.value=''; document.getElementById('prevData').textContent=''; return; }
-    if (!d2) d2 = d1;
+  var d1 = document.getElementById('dSaida').value;
+  var d2 = document.getElementById('dRetorno').value;
+
+  document.getElementById('inputDataSaida').value  = d1;
+  $dataRetorno.value = d2;
+
+  if (!d1){ $dataFinal.value=''; $prevTexto.textContent=''; return; }
+
+  var p1 = d1.split('-'), y1=p1[0], m1=p1[1], dd1=p1[2];
+
+  if (!d2 || d2 === d1){
+    $dataFinal.value = dd1+'/'+m1+'/'+y1;
+  } else {
     var start = new Date(d1+'T00:00:00');
     var end   = new Date(d2+'T00:00:00');
-    if (end < start) end = start;
-    var dias = [];
-    var cur = new Date(start);
-    while(cur <= end){ dias.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
-    var [y1,m1,dd1] = d1.split('-');
-    var [y2,m2,dd2] = d2.split('-');
-    var texto = '';
-    if (m1 === m2 && y1 === y2){
-      texto = dias.map(function(d){ return pad(d.getDate()); }).join('-') + '/' + m1 + '/' + y1;
+    if (end < start){ end = start; d2 = d1; }
+    var p2 = d2.split('-'), y2=p2[0], m2=p2[1], dd2=p2[2];
+    if (m1===m2 && y1===y2){
+      var dias=[], cur=new Date(start);
+      while(cur<=end){ dias.push(pad(cur.getDate())); cur.setDate(cur.getDate()+1); }
+      $dataFinal.value = dias.join('-')+'/'+m1+'/'+y1;
     } else {
-      texto = dd1+'/'+m1+'-'+dd2+'/'+m2+'/'+y1;
-    }
-    $dataFinal.value = texto;
-    document.getElementById('prevData').textContent = 'Texto: ' + texto;
-    return;
-  }
-}
-
-function syncTipoDatas(){
-  var tipo = (document.querySelector('[name=data_tipo]:checked') || {}).value || 'livre';
-  document.getElementById('sdUnico').style.display    = tipo==='unico'      ? '' : 'none';
-  document.getElementById('sdBate').style.display     = tipo==='bate_volta' ? '' : 'none';
-  document.getElementById('sdPeriodo').style.display  = tipo==='periodo'    ? '' : 'none';
-  document.getElementById('sdLivre').style.display    = tipo==='livre'      ? '' : 'none';
-  // remove o name do input escondido se livre para não duplicar
-  document.getElementById('inputDataLivre').name = tipo==='livre' ? 'data_texto_livre_nao_usar' : '';
-  gerarDataTexto();
-}
-
-document.querySelectorAll('[name=data_tipo]').forEach(function(r){ r.addEventListener('change', syncTipoDatas); });
-['d1Unico','d1Bate','d1Per','d2Per'].forEach(function(id){
-  var el = document.getElementById(id);
-  if(el) el.addEventListener('change', gerarDataTexto);
-});
-$dataLivre.addEventListener('input', function(){ $dataFinal.value = this.value; });
-syncTipoDatas();
-
-// Pré-preencher datas existentes se editando
-(function(){
-  var val = <?= json_encode($viagem['data_texto'] ?? '') ?>;
-  var tipo = <?= json_encode($viagem['data_tipo'] ?? 'livre') ?>;
-  if (!val) return;
-  if (tipo === 'unico' || tipo === 'bate_volta') {
-    // tenta extrair date: DD/MM/YYYY
-    var m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-    if (m) {
-      var iso = m[3]+'-'+m[2]+'-'+m[1];
-      if (tipo==='unico')     document.getElementById('d1Unico').value = iso;
-      if (tipo==='bate_volta') document.getElementById('d1Bate').value  = iso;
-    }
-  } else if (tipo === 'periodo'){
-    // "DD-...-DD/MM/YYYY" ou "DD/MM-DD/MM/YYYY"
-    var m2 = val.match(/^(\d{2})[^\d].*?(\d{2})\/(\d{2})\/(\d{4})/);
-    if (m2) {
-      document.getElementById('d1Per').value = m2[4]+'-'+m2[3]+'-'+m2[1];
-    }
-    var m3 = val.match(/(\d{2})\/(\d{2})$/);
-    if (!m3) {
-      var m4 = val.match(/(\d{2})\/(\d{2})\/(\d{4})/g);
-      if (m4 && m4.length >= 2) {
-        var last = m4[m4.length-1].match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        if(last) document.getElementById('d2Per').value = last[3]+'-'+last[2]+'-'+last[1];
-      }
+      $dataFinal.value = dd1+'/'+m1+'-'+dd2+'/'+m2+'/'+y1;
     }
   }
-  gerarDataTexto();
-})();
+  $prevTexto.textContent = 'No documento: ' + $dataFinal.value;
+}
+
+document.getElementById('dSaida').addEventListener('change', gerarDataTexto);
+document.getElementById('dRetorno').addEventListener('change', gerarDataTexto);
+gerarDataTexto();
 
 /* ════════════════════════════════════════════
    Toggle motorista (membro / externo)
@@ -891,17 +797,7 @@ render();
 
 function setAcao(acao){
   document.getElementById('inputAcao').value = acao;
-  // Garante data_texto e data_saida
-  var tipo = (document.querySelector('[name=data_tipo]:checked') || {}).value || 'livre';
-  if (tipo === 'livre') {
-    document.getElementById('inputDataFinal').value = document.getElementById('inputDataLivre').value;
-  }
-  // data_saida para ordenação
-  var iso = '';
-  if (tipo === 'unico')     iso = document.getElementById('d1Unico').value;
-  else if (tipo === 'bate_volta') iso = document.getElementById('d1Bate').value;
-  else if (tipo === 'periodo')    iso = document.getElementById('d1Per').value;
-  document.getElementById('inputDataSaida').value = iso;
+  gerarDataTexto();
 }
 </script>
 

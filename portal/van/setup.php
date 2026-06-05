@@ -49,6 +49,7 @@ try {
 $migracoes = [
     "ALTER TABLE membros         ADD COLUMN cpf              VARCHAR(20)  NULL AFTER sexo",
     "ALTER TABLE van_viagens     ADD COLUMN data_saida       DATE         NULL AFTER data_texto",
+    "ALTER TABLE van_viagens     ADD COLUMN data_retorno     DATE         NULL AFTER data_saida",
     "ALTER TABLE van_viagens     ADD COLUMN data_tipo        ENUM('unico','bate_volta','periodo','livre') NOT NULL DEFAULT 'livre' AFTER data_saida",
     "ALTER TABLE van_viagens     ADD COLUMN coordenador_id   INT          NULL AFTER motorista_cpf",
     "ALTER TABLE van_viagens     ADD COLUMN coordenador_nome VARCHAR(150) NULL AFTER coordenador_id",
