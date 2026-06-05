@@ -45,6 +45,8 @@ body {
   font-size: 11pt;
   color: #000;
   background: #d8d8d8;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Barra de ações (tela apenas) ── */

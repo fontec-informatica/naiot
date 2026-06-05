@@ -195,9 +195,22 @@ include dirname(__DIR__) . '/_layout.php';
 .tog-crianca label:has(input[value=colo]:checked)       { background:#3b6cb7;color:#fff }
 .tog-crianca label:has(input[value=cadeirinha]:checked) { background:#a87d28;color:#fff }
 
+/* Grid 2 colunas responsivo */
+.cols-2 { display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0 }
+
+/* Botões de ação */
+.van-acoes { display:flex;gap:10px;flex-wrap:wrap }
+
 @media (max-width:600px) {
-  .pass-item { grid-template-columns:22px 1fr auto }
+  .pass-item   { grid-template-columns:22px 1fr auto }
   .pass-inputs { grid-template-columns:1fr }
+  .cols-2      { grid-template-columns:1fr }
+  .cols-2.gap-sm { gap:10px }
+  .tog         { max-width:100% }
+  .tog-crianca { max-width:100% }
+  .van-card    { padding:14px }
+  .van-acoes   { flex-direction:column }
+  .van-acoes .btn { width:100%;justify-content:center;text-align:center }
 }
 </style>
 
@@ -241,7 +254,7 @@ include dirname(__DIR__) . '/_layout.php';
     <!-- Data -->
     <div class="form-group" style="margin:0">
       <label>Data <span style="color:var(--red)">*</span></label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0">
+      <div class="cols-2">
         <div>
           <div style="font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:4px">Saída</div>
           <input type="date" id="dSaida" required
@@ -293,7 +306,7 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
 
     <div id="smExterno" style="display:none">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0">
+      <div class="cols-2">
         <div class="form-group" style="margin:0">
           <label>Nome completo</label>
           <input type="text" name="motorista_nome" maxlength="150" placeholder="Nome do motorista"
@@ -326,7 +339,7 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="srch-drop" id="coordDrop"></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0">
+    <div class="cols-2">
       <div class="form-group" style="margin:0">
         <label>Nome completo</label>
         <input type="text" name="coordenador_nome" id="coordNome" maxlength="150"
@@ -367,7 +380,7 @@ include dirname(__DIR__) . '/_layout.php';
     <!-- Adulto externo sem cadastro -->
     <div class="add-box" id="manualBox">
       <div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Adulto sem cadastro</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;min-width:0">
+      <div class="cols-2 gap-sm" style="margin-bottom:10px">
         <div class="form-group" style="margin:0">
           <label style="font-size:.78rem">Nome completo</label>
           <input type="text" id="mNome" maxlength="150" placeholder="Nome">
@@ -390,7 +403,7 @@ include dirname(__DIR__) . '/_layout.php';
         <label><input type="radio" name="crianca_tipo" value="colo" checked> <span>No colo</span></label>
         <label><input type="radio" name="crianca_tipo" value="cadeirinha"> <span>Na cadeirinha</span></label>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;min-width:0">
+      <div class="cols-2 gap-sm" style="margin-bottom:10px">
         <div class="form-group" style="margin:0">
           <label style="font-size:.78rem">Nome da criança</label>
           <input type="text" id="cNome" maxlength="150" placeholder="Nome">
@@ -434,7 +447,7 @@ include dirname(__DIR__) . '/_layout.php';
       <label><input type="radio" name="status" value="cancelada"
         <?= $statusAtual === 'cancelada' ? 'checked' : '' ?>> Cancelada</label>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+    <div class="van-acoes" style="margin-top:4px">
       <button type="submit" class="btn btn-primary" onclick="setAcao('salvar')">Salvar</button>
       <button type="submit" class="btn btn-primary" onclick="setAcao('imprimir')"
         style="background:var(--green-dk);border-color:var(--green-dk)">
