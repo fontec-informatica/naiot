@@ -39,9 +39,17 @@ CREATE TABLE IF NOT EXISTS van_passageiros (
 ");
 
 // Migrações para instalações anteriores
+// Migra status antigos antes de alterar o ENUM
+try {
+    $pdo->exec("UPDATE van_viagens SET status='agendada'  WHERE status='rascunho'");
+    $pdo->exec("UPDATE van_viagens SET status='concluida' WHERE status='finalizada'");
+    $pdo->exec("ALTER TABLE van_viagens MODIFY COLUMN status ENUM('agendada','concluida','cancelada') NOT NULL DEFAULT 'agendada'");
+} catch (PDOException $e) { /* já migrado */ }
+
 $migracoes = [
     "ALTER TABLE membros         ADD COLUMN cpf              VARCHAR(20)  NULL AFTER sexo",
-    "ALTER TABLE van_viagens     ADD COLUMN data_tipo        ENUM('unico','bate_volta','periodo','livre') NOT NULL DEFAULT 'livre' AFTER data_texto",
+    "ALTER TABLE van_viagens     ADD COLUMN data_saida       DATE         NULL AFTER data_texto",
+    "ALTER TABLE van_viagens     ADD COLUMN data_tipo        ENUM('unico','bate_volta','periodo','livre') NOT NULL DEFAULT 'livre' AFTER data_saida",
     "ALTER TABLE van_viagens     ADD COLUMN coordenador_id   INT          NULL AFTER motorista_cpf",
     "ALTER TABLE van_viagens     ADD COLUMN coordenador_nome VARCHAR(150) NULL AFTER coordenador_id",
     "ALTER TABLE van_viagens     ADD COLUMN coordenador_cpf  VARCHAR(20)  NULL AFTER coordenador_nome",

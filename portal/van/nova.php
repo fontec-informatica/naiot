@@ -45,7 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $coord_id        = (int)($_POST['coordenador_id']   ?? 0) ?: null;
     $coord_nome      = trim($_POST['coordenador_nome'] ?? '');
     $coord_cpf       = trim($_POST['coordenador_cpf']  ?? '');
-    $status          = in_array($_POST['status'] ?? '', ['rascunho','finalizada']) ? $_POST['status'] : 'rascunho';
+    $status          = in_array($_POST['status'] ?? '', ['agendada','concluida','cancelada']) ? $_POST['status'] : 'agendada';
+    $data_saida      = trim($_POST['data_saida'] ?? '') ?: null;
     $pass_json       = $_POST['passageiros_json'] ?? '[]';
     $pass_arr        = json_decode($pass_json, true) ?: [];
     $acao            = $_POST['acao'] ?? 'salvar';
@@ -69,21 +70,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         if (!$id) {
             $pdo->prepare("
                 INSERT INTO van_viagens
-                  (destino,data_texto,data_tipo,motorista_id,motorista_nome,motorista_cpf,
+                  (destino,data_texto,data_saida,data_tipo,motorista_id,motorista_nome,motorista_cpf,
                    coordenador_id,coordenador_nome,coordenador_cpf,status)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
-            ")->execute([$destino,$data_texto,$data_tipo,
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            ")->execute([$destino,$data_texto,$data_saida,$data_tipo,
                          $mot_id,$mot_nome?:null,$mot_cpf?:null,
                          $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status]);
             $id = (int)$pdo->lastInsertId();
         } else {
             $pdo->prepare("
                 UPDATE van_viagens SET
-                  destino=?,data_texto=?,data_tipo=?,
+                  destino=?,data_texto=?,data_saida=?,data_tipo=?,
                   motorista_id=?,motorista_nome=?,motorista_cpf=?,
                   coordenador_id=?,coordenador_nome=?,coordenador_cpf=?,status=?
                 WHERE id=?
-            ")->execute([$destino,$data_texto,$data_tipo,
+            ")->execute([$destino,$data_texto,$data_saida,$data_tipo,
                          $mot_id,$mot_nome?:null,$mot_cpf?:null,
                          $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status,$id]);
         }
@@ -216,8 +217,8 @@ include dirname(__DIR__) . '/_layout.php';
 <form method="post" id="formViagem">
   <input type="hidden" name="csrf_token"       value="<?= csrf_token() ?>">
   <input type="hidden" name="passageiros_json" id="passJson"     value="<?= htmlspecialchars(json_encode($pass_inicial)) ?>">
-  <input type="hidden" name="status"           id="inputStatus"  value="<?= htmlspecialchars($viagem['status'] ?? 'rascunho') ?>">
-  <input type="hidden" name="acao"             id="inputAcao"    value="salvar">
+  <input type="hidden" name="data_saida" id="inputDataSaida" value="<?= htmlspecialchars($viagem['data_saida'] ?? '') ?>">
+  <input type="hidden" name="acao"       id="inputAcao"      value="salvar">
 
   <!-- ── Dados da viagem ── -->
   <div class="van-card">
@@ -452,14 +453,28 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
   </div>
 
-  <!-- ── Ações ── -->
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <button type="submit" class="btn btn-ghost"   onclick="setAcao('salvar','rascunho')">Salvar rascunho</button>
-    <button type="submit" class="btn btn-primary" onclick="setAcao('salvar','finalizada')">Salvar e finalizar</button>
-    <button type="submit" class="btn btn-primary" onclick="setAcao('imprimir','finalizada')"
-      style="background:var(--green-dk);border-color:var(--green-dk)">
-      Salvar e imprimir documento
-    </button>
+  <!-- ── Status + Ações ── -->
+  <div class="van-card">
+    <h3>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Status da missão
+    </h3>
+    <?php $statusAtual = $viagem['status'] ?? 'agendada'; ?>
+    <div class="dtipo">
+      <label><input type="radio" name="status" value="agendada"
+        <?= $statusAtual === 'agendada'  ? 'checked' : '' ?>> Agendada</label>
+      <label><input type="radio" name="status" value="concluida"
+        <?= $statusAtual === 'concluida' ? 'checked' : '' ?>> Concluída</label>
+      <label><input type="radio" name="status" value="cancelada"
+        <?= $statusAtual === 'cancelada' ? 'checked' : '' ?>> Cancelada</label>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <button type="submit" class="btn btn-primary" onclick="setAcao('salvar')">Salvar</button>
+      <button type="submit" class="btn btn-primary" onclick="setAcao('imprimir')"
+        style="background:var(--green-dk);border-color:var(--green-dk)">
+        Salvar e imprimir documento
+      </button>
+    </div>
   </div>
 </form>
 
@@ -874,16 +889,19 @@ render();
 
 })(); // fim IIFE
 
-function setAcao(acao, status){
-  // Força sincronização antes de submeter
-  document.getElementById('passJson').value; // já sincronizado pelo listener input
-  document.getElementById('inputAcao').value   = acao;
-  document.getElementById('inputStatus').value = status;
-  // Garante que o campo data_texto final está preenchido
+function setAcao(acao){
+  document.getElementById('inputAcao').value = acao;
+  // Garante data_texto e data_saida
   var tipo = (document.querySelector('[name=data_tipo]:checked') || {}).value || 'livre';
   if (tipo === 'livre') {
     document.getElementById('inputDataFinal').value = document.getElementById('inputDataLivre').value;
   }
+  // data_saida para ordenação
+  var iso = '';
+  if (tipo === 'unico')     iso = document.getElementById('d1Unico').value;
+  else if (tipo === 'bate_volta') iso = document.getElementById('d1Bate').value;
+  else if (tipo === 'periodo')    iso = document.getElementById('d1Per').value;
+  document.getElementById('inputDataSaida').value = iso;
 }
 </script>
 
