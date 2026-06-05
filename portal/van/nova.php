@@ -533,13 +533,7 @@ function gerarDataTexto(){
     var end   = new Date(d2+'T00:00:00');
     if (end < start){ end = start; d2 = d1; }
     var p2 = d2.split('-'), y2=p2[0], m2=p2[1], dd2=p2[2];
-    if (m1===m2 && y1===y2){
-      var dias=[], cur=new Date(start);
-      while(cur<=end){ dias.push(pad(cur.getDate())); cur.setDate(cur.getDate()+1); }
-      $dataFinal.value = dias.join('-')+'/'+m1+'/'+y1;
-    } else {
-      $dataFinal.value = dd1+'/'+m1+'-'+dd2+'/'+m2+'/'+y1;
-    }
+    $dataFinal.value = 'De '+dd1+'/'+m1+' até '+dd2+'/'+m2+' de '+y1;
   }
   $prevTexto.textContent = 'No documento: ' + $dataFinal.value;
 }
