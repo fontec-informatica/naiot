@@ -414,8 +414,8 @@ include dirname(__DIR__) . '/_layout.php';
 
     <div class="aviso-limite" id="avisoLimite">
       <strong>Limite de 19 assentos atingido.</strong>
-      Novos passageiros serão adicionados automaticamente como <strong>No colo</strong>.
-      Você pode alterar o tipo em cada linha.
+      A busca de membros está bloqueada. Para registrar bebês ou crianças no colo,
+      use o botão <strong>"Adicionar sem cadastro"</strong> abaixo e selecione o tipo <strong>No colo</strong>.
     </div>
 
     <ul class="pass-lista" id="passLista" style="margin-top:6px"></ul>
@@ -717,9 +717,14 @@ function render(){
   });
   var assentos = contarAssentos();
   var colo     = passengers.filter(function(p){ return p.tipo === 'colo'; }).length;
-  $vazio.style.display  = passengers.length ? 'none' : '';
-  $aviso.style.display  = assentos >= MAX_ASSENTOS ? '' : 'none';
-  $count.textContent    = assentos
+  var cheio    = assentos >= MAX_ASSENTOS;
+  $vazio.style.display    = passengers.length ? 'none' : '';
+  $aviso.style.display    = cheio ? '' : 'none';
+  $busca.disabled         = cheio;
+  $busca.placeholder      = cheio
+    ? 'Limite de ' + MAX_ASSENTOS + ' assentos atingido — use "Adicionar sem cadastro" para bebês/crianças no colo'
+    : 'Buscar membro por nome, CPF ou telefone…';
+  $count.textContent      = assentos
     ? '(' + assentos + ' com assento' + (colo ? ', ' + colo + ' no colo' : '') + ')'
     : '(0)';
   $pjson.value = JSON.stringify(passengers);
@@ -760,9 +765,10 @@ $lista.addEventListener('input', function(){ sincJson(); $pjson.value = JSON.str
 
 function addPass(p){
   p.tipo = p.tipo || 'normal';
-  // Auto-atribui "colo" se limite atingido
+  // Bloqueia passageiro com assento quando limite atingido
   if (p.tipo !== 'colo' && contarAssentos() >= MAX_ASSENTOS) {
-    p.tipo = 'colo';
+    alert('Limite de ' + MAX_ASSENTOS + ' assentos atingido.\nPara adicionar crianças/bebês no colo, use o botão "Adicionar sem cadastro".');
+    return;
   }
   passengers.push(p);
   render();
