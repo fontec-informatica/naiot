@@ -2,7 +2,7 @@
 require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin', 'secretaria']);
 
-$titulo       = 'Viagens de Van';
+$titulo       = 'Missões Van';
 $pagina_ativa = 'van';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
@@ -37,7 +37,7 @@ include dirname(__DIR__) . '/_layout.php';
 <?php else: ?>
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-  <h2 style="margin:0">Viagens de Van</h2>
+  <h2 style="margin:0">Missões Van</h2>
   <a href="/portal/van/nova.php" class="btn btn-primary">+ Nova viagem</a>
 </div>
 

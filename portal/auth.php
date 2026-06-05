@@ -36,7 +36,7 @@ const MODULOS_PORTAL = [
     'inscricoes' => 'Inscrições',
     'financeiro' => 'Financeiro',
     'membros'    => 'Membros',
-    'van'        => 'Viagens de Van',
+    'van'        => 'Missões Van',
     'oracoes'    => 'Orações & Testemunhos',
     'usuarios'   => 'Usuários',
 ];

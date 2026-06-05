@@ -5,7 +5,7 @@ requer_perfil(['admin', 'secretaria']);
 $id = (int)($_GET['id'] ?? 0);
 $viagem      = null;
 $pass_db     = [];
-$titulo      = 'Nova Viagem de Van';
+$titulo      = 'Nova Missão Van';
 $pagina_ativa= 'van';
 
 if ($id) {
@@ -13,7 +13,7 @@ if ($id) {
     $st->execute([$id]);
     $viagem = $st->fetch();
     if (!$viagem) { header('Location: /portal/van/'); exit; }
-    $titulo = 'Editar Viagem';
+    $titulo = 'Editar Missão';
     $pst = db()->prepare("SELECT * FROM van_passageiros WHERE viagem_id=? ORDER BY ordem");
     $pst->execute([$id]);
     $pass_db = $pst->fetchAll();

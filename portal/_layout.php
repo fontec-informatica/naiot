@@ -36,7 +36,7 @@ $menu = [
   'inscricoes' => ['icon' => $icons['inscricoes'], 'label' => 'Inscrições',    'href' => '/portal/inscricoes/', 'modulo' => 'inscricoes'],
   'financeiro' => ['icon' => $icons['financeiro'], 'label' => 'Financeiro',    'href' => '/portal/financeiro/', 'modulo' => 'financeiro'],
   'membros'    => ['icon' => $icons['membros'],    'label' => 'Membros',       'href' => '/portal/membros/',    'modulo' => 'membros'],
-  'van'        => ['icon' => $icons['van'],        'label' => 'Van',           'href' => '/portal/van/',        'modulo' => 'van'],
+  'van'        => ['icon' => $icons['van'],        'label' => 'Missões Van',   'href' => '/portal/van/',        'modulo' => 'van'],
   'oracoes'    => ['icon' => $icons['oracoes'],    'label' => 'Orações',       'href' => '/portal/oracoes/',    'modulo' => 'oracoes'],
   'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'modulo' => 'usuarios'],
 ];
