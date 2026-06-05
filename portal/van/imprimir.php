@@ -12,13 +12,16 @@ if (!$viagem) { header('Location: /portal/van/'); exit; }
 
 $pst = db()->prepare("SELECT * FROM van_passageiros WHERE viagem_id=? ORDER BY ordem");
 $pst->execute([$id]);
-$passageiros = $pst->fetchAll();
+$todos = $pst->fetchAll();
 
-// Garante mínimo de 19 linhas na tabela
+// Separa quem tem assento de quem vai no colo
+$passageiros = array_values(array_filter($todos, fn($p) => ($p['tipo'] ?? 'normal') !== 'colo'));
+$no_colo     = array_values(array_filter($todos, fn($p) => ($p['tipo'] ?? 'normal') === 'colo'));
+
+// Garante mínimo de 19 linhas na tabela de assentos
 $minLinhas = 19;
-$totalLinhas = max(count($passageiros), $minLinhas);
-while (count($passageiros) < $totalLinhas) {
-    $passageiros[] = ['nome' => '', 'cpf_rg' => '', 'nota' => ''];
+while (count($passageiros) < $minLinhas) {
+    $passageiros[] = ['nome' => '', 'cpf_rg' => '', 'nota' => '', 'tipo' => 'normal'];
 }
 
 // Data da declaração (hoje)
@@ -251,10 +254,11 @@ body {
     <tbody>
       <?php foreach ($passageiros as $i => $p):
         $nomeFull = htmlspecialchars($p['nome']);
-        if (!empty($p['nota'])) $nomeFull .= ' <em style="font-size:8.5pt;color:#444">('.htmlspecialchars($p['nota']).')</em>';
+        if (($p['tipo'] ?? '') === 'cadeirinha') $nomeFull .= ' <em style="font-size:8pt;color:#555">(cadeirinha)</em>';
+        if (!empty($p['nota'])) $nomeFull .= ' <em style="font-size:8pt;color:#555">('.htmlspecialchars($p['nota']).')</em>';
       ?>
       <tr>
-        <td class="c-num"><?= $i + 2 ?></td>
+        <td class="c-num"><?= $p['nome'] ? $i + 2 : '' ?></td>
         <td class="c-nome"><?= $nomeFull ?></td>
         <td class="c-cpf"><?= htmlspecialchars($p['cpf_rg'] ?? '') ?></td>
         <td class="c-asn">&nbsp;</td>
@@ -262,6 +266,18 @@ body {
       <?php endforeach; ?>
     </tbody>
   </table>
+
+  <?php if (!empty($no_colo)): ?>
+  <div style="margin-top:8pt;font-size:9.5pt;border-top:1px dashed #000;padding-top:6pt">
+    <strong>Crianças / bebês no colo:</strong>
+    <?php foreach ($no_colo as $j => $c):
+      $cn = htmlspecialchars($c['nome']);
+      if (!empty($c['cpf_rg'])) $cn .= ' (CPF/RG: '.htmlspecialchars($c['cpf_rg']).')';
+      if (!empty($c['nota']))   $cn .= ' — '.htmlspecialchars($c['nota']);
+      echo ($j > 0 ? ' &bull; ' : '') . $cn;
+    endforeach; ?>
+  </div>
+  <?php endif; ?>
 
   <div class="spacer"></div>
 

@@ -90,14 +90,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 
         // Salvar passageiros
         $pdo->prepare("DELETE FROM van_passageiros WHERE viagem_id=?")->execute([$id]);
-        $ins = $pdo->prepare("INSERT INTO van_passageiros (viagem_id,ordem,membro_id,nome,cpf_rg,nota) VALUES (?,?,?,?,?,?)");
+        $ins = $pdo->prepare("INSERT INTO van_passageiros (viagem_id,ordem,membro_id,nome,cpf_rg,nota,tipo) VALUES (?,?,?,?,?,?,?)");
         foreach ($pass_arr as $i => $p) {
             $pnome = trim($p['nome'] ?? '');
             if (!$pnome) continue;
             $pmid  = !empty($p['membro_id']) ? (int)$p['membro_id'] : null;
             $pcpf  = trim($p['cpf_rg'] ?? '');
             $pnota = trim($p['nota']   ?? '');
-            $ins->execute([$id,$i,$pmid,$pnome,$pcpf?:null,$pnota?:null]);
+            $ptipo = in_array($p['tipo'] ?? '', ['normal','cadeirinha','colo']) ? $p['tipo'] : 'normal';
+            $ins->execute([$id,$i,$pmid,$pnome,$pcpf?:null,$pnota?:null,$ptipo]);
         }
 
         if ($acao === 'imprimir') {
@@ -115,6 +116,7 @@ $pass_inicial = array_map(fn($p) => [
     'nome'      => $p['nome'],
     'cpf_rg'    => $p['cpf_rg'] ?? '',
     'nota'      => $p['nota']   ?? '',
+    'tipo'      => $p['tipo']   ?? 'normal',
 ], $pass_db);
 
 include dirname(__DIR__) . '/_layout.php';
@@ -158,8 +160,20 @@ include dirname(__DIR__) . '/_layout.php';
 .pass-inputs{ display:grid;grid-template-columns:1fr 1fr;gap:6px }
 .pass-inputs input { padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.78rem;font-family:inherit;background:var(--off);width:100%;box-sizing:border-box }
 .pass-inputs input:focus { outline:none;border-color:var(--green-dk);background:#fff }
-.pass-rem   { background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:4px 6px;line-height:1;align-self:center }
+.pass-rem   { background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:4px 6px;line-height:1;align-self:flex-start;margin-top:4px }
 .pass-rem:hover { color:var(--red) }
+
+/* Tipo de passageiro */
+.tipo-pills { display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap }
+.tipo-pill  { padding:2px 9px;border-radius:20px;border:1.5px solid var(--border);font-size:.72rem;font-weight:600;cursor:pointer;color:var(--muted);background:#fff;line-height:1.5;user-select:none;transition:background .1s,color .1s,border-color .1s }
+.tipo-pill:hover { border-color:var(--green-dk);color:var(--green-dk) }
+.tipo-pill.ativo[data-tipo=normal]     { background:#e8f5ec;color:#1e6b35;border-color:#1e6b35 }
+.tipo-pill.ativo[data-tipo=cadeirinha] { background:#fff3cd;color:#a87d28;border-color:#a87d28 }
+.tipo-pill.ativo[data-tipo=colo]       { background:#e8f0fb;color:#3b6cb7;border-color:#3b6cb7 }
+
+/* Aviso de limite */
+.aviso-limite { background:#fff3cd;border:1.5px solid #a87d28;border-radius:8px;padding:10px 14px;font-size:.83rem;color:#7a5c1a;margin-bottom:10px;display:none }
+.aviso-limite strong { color:#a87d28 }
 
 /* Busca passageiros */
 .srch-wrap { position:relative;margin-bottom:10px }
@@ -398,7 +412,13 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
-    <ul class="pass-lista" id="passLista" style="margin-top:10px"></ul>
+    <div class="aviso-limite" id="avisoLimite">
+      <strong>Limite de 19 assentos atingido.</strong>
+      Novos passageiros serão adicionados automaticamente como <strong>No colo</strong>.
+      Você pode alterar o tipo em cada linha.
+    </div>
+
+    <ul class="pass-lista" id="passLista" style="margin-top:6px"></ul>
     <div id="passVazio" style="padding:20px;text-align:center;color:var(--muted);font-size:.85rem;
       border:1.5px dashed var(--border);border-radius:8px;margin-top:8px">
       Nenhum passageiro adicionado ainda.
@@ -651,60 +671,99 @@ document.getElementById('selMot').addEventListener('change', function(){
 /* ════════════════════════════════════════════
    Gerenciador de passageiros
 ════════════════════════════════════════════ */
+var MAX_ASSENTOS = 19;
 var passengers = <?= json_encode($pass_inicial) ?>;
-var $lista  = document.getElementById('passLista');
-var $vazio  = document.getElementById('passVazio');
-var $pjson  = document.getElementById('passJson');
-var $count  = document.getElementById('passCount');
-var $busca  = document.getElementById('buscaPass');
-var $sdrop  = document.getElementById('srchDrop');
-var $manual = document.getElementById('manualBox');
+var $lista   = document.getElementById('passLista');
+var $vazio   = document.getElementById('passVazio');
+var $pjson   = document.getElementById('passJson');
+var $count   = document.getElementById('passCount');
+var $aviso   = document.getElementById('avisoLimite');
+var $busca   = document.getElementById('buscaPass');
+var $sdrop   = document.getElementById('srchDrop');
+var $manual  = document.getElementById('manualBox');
 
 function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
+function contarAssentos(){ return passengers.filter(function(p){ return p.tipo !== 'colo'; }).length; }
+
 function render(){
+  sincJson(); // salva inputs antes de rerender
   $lista.innerHTML = '';
-  passengers.forEach(function(p,i){
+  var seatNum = 2;
+  passengers.forEach(function(p, i){
+    var isColo = (p.tipo === 'colo');
+    var numHtml = isColo
+      ? '<span style="font-size:.68rem;background:#e8f0fb;color:#3b6cb7;border-radius:4px;padding:2px 5px;font-weight:700">colo</span>'
+      : '<span>'+(seatNum++)+'</span>';
     var li = document.createElement('li');
     li.className = 'pass-item';
     li.dataset.idx = i;
     li.innerHTML =
-      '<span class="pass-num">'+(i+2)+'</span>'+
+      '<span class="pass-num">'+numHtml+'</span>'+
       '<div class="pass-info">'+
         '<div class="pass-nome">'+esc(p.nome)+'</div>'+
+        '<div class="tipo-pills">'+
+          '<span class="tipo-pill'+(p.tipo==='normal'?' ativo':'')+'" data-tipo="normal" data-idx="'+i+'">Normal</span>'+
+          '<span class="tipo-pill'+(p.tipo==='cadeirinha'?' ativo':'')+'" data-tipo="cadeirinha" data-idx="'+i+'">Cadeirinha</span>'+
+          '<span class="tipo-pill'+(p.tipo==='colo'?' ativo':'')+'" data-tipo="colo" data-idx="'+i+'">No colo</span>'+
+        '</div>'+
         '<div class="pass-inputs">'+
           '<input type="text" class="pi-cpf"  placeholder="CPF / RG (opcional)" value="'+esc(p.cpf_rg||'')+'">'+
-          '<input type="text" class="pi-nota" placeholder="Obs. (ex: no colo)" value="'+esc(p.nota||'')+'">'+
+          '<input type="text" class="pi-nota" placeholder="Obs. (opcional)"     value="'+esc(p.nota||'')+'">'+
         '</div>'+
       '</div>'+
       '<button type="button" class="pass-rem" data-idx="'+i+'" title="Remover">✕</button>';
     $lista.appendChild(li);
   });
-  $vazio.style.display = passengers.length ? 'none' : '';
-  $count.textContent   = '(' + passengers.length + ')';
-  sincJson();
-}
-
-function sincJson(){
-  // Coleta CPF e nota dos inputs do DOM
-  $lista.querySelectorAll('.pass-item').forEach(function(li){
-    var idx  = parseInt(li.dataset.idx);
-    if (!passengers[idx]) return;
-    passengers[idx].cpf_rg = li.querySelector('.pi-cpf').value.trim();
-    passengers[idx].nota   = li.querySelector('.pi-nota').value.trim();
-  });
+  var assentos = contarAssentos();
+  var colo     = passengers.filter(function(p){ return p.tipo === 'colo'; }).length;
+  $vazio.style.display  = passengers.length ? 'none' : '';
+  $aviso.style.display  = assentos >= MAX_ASSENTOS ? '' : 'none';
+  $count.textContent    = assentos
+    ? '(' + assentos + ' com assento' + (colo ? ', ' + colo + ' no colo' : '') + ')'
+    : '(0)';
   $pjson.value = JSON.stringify(passengers);
 }
 
+function sincJson(){
+  $lista.querySelectorAll('.pass-item').forEach(function(li){
+    var idx = parseInt(li.dataset.idx);
+    if (!passengers[idx]) return;
+    passengers[idx].cpf_rg = (li.querySelector('.pi-cpf')  || {}).value || passengers[idx].cpf_rg || '';
+    passengers[idx].nota   = (li.querySelector('.pi-nota') || {}).value || passengers[idx].nota   || '';
+  });
+}
+
 $lista.addEventListener('click', function(e){
-  var btn = e.target.closest('[data-idx]');
-  if(!btn || !btn.classList.contains('pass-rem')) return;
-  passengers.splice(parseInt(btn.dataset.idx),1);
-  render();
+  // Remover passageiro
+  var rem = e.target.closest('.pass-rem');
+  if (rem){ sincJson(); passengers.splice(parseInt(rem.dataset.idx),1); render(); return; }
+  // Mudar tipo
+  var pill = e.target.closest('.tipo-pill');
+  if (pill){
+    sincJson();
+    var idx  = parseInt(pill.dataset.idx);
+    var tipo = pill.dataset.tipo;
+    // Verifica limite antes de mudar para tipo com assento
+    if (tipo !== 'colo' && passengers[idx].tipo === 'colo') {
+      var outros = passengers.filter(function(p,i){ return i !== idx && p.tipo !== 'colo'; }).length;
+      if (outros >= MAX_ASSENTOS){
+        alert('Limite de '+MAX_ASSENTOS+' assentos atingido. Remova outro passageiro com assento antes.');
+        return;
+      }
+    }
+    passengers[idx].tipo = tipo;
+    render();
+  }
 });
-$lista.addEventListener('input', function(){ sincJson(); });
+$lista.addEventListener('input', function(){ sincJson(); $pjson.value = JSON.stringify(passengers); });
 
 function addPass(p){
+  p.tipo = p.tipo || 'normal';
+  // Auto-atribui "colo" se limite atingido
+  if (p.tipo !== 'colo' && contarAssentos() >= MAX_ASSENTOS) {
+    p.tipo = 'colo';
+  }
   passengers.push(p);
   render();
   $sdrop.classList.remove('aberto');

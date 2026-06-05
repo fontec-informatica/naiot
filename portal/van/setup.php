@@ -46,6 +46,7 @@ $migracoes = [
     "ALTER TABLE van_viagens     ADD COLUMN coordenador_nome VARCHAR(150) NULL AFTER coordenador_id",
     "ALTER TABLE van_viagens     ADD COLUMN coordenador_cpf  VARCHAR(20)  NULL AFTER coordenador_nome",
     "ALTER TABLE van_passageiros ADD COLUMN nota             VARCHAR(80)  NULL AFTER cpf_rg",
+    "ALTER TABLE van_passageiros ADD COLUMN tipo             ENUM('normal','cadeirinha','colo') NOT NULL DEFAULT 'normal' AFTER nota",
 ];
 foreach ($migracoes as $sql) {
     try { $pdo->exec($sql); } catch (PDOException $e) { /* coluna já existe */ }
