@@ -220,7 +220,7 @@ body {
 
   <div class="campos">
     <b>Origem:</b> Comunidade Católica Senhor Jesus - Naiot (Campo Limpo - Go)<br>
-    <b>Destino:</b> <?= htmlspecialchars(strtoupper($viagem['destino'])) ?><br>
+    <b>Destino:</b> <?= htmlspecialchars(mb_strtoupper($viagem['destino'], 'UTF-8')) ?><br>
     <b>Data:</b> <?= htmlspecialchars($viagem['data_texto']) ?>
   </div>
 
