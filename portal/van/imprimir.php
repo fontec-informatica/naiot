@@ -137,7 +137,7 @@ body {
 }
 .tabela-pass .c-num  { width: 5%;  text-align: center; font-weight: bold }
 .tabela-pass .c-nome { width: 46% }
-.tabela-pass .c-cpf  { width: 24% }
+.tabela-pass .c-cpf  { width: 24%; text-align: center }
 .tabela-pass .c-asn  { width: 25% }
 
 /* ── Rodapé ── */
