@@ -31,10 +31,6 @@ try {
     ")->fetchAll();
 } catch (PDOException $e) { $motoristas = []; }
 
-// Todos os membros ativos para coordenador (qualquer membro pode ser coordenador)
-try {
-    $todos_membros = db()->query("SELECT id, nome, cpf FROM membros WHERE ativo=1 ORDER BY nome")->fetchAll();
-} catch (PDOException $e) { $todos_membros = []; }
 
 $erros = [];
 
@@ -46,10 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $mot_id          = (int)($_POST['motorista_id']   ?? 0) ?: null;
     $mot_nome        = trim($_POST['motorista_nome']  ?? '');
     $mot_cpf         = trim($_POST['motorista_cpf']   ?? '');
-    $coord_tipo      = $_POST['coordenador_tipo']      ?? 'membro';
-    $coord_id        = (int)($_POST['coordenador_id'] ?? 0) ?: null;
-    $coord_nome      = trim($_POST['coordenador_nome']?? '');
-    $coord_cpf       = trim($_POST['coordenador_cpf'] ?? '');
+    $coord_id        = (int)($_POST['coordenador_id']   ?? 0) ?: null;
+    $coord_nome      = trim($_POST['coordenador_nome'] ?? '');
+    $coord_cpf       = trim($_POST['coordenador_cpf']  ?? '');
     $status          = in_array($_POST['status'] ?? '', ['rascunho','finalizada']) ? $_POST['status'] : 'rascunho';
     $pass_json       = $_POST['passageiros_json'] ?? '[]';
     $pass_arr        = json_decode($pass_json, true) ?: [];
@@ -67,15 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if ($row) { $mot_nome = $row['nome']; $mot_cpf = $row['cpf'] ?? ''; }
         } catch (PDOException $e) {}
     }
-    // Preenche coordenador a partir do membro
-    if ($coord_tipo === 'membro' && $coord_id) {
-        try {
-            $row2 = db()->prepare("SELECT nome, cpf FROM membros WHERE id=?");
-            $row2->execute([$coord_id]);
-            $row2 = $row2->fetch();
-            if ($row2) { $coord_nome = $row2['nome']; $coord_cpf = $row2['cpf'] ?? ''; }
-        } catch (PDOException $e) {}
-    }
+
 
     if (!$erros) {
         $pdo = db();
@@ -347,40 +334,29 @@ include dirname(__DIR__) . '/_layout.php';
       <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(opcional)</span>
     </h3>
 
-    <div class="tog" id="togCoord">
-      <label><input type="radio" name="coordenador_tipo" value="membro"  <?= (!$viagem || $viagem['coordenador_id']) ? 'checked' : '' ?>> <span>Membro da comunidade</span></label>
-      <label><input type="radio" name="coordenador_tipo" value="externo" <?= ($viagem && !$viagem['coordenador_id'] && $viagem['coordenador_nome']) ? 'checked' : '' ?>> <span>Não é membro</span></label>
+    <div class="srch-wrap" style="margin-bottom:12px">
+      <input type="text" id="buscaCoord"
+        placeholder="Buscar por nome, CPF ou telefone…"
+        autocomplete="off" style="width:100%;box-sizing:border-box">
+      <div class="srch-drop" id="coordDrop"></div>
     </div>
 
-    <div id="scMembro">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0">
       <div class="form-group" style="margin:0">
-        <label>Selecionar coordenador</label>
-        <select name="coordenador_id" id="selCoord">
-          <option value="">— Nenhum / Selecione —</option>
-          <?php foreach ($todos_membros as $m): ?>
-            <option value="<?= $m['id'] ?>" data-cpf="<?= htmlspecialchars($m['cpf'] ?? '') ?>"
-              <?= ($viagem && $viagem['coordenador_id'] == $m['id']) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($m['nome']) ?><?php if($m['cpf']): ?> — CPF: <?= htmlspecialchars($m['cpf']) ?><?php endif; ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
+        <label>Nome completo</label>
+        <input type="text" name="coordenador_nome" id="coordNome" maxlength="150"
+          placeholder="Nome do coordenador"
+          value="<?= htmlspecialchars($viagem['coordenador_nome'] ?? '') ?>">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label>CPF <span style="font-weight:400;color:var(--muted);font-size:.78rem">(opcional)</span></label>
+        <input type="text" name="coordenador_cpf" id="coordCpf" maxlength="20"
+          placeholder="000.000.000-00"
+          value="<?= htmlspecialchars($viagem['coordenador_cpf'] ?? '') ?>">
       </div>
     </div>
-
-    <div id="scExterno" style="display:none">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0">
-        <div class="form-group" style="margin:0">
-          <label>Nome completo</label>
-          <input type="text" name="coordenador_nome" maxlength="150" placeholder="Nome do coordenador"
-            value="<?= htmlspecialchars(($viagem && !$viagem['coordenador_id']) ? ($viagem['coordenador_nome'] ?? '') : '') ?>">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label>CPF</label>
-          <input type="text" name="coordenador_cpf" maxlength="20" placeholder="000.000.000-00"
-            value="<?= htmlspecialchars(($viagem && !$viagem['coordenador_id']) ? ($viagem['coordenador_cpf'] ?? '') : '') ?>">
-        </div>
-      </div>
-    </div>
+    <input type="hidden" name="coordenador_id" id="coordId"
+      value="<?= (int)($viagem['coordenador_id'] ?? 0) ?: '' ?>">
   </div>
 
   <!-- ── Passageiros ── -->
@@ -605,7 +581,7 @@ syncTipoDatas();
 })();
 
 /* ════════════════════════════════════════════
-   Toggle motorista / coordenador
+   Toggle motorista (membro / externo)
 ════════════════════════════════════════════ */
 function syncToggle(nomeRadio, secMembro, secExterno){
   var val = (document.querySelector('[name='+nomeRadio+']:checked') || {}).value || 'membro';
@@ -615,11 +591,47 @@ function syncToggle(nomeRadio, secMembro, secExterno){
 document.querySelectorAll('[name=motorista_tipo]').forEach(function(r){
   r.addEventListener('change', function(){ syncToggle('motorista_tipo','smMembro','smExterno'); });
 });
-document.querySelectorAll('[name=coordenador_tipo]').forEach(function(r){
-  r.addEventListener('change', function(){ syncToggle('coordenador_tipo','scMembro','scExterno'); });
-});
 syncToggle('motorista_tipo','smMembro','smExterno');
-syncToggle('coordenador_tipo','scMembro','scExterno');
+
+/* ════════════════════════════════════════════
+   Busca coordenador (igual passageiros)
+════════════════════════════════════════════ */
+var $cBusca = document.getElementById('buscaCoord');
+var $cDrop  = document.getElementById('coordDrop');
+var cTimer;
+
+$cBusca.addEventListener('input', function(){
+  clearTimeout(cTimer);
+  var q = this.value.trim();
+  if (q.length < 2){ $cDrop.classList.remove('aberto'); return; }
+  cTimer = setTimeout(function(){
+    fetch('/portal/van/buscar.php?q='+encodeURIComponent(q))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data.length){ $cDrop.classList.remove('aberto'); return; }
+        $cDrop.innerHTML = data.map(function(m){
+          var info = m.cpf ? 'CPF: '+esc(m.cpf) : (m.telefone ? 'Tel: '+esc(m.telefone) : '');
+          return '<div class="srch-item" data-id="'+m.id+'" data-nome="'+esc(m.nome)+'" data-cpf="'+esc(m.cpf||'')+'">'+
+            '<strong>'+esc(m.nome)+'</strong>'+
+            (info ? '<span>'+info+'</span>' : '')+
+            '</div>';
+        }).join('');
+        $cDrop.classList.add('aberto');
+      });
+  }, 260);
+});
+$cDrop.addEventListener('click', function(e){
+  var item = e.target.closest('.srch-item');
+  if (!item) return;
+  document.getElementById('coordId').value   = item.dataset.id;
+  document.getElementById('coordNome').value = item.dataset.nome;
+  document.getElementById('coordCpf').value  = item.dataset.cpf || '';
+  $cBusca.value = '';
+  $cDrop.classList.remove('aberto');
+});
+document.addEventListener('click', function(e){
+  if (!$cDrop.contains(e.target) && e.target !== $cBusca) $cDrop.classList.remove('aberto');
+});
 
 /* Mostra CPF do motorista selecionado */
 document.getElementById('selMot').addEventListener('change', function(){
