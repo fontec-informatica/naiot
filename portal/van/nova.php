@@ -163,13 +163,10 @@ include dirname(__DIR__) . '/_layout.php';
 .pass-rem   { background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:4px 6px;line-height:1;align-self:flex-start;margin-top:4px }
 .pass-rem:hover { color:var(--red) }
 
-/* Tipo de passageiro */
-.tipo-pills { display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap }
-.tipo-pill  { padding:2px 9px;border-radius:20px;border:1.5px solid var(--border);font-size:.72rem;font-weight:600;cursor:pointer;color:var(--muted);background:#fff;line-height:1.5;user-select:none;transition:background .1s,color .1s,border-color .1s }
-.tipo-pill:hover { border-color:var(--green-dk);color:var(--green-dk) }
-.tipo-pill.ativo[data-tipo=normal]     { background:#e8f5ec;color:#1e6b35;border-color:#1e6b35 }
-.tipo-pill.ativo[data-tipo=cadeirinha] { background:#fff3cd;color:#a87d28;border-color:#a87d28 }
-.tipo-pill.ativo[data-tipo=colo]       { background:#e8f0fb;color:#3b6cb7;border-color:#3b6cb7 }
+/* Badge de tipo (não interativo) */
+.tipo-badge { display:inline-block;padding:1px 7px;border-radius:20px;font-size:.7rem;font-weight:600;margin-left:6px;vertical-align:middle }
+.tipo-badge.cadeirinha { background:#fff3cd;color:#a87d28 }
+.tipo-badge.colo       { background:#e8f0fb;color:#3b6cb7 }
 
 /* Aviso de limite */
 .aviso-limite { background:#fff3cd;border:1.5px solid #a87d28;border-radius:8px;padding:10px 14px;font-size:.83rem;color:#7a5c1a;margin-bottom:10px;display:none }
@@ -187,8 +184,15 @@ include dirname(__DIR__) . '/_layout.php';
 .srch-item strong { display:block;font-size:.87rem }
 .srch-item span   { font-size:.74rem;color:var(--muted) }
 
-.manual-box { border:1.5px dashed var(--border);border-radius:8px;padding:14px;margin-top:10px;display:none }
-.manual-box.aberto { display:block }
+.add-box { border:1.5px dashed var(--border);border-radius:8px;padding:14px;margin-top:10px;display:none }
+.add-box.aberto { display:block }
+
+/* Toggle colo/cadeirinha */
+.tog-crianca { display:flex;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;max-width:300px;margin-bottom:12px }
+.tog-crianca label { flex:1;text-align:center;padding:7px 10px;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--muted);background:#fff;transition:background .12s,color .12s;user-select:none }
+.tog-crianca input[type=radio] { display:none }
+.tog-crianca label:has(input[value=colo]:checked)       { background:#3b6cb7;color:#fff }
+.tog-crianca label:has(input[value=cadeirinha]:checked) { background:#a87d28;color:#fff }
 
 @media (max-width:600px) {
   .pass-item { grid-template-columns:22px 1fr auto }
@@ -387,28 +391,51 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="srch-drop" id="srchDrop"></div>
     </div>
 
-    <button type="button" class="btn btn-ghost btn-sm" id="btnManual" style="margin-bottom:12px">
-      + Adicionar pessoa sem cadastro
-    </button>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button type="button" class="btn btn-ghost btn-sm" id="btnManual">+ Adicionar sem cadastro</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="btnCrianca"
+        style="border-color:#3b6cb7;color:#3b6cb7">🧒 Criança / Bebê</button>
+    </div>
 
-    <div class="manual-box" id="manualBox">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;min-width:0">
+    <!-- Adulto externo sem cadastro -->
+    <div class="add-box" id="manualBox">
+      <div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Adulto sem cadastro</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;min-width:0">
         <div class="form-group" style="margin:0">
-          <label style="font-size:.78rem">Nome</label>
-          <input type="text" id="mNome" maxlength="150" placeholder="Nome completo">
+          <label style="font-size:.78rem">Nome completo</label>
+          <input type="text" id="mNome" maxlength="150" placeholder="Nome">
         </div>
         <div class="form-group" style="margin:0">
           <label style="font-size:.78rem">CPF / RG <small style="color:var(--muted)">(opcional)</small></label>
           <input type="text" id="mCpf" maxlength="30" placeholder="000.000.000-00">
         </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:.78rem">Observação <small style="color:var(--muted)">(ex: no colo)</small></label>
-          <input type="text" id="mNota" maxlength="80" placeholder="no colo…">
-        </div>
       </div>
       <div style="display:flex;gap:8px">
         <button type="button" class="btn btn-primary btn-sm" id="btnAddManual">Adicionar</button>
         <button type="button" class="btn btn-ghost btn-sm"  id="btnCancelManual">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Criança / Bebê -->
+    <div class="add-box" id="criancaBox">
+      <div style="font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Criança / Bebê</div>
+      <div class="tog-crianca">
+        <label><input type="radio" name="crianca_tipo" value="colo" checked> <span>No colo</span></label>
+        <label><input type="radio" name="crianca_tipo" value="cadeirinha"> <span>Na cadeirinha</span></label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;min-width:0">
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.78rem">Nome da criança</label>
+          <input type="text" id="cNome" maxlength="150" placeholder="Nome">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.78rem">CPF / RG <small style="color:var(--muted)">(opcional)</small></label>
+          <input type="text" id="cCpf" maxlength="30" placeholder="000.000.000-00">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn btn-primary btn-sm" id="btnAddCrianca">Adicionar</button>
+        <button type="button" class="btn btn-ghost btn-sm"  id="btnCancelCrianca">Cancelar</button>
       </div>
     </div>
 
@@ -680,33 +707,31 @@ var $count   = document.getElementById('passCount');
 var $aviso   = document.getElementById('avisoLimite');
 var $busca   = document.getElementById('buscaPass');
 var $sdrop   = document.getElementById('srchDrop');
-var $manual  = document.getElementById('manualBox');
 
 function esc(s){ return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
 function contarAssentos(){ return passengers.filter(function(p){ return p.tipo !== 'colo'; }).length; }
 
 function render(){
-  sincJson(); // salva inputs antes de rerender
+  sincJson();
   $lista.innerHTML = '';
   var seatNum = 2;
   passengers.forEach(function(p, i){
     var isColo = (p.tipo === 'colo');
+    var isCad  = (p.tipo === 'cadeirinha');
     var numHtml = isColo
-      ? '<span style="font-size:.68rem;background:#e8f0fb;color:#3b6cb7;border-radius:4px;padding:2px 5px;font-weight:700">colo</span>'
+      ? '<span style="font-size:.65rem;background:#e8f0fb;color:#3b6cb7;border-radius:4px;padding:2px 4px;font-weight:700;line-height:1.4">colo</span>'
       : '<span>'+(seatNum++)+'</span>';
+    var badgeHtml = isCad
+      ? '<span class="tipo-badge cadeirinha">cadeirinha</span>'
+      : (isColo ? '<span class="tipo-badge colo">no colo</span>' : '');
     var li = document.createElement('li');
     li.className = 'pass-item';
     li.dataset.idx = i;
     li.innerHTML =
       '<span class="pass-num">'+numHtml+'</span>'+
       '<div class="pass-info">'+
-        '<div class="pass-nome">'+esc(p.nome)+'</div>'+
-        '<div class="tipo-pills">'+
-          '<span class="tipo-pill'+(p.tipo==='normal'?' ativo':'')+'" data-tipo="normal" data-idx="'+i+'">Normal</span>'+
-          '<span class="tipo-pill'+(p.tipo==='cadeirinha'?' ativo':'')+'" data-tipo="cadeirinha" data-idx="'+i+'">Cadeirinha</span>'+
-          '<span class="tipo-pill'+(p.tipo==='colo'?' ativo':'')+'" data-tipo="colo" data-idx="'+i+'">No colo</span>'+
-        '</div>'+
+        '<div class="pass-nome">'+esc(p.nome)+badgeHtml+'</div>'+
         '<div class="pass-inputs">'+
           '<input type="text" class="pi-cpf"  placeholder="CPF / RG (opcional)" value="'+esc(p.cpf_rg||'')+'">'+
           '<input type="text" class="pi-nota" placeholder="Obs. (opcional)"     value="'+esc(p.nota||'')+'">'+
@@ -740,34 +765,15 @@ function sincJson(){
 }
 
 $lista.addEventListener('click', function(e){
-  // Remover passageiro
   var rem = e.target.closest('.pass-rem');
-  if (rem){ sincJson(); passengers.splice(parseInt(rem.dataset.idx),1); render(); return; }
-  // Mudar tipo
-  var pill = e.target.closest('.tipo-pill');
-  if (pill){
-    sincJson();
-    var idx  = parseInt(pill.dataset.idx);
-    var tipo = pill.dataset.tipo;
-    // Verifica limite antes de mudar para tipo com assento
-    if (tipo !== 'colo' && passengers[idx].tipo === 'colo') {
-      var outros = passengers.filter(function(p,i){ return i !== idx && p.tipo !== 'colo'; }).length;
-      if (outros >= MAX_ASSENTOS){
-        alert('Limite de '+MAX_ASSENTOS+' assentos atingido. Remova outro passageiro com assento antes.');
-        return;
-      }
-    }
-    passengers[idx].tipo = tipo;
-    render();
-  }
+  if (rem){ sincJson(); passengers.splice(parseInt(rem.dataset.idx),1); render(); }
 });
 $lista.addEventListener('input', function(){ sincJson(); $pjson.value = JSON.stringify(passengers); });
 
 function addPass(p){
   p.tipo = p.tipo || 'normal';
-  // Bloqueia passageiro com assento quando limite atingido
   if (p.tipo !== 'colo' && contarAssentos() >= MAX_ASSENTOS) {
-    alert('Limite de ' + MAX_ASSENTOS + ' assentos atingido.\nPara adicionar crianças/bebês no colo, use o botão "Adicionar sem cadastro".');
+    alert('Limite de ' + MAX_ASSENTOS + ' assentos atingido.\nUse o botão "Criança / Bebê" para adicionar passageiros no colo.');
     return;
   }
   passengers.push(p);
@@ -807,25 +813,50 @@ document.addEventListener('click', function(e){
   if (!$sdrop.contains(e.target) && e.target !== $busca) $sdrop.classList.remove('aberto');
 });
 
-/* Adicionar manual */
+/* Adulto sem cadastro */
+var $manual  = document.getElementById('manualBox');
+var $crianca = document.getElementById('criancaBox');
+
+function fecharBoxes(){ $manual.classList.remove('aberto'); $crianca.classList.remove('aberto'); }
+
 document.getElementById('btnManual').addEventListener('click', function(){
-  $manual.classList.toggle('aberto');
-  if ($manual.classList.contains('aberto')) document.getElementById('mNome').focus();
+  var aberto = $manual.classList.contains('aberto');
+  fecharBoxes();
+  if (!aberto){ $manual.classList.add('aberto'); document.getElementById('mNome').focus(); }
 });
 document.getElementById('btnCancelManual').addEventListener('click', function(){
   $manual.classList.remove('aberto');
   document.getElementById('mNome').value = '';
   document.getElementById('mCpf').value  = '';
-  document.getElementById('mNota').value = '';
 });
 document.getElementById('btnAddManual').addEventListener('click', function(){
   var nome = document.getElementById('mNome').value.trim();
   if (!nome){ document.getElementById('mNome').focus(); return; }
-  addPass({ membro_id:null, nome:nome, cpf_rg: document.getElementById('mCpf').value.trim(), nota: document.getElementById('mNota').value.trim() });
+  addPass({ membro_id:null, nome:nome, cpf_rg: document.getElementById('mCpf').value.trim(), nota:'', tipo:'normal' });
   document.getElementById('mNome').value = '';
   document.getElementById('mCpf').value  = '';
-  document.getElementById('mNota').value = '';
   $manual.classList.remove('aberto');
+});
+
+/* Criança / Bebê */
+document.getElementById('btnCrianca').addEventListener('click', function(){
+  var aberto = $crianca.classList.contains('aberto');
+  fecharBoxes();
+  if (!aberto){ $crianca.classList.add('aberto'); document.getElementById('cNome').focus(); }
+});
+document.getElementById('btnCancelCrianca').addEventListener('click', function(){
+  $crianca.classList.remove('aberto');
+  document.getElementById('cNome').value = '';
+  document.getElementById('cCpf').value  = '';
+});
+document.getElementById('btnAddCrianca').addEventListener('click', function(){
+  var nome = document.getElementById('cNome').value.trim();
+  if (!nome){ document.getElementById('cNome').focus(); return; }
+  var tipo = document.querySelector('[name=crianca_tipo]:checked').value;
+  addPass({ membro_id:null, nome:nome, cpf_rg: document.getElementById('cCpf').value.trim(), nota:'', tipo:tipo });
+  document.getElementById('cNome').value = '';
+  document.getElementById('cCpf').value  = '';
+  // mantém a caixa aberta para adicionar mais crianças rapidamente
 });
 
 render();
