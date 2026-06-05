@@ -179,24 +179,27 @@ body {
 
 /* ── Print ── */
 @media print {
-  body { background: #fff }
+  body { background: #fff; margin: 0; padding: 0 }
   .barra-acoes { display: none }
-  @page { size: A4; margin: 0 }
-  .quebra { page-break-before: always }
+  @page { size: A4; margin: 10mm 14mm }
+  .quebra { page-break-before: always; break-before: always }
   .pagina {
-    /* altura EXATA de uma folha A4 — impede páginas em branco */
-    width: 210mm !important;
-    height: 297mm !important;
-    min-height: unset !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+    display: block !important;
+    width: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     margin: 0 !important;
-    padding: 10mm 14mm !important;
+    padding: 0 !important;
     box-shadow: none !important;
+    background: #fff !important;
     transform: none !important;
     zoom: 1 !important;
   }
+  .spacer { display: none !important }
+  .rodape { margin-top: 20pt !important }
 }
 </style>
 </head>
@@ -347,13 +350,18 @@ body {
 <script>
 (function(){
   var paginas = document.querySelectorAll('.pagina');
-  var backup  = [];
 
+  /* ── Escala visual para mobile (tela apenas) ── */
   function ajustar(){
     if (!paginas.length) return;
     var avail = window.innerWidth - 8;
     var natW  = paginas[0].scrollWidth;
-    if (!natW || avail >= natW) return;
+    if (!natW || avail >= natW){
+      paginas.forEach(function(p){
+        p.style.transform = p.style.marginBottom = p.style.marginRight = '';
+      });
+      return;
+    }
     var scale = avail / natW;
     paginas.forEach(function(p){
       var h = p.offsetHeight, w = p.offsetWidth;
@@ -364,51 +372,26 @@ body {
     });
   }
 
-  /* Limpa estilos inline antes de imprimir para não interferir no PDF */
+  /* ── Limpa estilos inline antes de imprimir ── */
   function limpar(){
-    backup = [];
     paginas.forEach(function(p){
-      backup.push({
-        transform: p.style.transform, marginBottom: p.style.marginBottom,
-        marginRight: p.style.marginRight, transformOrigin: p.style.transformOrigin
-      });
-      p.style.transform = p.style.marginBottom = p.style.marginRight = p.style.transformOrigin = '';
+      p.style.transform = p.style.marginBottom = p.style.marginRight =
+      p.style.transformOrigin = '';
     });
   }
 
-  function restaurar(){
-    paginas.forEach(function(p, i){
-      if (!backup[i]) return;
-      p.style.transform       = backup[i].transform;
-      p.style.transformOrigin = backup[i].transformOrigin;
-      p.style.marginBottom    = backup[i].marginBottom;
-      p.style.marginRight     = backup[i].marginRight;
-    });
-  }
-
-  /* beforeprint: suportado no Safari iOS 13+ */
   window.addEventListener('beforeprint', limpar);
-  window.addEventListener('afterprint',  restaurar);
+  window.addEventListener('afterprint',  ajustar);
 
-  /* matchMedia fallback para cobrir variações do Safari */
-  try {
-    var mq = window.matchMedia('print');
-    var fn = function(e){ if (e.matches) limpar(); else restaurar(); };
-    if (mq.addEventListener) mq.addEventListener('change', fn);
-    else if (mq.addListener) mq.addListener(fn);
-  } catch(e){}
-
-  /* Botão imprimir: garante limpeza síncrona antes do window.print() */
+  /* ── Botão imprimir — chamada SÍNCRONA (iOS Safari exige) ── */
   var btnImp = document.querySelector('.btn-imp');
   if (btnImp) {
-    btnImp.addEventListener('click', function(e){
-      e.preventDefault();
-      limpar();
-      requestAnimationFrame(function(){
-        window.print();
-        setTimeout(restaurar, 1500);
-      });
-    });
+    btnImp.onclick = function(){
+      limpar();          /* limpa inline styles antes do print */
+      window.print();    /* chamada síncrona — não download */
+      ajustar();         /* restaura escala na tela */
+      return false;
+    };
   }
 
   window.addEventListener('load',   ajustar);
