@@ -15,6 +15,7 @@ if (!$m) { header('Location: /portal/membros/'); exit; }
 
 $erros = [];
 $dados = [
+    'cpf'         => $m['cpf']          ?? '',
     'nome'        => $m['nome'],
     'telefone'    => $m['telefone'],
     'data_nasc'   => $m['data_nasc'],
@@ -58,6 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         exit;
     }
 
+    $dados['cpf']       = preg_replace('/\D/', '', trim($_POST['cpf'] ?? ''));
+    if ($dados['cpf']) $dados['cpf'] = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $dados['cpf']);
     $dados['nome']      = trim($_POST['nome']      ?? '');
     $dados['telefone']  = trim($_POST['telefone']  ?? '');
     $dados['data_nasc'] = trim($_POST['data_nasc'] ?? '');
@@ -115,8 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if ($m['foto']) @unlink($dir_fotos . $m['foto']);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $nova_foto);
         }
-        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=?,estado_civil=?,sexo=? WHERE id=?")
-           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $id]);
+        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=?,estado_civil=?,sexo=?,cpf=? WHERE id=?")
+           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $dados['cpf'] ?: null, $id]);
 
         db()->prepare("DELETE FROM membros_grupo_rel WHERE membro_id=?")->execute([$id]);
         foreach ($grupos_sel as $gid) {
@@ -178,6 +181,18 @@ include dirname(__DIR__) . '/_layout.php';
             </div>
             <div class="form-hint">JPG, PNG ou WEBP · Máx. 5 MB</div>
           </div>
+        </div>
+      </div>
+
+      <!-- CPF -->
+      <div class="form-group">
+        <label>CPF</label>
+        <div style="position:relative">
+          <input type="text" name="cpf" id="cpf-input" inputmode="numeric"
+            value="<?= htmlspecialchars($dados['cpf']) ?>"
+            maxlength="14" placeholder="000.000.000-00" autocomplete="off"
+            style="padding-right:110px">
+          <span id="cpf-status" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:.72rem;font-weight:600;pointer-events:none"></span>
         </div>
       </div>
 
@@ -483,6 +498,44 @@ function salvarItemInline(tipo,btn) {
   })
   .catch(function(){btn.disabled=false;btn.textContent=origTxt;alert('Erro de conexão.');});
 }
+
+/* ── Máscara e validação de CPF ── */
+(function(){
+  var inp = document.getElementById('cpf-input');
+  var sta = document.getElementById('cpf-status');
+  if (!inp) return;
+  function mascara(v){
+    v = v.replace(/\D/g,'').slice(0,11);
+    if (v.length > 9) return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+    if (v.length > 6) return v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
+    if (v.length > 3) return v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
+    return v;
+  }
+  function validar(v){
+    v = v.replace(/\D/g,'');
+    if (v.length !== 11 || /^(.)\1+$/.test(v)) return false;
+    var s=0,r; for(var i=0;i<9;i++) s+=parseInt(v[i])*(10-i);
+    r=(s*10)%11; if(r===10||r===11) r=0; if(r!==parseInt(v[9])) return false;
+    s=0; for(var i=0;i<10;i++) s+=parseInt(v[i])*(11-i);
+    r=(s*10)%11; if(r===10||r===11) r=0; return r===parseInt(v[10]);
+  }
+  function atualizar(){
+    var digits = inp.value.replace(/\D/g,'');
+    if (!digits){ sta.textContent=''; return; }
+    if (digits.length < 11){ sta.style.color='var(--muted)'; sta.textContent=''; return; }
+    if (validar(inp.value)){ sta.style.color='#1e6b35'; sta.textContent='✓ CPF válido'; }
+    else                   { sta.style.color='#c0392b'; sta.textContent='✗ CPF inválido'; }
+  }
+  inp.addEventListener('input', function(){
+    var pos = this.selectionStart;
+    var antes = this.value.length;
+    this.value = mascara(this.value);
+    var depois = this.value.length;
+    this.selectionStart = this.selectionEnd = pos + (depois - antes);
+    atualizar();
+  });
+  atualizar();
+})();
 
 function previewFoto(input) {
   var file = input.files[0];

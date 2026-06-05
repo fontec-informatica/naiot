@@ -163,6 +163,22 @@ include dirname(__DIR__) . '/_layout.php';
 
         <div class="ver-campo">
           <div class="ver-campo-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+          </div>
+          <div>
+            <div class="ver-campo-label">CPF</div>
+            <div class="ver-campo-val">
+              <?php if (!empty($m['cpf'])): ?>
+                <?= htmlspecialchars($m['cpf']) ?>
+              <?php else: ?>
+                <span class="ver-campo-vazio">Não informado</span>
+              <?php endif; ?>
+            </div>
+          </div>
+        </div>
+
+        <div class="ver-campo">
+          <div class="ver-campo-icon">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-5 0-8 2-8 3v1h16v-1c0-1-3-3-8-3z"/></svg>
           </div>
           <div>
