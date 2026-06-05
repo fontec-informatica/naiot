@@ -36,12 +36,13 @@ const MODULOS_PORTAL = [
     'inscricoes' => 'Inscrições',
     'financeiro' => 'Financeiro',
     'membros'    => 'Membros',
+    'van'        => 'Viagens de Van',
     'oracoes'    => 'Orações & Testemunhos',
     'usuarios'   => 'Usuários',
 ];
 
 const PERFIL_LEGADO = [
-    'secretaria' => ['dashboard', 'eventos', 'inscricoes', 'membros'],
+    'secretaria' => ['dashboard', 'eventos', 'inscricoes', 'membros', 'van'],
     'financeiro' => ['dashboard', 'financeiro'],
 ];
 
