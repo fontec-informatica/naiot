@@ -35,7 +35,7 @@ $data_decl = sprintf('%02d DE %s DE %d',
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Relação de Passageiros — <?= htmlspecialchars($viagem['destino']) ?></title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0 }
@@ -45,8 +45,6 @@ body {
   font-size: 11pt;
   color: #000;
   background: #d8d8d8;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Barra de ações (tela apenas) ── */
@@ -332,6 +330,36 @@ body {
   </div>
 
 </div>
+
+<script>
+(function(){
+  function ajustar(){
+    var paginas = document.querySelectorAll('.pagina');
+    if (!paginas.length) return;
+    var barra  = document.querySelector('.barra-acoes');
+    var margem = 8;
+    var avail  = window.innerWidth - margem;
+    var natW   = paginas[0].offsetWidth; // 794px aprox
+    var escala = avail < natW ? avail / natW : 1;
+    paginas.forEach(function(p){
+      if (escala < 1) {
+        p.style.zoom          = escala;
+        p.style.marginLeft    = (margem / 2) + 'px';
+        p.style.marginRight   = (margem / 2) + 'px';
+        p.style.marginBottom  = '12px';
+      } else {
+        p.style.zoom = '';
+        p.style.margin = '';
+      }
+    });
+    /* Ajusta background para não ficar com faixa cinza larga */
+    document.body.style.minWidth = (natW * escala + margem) + 'px';
+  }
+  window.addEventListener('load',   ajustar);
+  window.addEventListener('resize', ajustar);
+  ajustar();
+})();
+</script>
 
 </body>
 </html>
