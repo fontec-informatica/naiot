@@ -181,8 +181,7 @@ body {
 @media print {
   body { background: #fff }
   .barra-acoes { display: none }
-  .pag-wrapper  { display: contents }
-  .pagina { margin: 0; box-shadow: none; padding: 10mm 14mm;
+  .pagina { margin: 0 !important; box-shadow: none; padding: 10mm 14mm;
             transform: none !important; zoom: 1 !important }
   @page { size: A4; margin: 0 }
   .quebra { page-break-before: always }
@@ -204,7 +203,6 @@ body {
 <!-- ══════════════════════════════════════
      PÁGINA 1 — Relação de passageiros
 ══════════════════════════════════════ -->
-<div class="pag-wrapper">
 <div class="pagina">
 
   <div class="cab">
@@ -290,12 +288,10 @@ body {
   </div>
 
 </div>
-</div><!-- /pag-wrapper 1 -->
 
 <!-- ══════════════════════════════════════
      PÁGINA 2 — Declaração
 ══════════════════════════════════════ -->
-<div class="pag-wrapper">
 <div class="pagina quebra">
 
   <div class="cab">
@@ -335,28 +331,24 @@ body {
   </div>
 
 </div>
-</div><!-- /pag-wrapper 2 -->
 
 <script>
 (function(){
   function ajustar(){
-    var wrappers = document.querySelectorAll('.pag-wrapper');
-    var paginas  = document.querySelectorAll('.pagina');
+    var paginas = document.querySelectorAll('.pagina');
     if (!paginas.length) return;
-    var margem = 8;
-    var avail  = window.innerWidth - margem;
-    var natW   = paginas[0].scrollWidth;
-    if (!natW || avail >= natW) return; // desktop: sem escala
-    var escala = avail / natW;
-    paginas.forEach(function(p, i){
-      p.style.transform       = 'scale(' + escala + ')';
+    var avail = window.innerWidth - 8;
+    var natW  = paginas[0].scrollWidth;
+    if (!natW || avail >= natW) return;
+    var scale = avail / natW;
+    paginas.forEach(function(p){
+      var h = p.offsetHeight;
+      var w = p.offsetWidth;
+      p.style.transform       = 'scale(' + scale + ')';
       p.style.transformOrigin = 'top left';
-      /* Wrapper assume a altura visual após a escala */
-      if (wrappers[i]) {
-        wrappers[i].style.height   = (p.offsetHeight * escala) + 'px';
-        wrappers[i].style.overflow = 'hidden';
-        wrappers[i].style.marginBottom = '12px';
-      }
+      /* Colapsa o espaço extra que o transform não afeta no layout */
+      p.style.marginBottom = '-' + (h * (1 - scale) - 12) + 'px';
+      p.style.marginRight  = '-' + (w * (1 - scale)) + 'px';
     });
   }
   window.addEventListener('load',   ajustar);
