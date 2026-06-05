@@ -181,7 +181,9 @@ body {
 @media print {
   body { background: #fff }
   .barra-acoes { display: none }
-  .pagina { margin: 0; box-shadow: none; padding: 10mm 14mm }
+  .pag-wrapper  { display: contents }
+  .pagina { margin: 0; box-shadow: none; padding: 10mm 14mm;
+            transform: none !important; zoom: 1 !important }
   @page { size: A4; margin: 0 }
   .quebra { page-break-before: always }
 }
@@ -202,6 +204,7 @@ body {
 <!-- ══════════════════════════════════════
      PÁGINA 1 — Relação de passageiros
 ══════════════════════════════════════ -->
+<div class="pag-wrapper">
 <div class="pagina">
 
   <div class="cab">
@@ -287,10 +290,12 @@ body {
   </div>
 
 </div>
+</div><!-- /pag-wrapper 1 -->
 
 <!-- ══════════════════════════════════════
      PÁGINA 2 — Declaração
 ══════════════════════════════════════ -->
+<div class="pag-wrapper">
 <div class="pagina quebra">
 
   <div class="cab">
@@ -330,30 +335,29 @@ body {
   </div>
 
 </div>
+</div><!-- /pag-wrapper 2 -->
 
 <script>
 (function(){
   function ajustar(){
-    var paginas = document.querySelectorAll('.pagina');
+    var wrappers = document.querySelectorAll('.pag-wrapper');
+    var paginas  = document.querySelectorAll('.pagina');
     if (!paginas.length) return;
-    var barra  = document.querySelector('.barra-acoes');
     var margem = 8;
     var avail  = window.innerWidth - margem;
-    var natW   = paginas[0].offsetWidth; // 794px aprox
-    var escala = avail < natW ? avail / natW : 1;
-    paginas.forEach(function(p){
-      if (escala < 1) {
-        p.style.zoom          = escala;
-        p.style.marginLeft    = (margem / 2) + 'px';
-        p.style.marginRight   = (margem / 2) + 'px';
-        p.style.marginBottom  = '12px';
-      } else {
-        p.style.zoom = '';
-        p.style.margin = '';
+    var natW   = paginas[0].scrollWidth;
+    if (!natW || avail >= natW) return; // desktop: sem escala
+    var escala = avail / natW;
+    paginas.forEach(function(p, i){
+      p.style.transform       = 'scale(' + escala + ')';
+      p.style.transformOrigin = 'top left';
+      /* Wrapper assume a altura visual após a escala */
+      if (wrappers[i]) {
+        wrappers[i].style.height   = (p.offsetHeight * escala) + 'px';
+        wrappers[i].style.overflow = 'hidden';
+        wrappers[i].style.marginBottom = '12px';
       }
     });
-    /* Ajusta background para não ficar com faixa cinza larga */
-    document.body.style.minWidth = (natW * escala + margem) + 'px';
   }
   window.addEventListener('load',   ajustar);
   window.addEventListener('resize', ajustar);
