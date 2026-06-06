@@ -181,25 +181,25 @@ body {
 @media print {
   body { background: #fff; margin: 0; padding: 0 }
   .barra-acoes { display: none }
-  @page { size: A4; margin: 10mm 14mm }
+  @page { size: A4; margin: 0 }
   .quebra { page-break-before: always; break-before: always }
   .pagina {
     display: block !important;
-    width: auto !important;
+    width: 210mm !important;
     min-height: 0 !important;
     height: auto !important;
     overflow: visible !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 14mm 16mm !important;
     box-shadow: none !important;
     background: #fff !important;
     transform: none !important;
     zoom: 1 !important;
   }
+  .tabela-pass { page-break-inside: avoid !important; break-inside: avoid !important }
   .spacer { display: none !important }
-  .rodape { margin-top: 20pt !important }
 }
 </style>
 </head>
