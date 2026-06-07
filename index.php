@@ -689,7 +689,7 @@ footer {
                 </div>
                 <?php endif; ?>
                 <?php if (!empty($ev['inscricoes_abertas'])): ?>
-                <a href="/inscricao.php?id=<?= $ev['id'] ?>" class="evt-cta-bar">Inscrever-se neste evento &rarr;</a>
+                <a href="/evento.php?id=<?= $ev['id'] ?>" class="evt-cta-bar">Inscrever-se neste evento &rarr;</a>
                 <?php endif; ?>
               </div>
             </div>

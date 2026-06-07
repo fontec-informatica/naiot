@@ -113,7 +113,7 @@ $status_label = ['confirmado'=>'Confirmado','pendente'=>'Pendente','checkin'=>'C
   <div class="tabela-wrap">
     <div class="tabela-header">
       <h2>Inscrições abertas</h2>
-      <a href="/portal/eventos/novo.php?origem=inscricoes" class="btn btn-primary btn-sm">+ Novo evento</a>
+      <a href="/portal/eventos/wizard.php" class="btn btn-primary btn-sm">+ Novo evento</a>
     </div>
     <?php if (empty($eventos_abertos)): ?>
       <div style="padding:36px;text-align:center;color:var(--muted);font-size:.88rem">Nenhum evento com inscrições abertas.</div>
@@ -145,13 +145,13 @@ $status_label = ['confirmado'=>'Confirmado','pendente'=>'Pendente','checkin'=>'C
 <div class="tabela-wrap">
   <div class="tabela-header">
     <h2>Todos os eventos</h2>
-    <a href="/portal/eventos/novo.php?origem=inscricoes" class="btn btn-ghost btn-sm">+ Novo evento</a>
+    <a href="/portal/eventos/wizard.php" class="btn btn-ghost btn-sm">+ Novo evento</a>
   </div>
 
   <?php if (empty($eventos)): ?>
   <div style="padding:48px;text-align:center;color:var(--cinza3)">
     Nenhum evento cadastrado ainda.
-    <a href="/portal/eventos/novo.php?origem=inscricoes" style="color:var(--azul2)">Cadastrar agora</a>
+    <a href="/portal/eventos/wizard.php" style="color:var(--azul2)">Cadastrar agora</a>
   </div>
   <?php else: ?>
   <table>

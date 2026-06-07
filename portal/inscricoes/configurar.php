@@ -111,6 +111,14 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
     <a href="/portal/eventos/lotes.php?id=<?= $id ?>" class="btn btn-ouro btn-sm">Gerenciar lotes</a>
   </div>
+
+  <hr style="margin:20px 0;border:none;border-top:1px solid var(--cinza2)">
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <a href="/portal/inscricoes/campos.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Campos do formulário</a>
+    <a href="/portal/eventos/pagina.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Página pública</a>
+    <a href="/evento.php?id=<?= $id ?>" target="_blank" class="btn btn-ghost btn-sm">↗ Ver página</a>
+  </div>
 </div>
 
 <?php include dirname(__DIR__) . '/_layout_end.php'; ?>

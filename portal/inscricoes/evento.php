@@ -137,7 +137,7 @@ include dirname(__DIR__) . '/_layout.php';
       <?php endif; ?>
       <a href="?id=<?= $evento_id ?>&exportar=1<?= $status_f ? '&status='.$status_f : '' ?>" class="btn btn-ghost btn-sm">⬇ Exportar CSV</a>
       <?php if ($evento['inscricoes_abertas']): ?>
-      <a href="/inscricao.php?id=<?= $evento_id ?>" target="_blank" class="btn btn-primary btn-sm">🔗 Ver página pública</a>
+      <a href="/evento.php?id=<?= $evento_id ?>" target="_blank" class="btn btn-primary btn-sm">🔗 Ver página pública</a>
       <?php endif; ?>
     </div>
   </div>

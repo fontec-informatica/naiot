@@ -492,7 +492,11 @@ textarea { min-height: 88px; resize: vertical; }
       <span class="insc-logo-txt">NAIOT</span>
       <span class="insc-nome">Comunidade Católica Senhor Jesus</span>
     </a>
+    <?php if ($evento): ?>
+    <a href="/evento.php?id=<?= $evento['id'] ?>" class="insc-back">&#8592; Voltar ao evento</a>
+    <?php else: ?>
     <a href="/" class="insc-back">&#8592; Voltar ao site</a>
+    <?php endif; ?>
   </div>
 </header>
 
