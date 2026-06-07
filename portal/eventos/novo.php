@@ -72,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$proxima_ordem = (int)db()->query('SELECT COALESCE(MAX(ordem),0)+1 FROM eventos')->fetchColumn();
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
@@ -160,7 +161,7 @@ include dirname(__DIR__) . '/_layout.php';
     <div class="form-group">
       <label for="ordem">Ordem de exibição no carrossel</label>
       <input type="number" id="ordem" name="ordem" min="0"
-             value="<?= htmlspecialchars($_POST['ordem'] ?? '0') ?>">
+             value="<?= htmlspecialchars($_POST['ordem'] ?? $proxima_ordem) ?>">
       <span class="form-hint">Menor número aparece primeiro.</span>
     </div>
 

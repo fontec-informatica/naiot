@@ -13,27 +13,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     if ($id) {
         if ($acao === 'toggle') {
             db()->prepare('UPDATE eventos SET ativo = NOT ativo WHERE id = ?')->execute([$id]);
-        } elseif ($acao === 'subir') {
-            $ev = db()->prepare('SELECT id, ordem FROM eventos WHERE id = ?');
-            $ev->execute([$id]);
-            $atual = $ev->fetch();
-            $ant = db()->prepare('SELECT id, ordem FROM eventos WHERE ordem < ? ORDER BY ordem DESC LIMIT 1');
-            $ant->execute([$atual['ordem']]);
-            $anterior = $ant->fetch();
-            if ($anterior) {
-                db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?')->execute([$anterior['ordem'], $id]);
-                db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?')->execute([$atual['ordem'], $anterior['id']]);
-            }
-        } elseif ($acao === 'descer') {
-            $ev = db()->prepare('SELECT id, ordem FROM eventos WHERE id = ?');
-            $ev->execute([$id]);
-            $atual = $ev->fetch();
-            $prx = db()->prepare('SELECT id, ordem FROM eventos WHERE ordem > ? ORDER BY ordem ASC LIMIT 1');
-            $prx->execute([$atual['ordem']]);
-            $proximo = $prx->fetch();
-            if ($proximo) {
-                db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?')->execute([$proximo['ordem'], $id]);
-                db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?')->execute([$atual['ordem'], $proximo['id']]);
+        } elseif ($acao === 'subir' || $acao === 'descer') {
+            $ids = db()->query('SELECT id FROM eventos ORDER BY ordem ASC, id ASC')
+                       ->fetchAll(PDO::FETCH_COLUMN);
+            $ids = array_map('intval', $ids);
+            $pos = array_search($id, $ids, true);
+            if ($pos !== false) {
+                $alvo = $acao === 'subir' ? $pos - 1 : $pos + 1;
+                if ($alvo >= 0 && $alvo < count($ids)) {
+                    [$ids[$pos], $ids[$alvo]] = [$ids[$alvo], $ids[$pos]];
+                    $upd = db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?');
+                    foreach ($ids as $i => $eid) { $upd->execute([$i, $eid]); }
+                }
             }
         }
     }
@@ -42,6 +33,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 }
 
 $eventos = db()->query('SELECT * FROM eventos ORDER BY ordem ASC, id ASC')->fetchAll();
+
+/* ── Normalizar ordens se houver duplicatas ── */
+$ordens = array_column($eventos, 'ordem');
+if (count($ordens) !== count(array_unique($ordens))) {
+    $upd = db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?');
+    foreach ($eventos as $i => $ev) { $upd->execute([$i, $ev['id']]); }
+    // Recarregar com ordens corrigidas
+    $eventos = db()->query('SELECT * FROM eventos ORDER BY ordem ASC, id ASC')->fetchAll();
+}
 
 include dirname(__DIR__) . '/_layout.php';
 ?>

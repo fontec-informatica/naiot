@@ -213,6 +213,8 @@ if ($step === 3 && $evento_id) {
     } catch (Exception $e) {}
 }
 
+$proxima_ordem_ev = (int)db()->query('SELECT COALESCE(MAX(ordem),0)+1 FROM eventos')->fetchColumn();
+
 $prog_list = [];
 if ($step === 4 && $evento_id) {
     try {
@@ -640,7 +642,7 @@ $step_hrefs  = [
       <input type="hidden" name="acao" value="publicar">
       <div class="form-group">
         <label>Ordem no carrossel <span style="font-weight:400;color:var(--cinza3)">(menor = primeiro)</span></label>
-        <input type="number" name="ordem" min="0" value="<?= $evento['ordem'] ?? 0 ?>">
+        <input type="number" name="ordem" min="0" value="<?= ($evento['ordem'] ?? 0) ?: $proxima_ordem_ev ?>">
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%">Publicar evento ✓</button>
     </form>
