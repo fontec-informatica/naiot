@@ -51,7 +51,7 @@ if ($db_ok) {
 $eventos = [];
 if ($db_ok) {
     try {
-        $eventos = db()->query("SELECT * FROM eventos WHERE ativo = 1 AND (COALESCE(data_fim, data_evento) IS NULL OR COALESCE(data_fim, data_evento) >= CURDATE()) ORDER BY ordem ASC, id ASC")->fetchAll();
+        $eventos = db()->query("SELECT * FROM eventos WHERE ativo = 1 AND (COALESCE(data_fim, data_evento) IS NULL OR COALESCE(data_fim, data_evento) >= CURDATE()) ORDER BY COALESCE(data_evento,'9999-12-31') ASC, ordem ASC, id ASC")->fetchAll();
     } catch (Exception $e) {}
 }
 

@@ -32,16 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     exit;
 }
 
-$eventos = db()->query('SELECT * FROM eventos ORDER BY ordem ASC, id ASC')->fetchAll();
+$eventos = db()->query("SELECT * FROM eventos ORDER BY COALESCE(data_evento,'9999-12-31') ASC, ordem ASC, id ASC")->fetchAll();
 
-/* ── Normalizar ordens se houver duplicatas ── */
-$ordens = array_column($eventos, 'ordem');
-if (count($ordens) !== count(array_unique($ordens))) {
-    $upd = db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?');
-    foreach ($eventos as $i => $ev) { $upd->execute([$i, $ev['id']]); }
-    // Recarregar com ordens corrigidas
-    $eventos = db()->query('SELECT * FROM eventos ORDER BY ordem ASC, id ASC')->fetchAll();
-}
+/* ── Normalizar ordens para manter consistência com a ordem de exibição ── */
+$upd = db()->prepare('UPDATE eventos SET ordem = ? WHERE id = ?');
+foreach ($eventos as $i => $ev) { $upd->execute([$i, $ev['id']]); }
+$eventos = db()->query("SELECT * FROM eventos ORDER BY COALESCE(data_evento,'9999-12-31') ASC, ordem ASC, id ASC")->fetchAll();
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
