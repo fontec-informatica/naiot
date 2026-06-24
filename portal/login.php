@@ -55,26 +55,37 @@ if (!$bloqueado && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($login && $senha && strlen($senha) <= 1000) {
             try {
-                $stmt = db()->prepare('SELECT id, nome, senha_hash, perfil, ativo FROM usuarios WHERE (email = ? OR usuario = ?) AND ativo = 1 LIMIT 1');
+                $stmt = db()->prepare('SELECT id, nome, email, senha_hash, perfil, ativo FROM usuarios WHERE (email = ? OR usuario = ?) AND ativo = 1 LIMIT 1');
                 $stmt->execute([$login, $login]);
             } catch (Exception $e) {
-                $stmt = db()->prepare('SELECT id, nome, senha_hash, perfil, ativo FROM usuarios WHERE email = ? AND ativo = 1 LIMIT 1');
+                $stmt = db()->prepare('SELECT id, nome, email, senha_hash, perfil, ativo FROM usuarios WHERE email = ? AND ativo = 1 LIMIT 1');
                 $stmt->execute([$login]);
             }
             $usuario = $stmt->fetch();
 
             if ($usuario && $usuario['ativo'] && password_verify($senha, $usuario['senha_hash'])) {
                 session_regenerate_id(true);
-                $_SESSION['usuario_id']     = $usuario['id'];
-                $_SESSION['usuario_nome']   = $usuario['nome'];
-                $_SESSION['usuario_perfil'] = $usuario['perfil'];
-                $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
-                $_SESSION['_ultimo_ativo']  = time();
 
-                db()->prepare('UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?')
-                    ->execute([$usuario['id']]);
+                if (mfa_dispositivo_confiavel((int)$usuario['id'])) {
+                    $_SESSION['usuario_id']     = $usuario['id'];
+                    $_SESSION['usuario_nome']   = $usuario['nome'];
+                    $_SESSION['usuario_perfil'] = $usuario['perfil'];
+                    $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
+                    $_SESSION['_ultimo_ativo']  = time();
+                    db()->prepare('UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?')->execute([$usuario['id']]);
+                    header('Location: ' . home_por_perfil($usuario['perfil']));
+                    exit;
+                }
 
-                header('Location: ' . home_por_perfil($usuario['perfil']));
+                // Dispositivo não reconhecido — exige verificação por e-mail
+                $_SESSION['mfa_pendente'] = [
+                    'id'     => (int)$usuario['id'],
+                    'nome'   => $usuario['nome'],
+                    'email'  => $usuario['email'],
+                    'perfil' => $usuario['perfil'],
+                ];
+                mfa_enviar_codigo((int)$usuario['id'], $usuario['email'], $usuario['nome']);
+                header('Location: /portal/mfa.php');
                 exit;
             }
         }
@@ -119,6 +130,10 @@ $site_key   = RECAPTCHA_SITE_KEY;
 
     <?php if ($expirado && !$erro): ?>
       <div class="alerta alerta-aviso">Sua sessão expirou por inatividade. Faça login novamente.</div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['mfa_bloqueado']) && !$erro): ?>
+      <div class="alerta alerta-erro">Muitas tentativas de verificação. Faça login novamente.</div>
     <?php endif; ?>
 
     <?php if ($erro): ?>

@@ -31,3 +31,29 @@ CREATE TABLE IF NOT EXISTS login_tentativas (
     INDEX idx_ip (ip),
     INDEX idx_em (em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Códigos MFA enviados por e-mail (válidos por 10 minutos)
+CREATE TABLE IF NOT EXISTS mfa_codigos (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuario_id  INT UNSIGNED NOT NULL,
+    codigo_hash VARCHAR(255) NOT NULL,
+    expira_em   DATETIME     NOT NULL,
+    usado       TINYINT(1)   NOT NULL DEFAULT 0,
+    criado_em   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_expira  (expira_em)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dispositivos confiáveis (cookie válido por 30 dias)
+CREATE TABLE IF NOT EXISTS mfa_dispositivos (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuario_id  INT UNSIGNED NOT NULL,
+    token_hash  VARCHAR(64)  NOT NULL,
+    ip          VARCHAR(45)  NOT NULL,
+    user_agent  VARCHAR(500) NOT NULL DEFAULT '',
+    expira_em   DATETIME     NOT NULL,
+    criado_em   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_token   (token_hash),
+    INDEX idx_expira  (expira_em)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

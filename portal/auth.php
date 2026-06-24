@@ -138,6 +138,100 @@ function label_perfil(string $perfil): string {
         : count($labels) . ' módulos';
 }
 
+/* ── MFA — 2FA por e-mail ────────────────────────────────────────────────── */
+define('MFA_DIAS',    30);
+define('MFA_MINUTOS', 10);
+define('MFA_COOKIE',  'naiot_dt');
+define('MFA_TENTATIVAS_MAX', 5);
+
+function mfa_dispositivo_confiavel(int $usuario_id): bool {
+    $token = $_COOKIE[MFA_COOKIE] ?? '';
+    if (!$token || strlen($token) < 32) return false;
+    try {
+        $st = db()->prepare("SELECT id FROM mfa_dispositivos WHERE usuario_id = ? AND token_hash = ? AND expira_em > NOW() LIMIT 1");
+        $st->execute([$usuario_id, hash('sha256', $token)]);
+        return (bool)$st->fetch();
+    } catch (Exception $e) { return false; }
+}
+
+function mfa_enviar_codigo(int $usuario_id, string $email, string $nome): void {
+    try {
+        db()->prepare("UPDATE mfa_codigos SET usado = 1 WHERE usuario_id = ? AND usado = 0")->execute([$usuario_id]);
+    } catch (Exception $e) {}
+
+    $codigo  = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $hash    = password_hash($codigo, PASSWORD_BCRYPT);
+    $expira  = date('Y-m-d H:i:s', time() + MFA_MINUTOS * 60);
+
+    try {
+        db()->prepare("INSERT INTO mfa_codigos (usuario_id, codigo_hash, expira_em) VALUES (?, ?, ?)")
+            ->execute([$usuario_id, $hash, $expira]);
+    } catch (Exception $e) { return; }
+
+    $nome_esc = htmlspecialchars($nome);
+    $msg = <<<HTML
+<html><body style="font-family:Inter,Arial,sans-serif;color:#1f1f1f;max-width:520px;margin:0 auto;padding:32px">
+  <div style="border-top:3px solid #1e6b35;padding-top:24px">
+    <h2 style="color:#1e6b35;margin:0 0 4px">Portal NAIOT</h2>
+    <p style="color:#6a6a6a;margin:0 0 24px;font-size:13px">Comunidade Católica Senhor Jesus</p>
+    <p>Olá, <strong>{$nome_esc}</strong>.</p>
+    <p>Seu código de verificação de acesso é:</p>
+    <div style="font-size:40px;font-weight:700;letter-spacing:10px;text-align:center;
+                padding:28px 16px;background:#f0f7f2;border-radius:10px;
+                color:#163d22;margin:20px 0">{$codigo}</div>
+    <p>Válido por <strong>10 minutos</strong>. Não compartilhe este código.</p>
+    <p style="color:#6a6a6a;font-size:12px;margin-top:24px">
+      Se você não tentou fazer login, ignore este e-mail.
+    </p>
+  </div>
+</body></html>
+HTML;
+
+    $headers  = "From: " . MAIL_FROM_NAME . " <" . MAIL_FROM . ">\r\n";
+    $headers .= "Reply-To: " . MAIL_FROM . "\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "MIME-Version: 1.0\r\n";
+    @mail($email, 'Código de acesso NAIOT: ' . $codigo, $msg, $headers);
+}
+
+function mfa_verificar_codigo(int $usuario_id, string $codigo): bool {
+    try {
+        $st = db()->prepare("SELECT id, codigo_hash FROM mfa_codigos WHERE usuario_id = ? AND usado = 0 AND expira_em > NOW() ORDER BY id DESC LIMIT 1");
+        $st->execute([$usuario_id]);
+        $row = $st->fetch();
+        if (!$row || !password_verify($codigo, $row['codigo_hash'])) return false;
+        db()->prepare("UPDATE mfa_codigos SET usado = 1 WHERE id = ?")->execute([$row['id']]);
+        return true;
+    } catch (Exception $e) { return false; }
+}
+
+function mfa_registrar_dispositivo(int $usuario_id): void {
+    $token  = bin2hex(random_bytes(32));
+    $hash   = hash('sha256', $token);
+    $expira = date('Y-m-d H:i:s', time() + MFA_DIAS * 86400);
+    $ip     = $_SERVER['REMOTE_ADDR'] ?? '';
+    $ua     = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
+
+    try {
+        db()->prepare("DELETE FROM mfa_dispositivos WHERE usuario_id = ? AND expira_em < NOW()")->execute([$usuario_id]);
+        db()->prepare("INSERT INTO mfa_dispositivos (usuario_id, token_hash, ip, user_agent, expira_em) VALUES (?, ?, ?, ?, ?)")
+            ->execute([$usuario_id, $hash, $ip, $ua, $expira]);
+    } catch (Exception $e) { return; }
+
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+          || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+
+    setcookie(MFA_COOKIE, $token, [
+        'expires'  => time() + MFA_DIAS * 86400,
+        'path'     => '/',
+        'secure'   => $https,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
+}
+
+/* ────────────────────────────────────────────────────────────────────────── */
+
 function csrf_token(): string {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

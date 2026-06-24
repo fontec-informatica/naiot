@@ -21,6 +21,9 @@ define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
 define('RECAPTCHA_SITE_KEY',   $_ENV['RECAPTCHA_SITE_KEY']   ?? '');
 define('RECAPTCHA_SECRET_KEY', $_ENV['RECAPTCHA_SECRET_KEY'] ?? '');
 
+define('MAIL_FROM',      $_ENV['MAIL_FROM']      ?? 'portal@naiot.com.br');
+define('MAIL_FROM_NAME', $_ENV['MAIL_FROM_NAME'] ?? 'Portal NAIOT');
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo === null) {
