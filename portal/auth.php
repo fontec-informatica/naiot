@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/mailer.php';
 
 define('SESSION_TIMEOUT', 1800); // 30 minutos de inatividade
 
@@ -200,10 +201,7 @@ function senha_reset_enviar(int $usuario_id, string $email, string $nome, int $h
 </body></html>
 HTML;
 
-    $headers  = "From: " . MAIL_FROM_NAME . " <" . MAIL_FROM . ">\r\n";
-    $headers .= "Reply-To: " . MAIL_FROM . "\r\n";
-    $headers .= "Content-Type: text/html; charset=UTF-8\r\nMIME-Version: 1.0\r\n";
-    @mail($email, $titulo, $msg, $headers);
+    mailer_enviar($email, $titulo, $msg);
 }
 
 /* ── MFA — 2FA por e-mail ────────────────────────────────────────────────── */
@@ -255,11 +253,7 @@ function mfa_enviar_codigo(int $usuario_id, string $email, string $nome): void {
 </body></html>
 HTML;
 
-    $headers  = "From: " . MAIL_FROM_NAME . " <" . MAIL_FROM . ">\r\n";
-    $headers .= "Reply-To: " . MAIL_FROM . "\r\n";
-    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $headers .= "MIME-Version: 1.0\r\n";
-    @mail($email, 'Código de acesso NAIOT: ' . $codigo, $msg, $headers);
+    mailer_enviar($email, 'Código de acesso NAIOT: ' . $codigo, $msg);
 }
 
 function mfa_verificar_codigo(int $usuario_id, string $codigo): bool {

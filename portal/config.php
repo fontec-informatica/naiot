@@ -24,6 +24,11 @@ define('RECAPTCHA_SECRET_KEY', $_ENV['RECAPTCHA_SECRET_KEY'] ?? '');
 define('MAIL_FROM',      $_ENV['MAIL_FROM']      ?? 'portal@naiot.com.br');
 define('MAIL_FROM_NAME', $_ENV['MAIL_FROM_NAME'] ?? 'Portal NAIOT');
 
+define('SMTP_HOST', $_ENV['SMTP_HOST'] ?? 'mail.naiot.com.br');
+define('SMTP_PORT', (int)($_ENV['SMTP_PORT'] ?? 587));
+define('SMTP_USER', $_ENV['SMTP_USER'] ?? MAIL_FROM);
+define('SMTP_PASS', $_ENV['SMTP_PASS'] ?? '');
+
 function db(): PDO {
     static $pdo = null;
     if ($pdo === null) {
