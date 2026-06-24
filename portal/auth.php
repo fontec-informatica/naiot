@@ -138,6 +138,74 @@ function label_perfil(string $perfil): string {
         : count($labels) . ' módulos';
 }
 
+/* ── Validação de senha forte ────────────────────────────────────────────── */
+function senha_valida(string $s): bool {
+    return strlen($s) >= 8
+        && preg_match('/[A-Z]/', $s)
+        && preg_match('/[a-z]/', $s)
+        && preg_match('/[0-9]/', $s)
+        && preg_match('/[^a-zA-Z0-9]/', $s);
+}
+
+function senha_erro(string $s): string {
+    if (strlen($s) < 8)                    return 'A senha deve ter no mínimo 8 caracteres.';
+    if (!preg_match('/[A-Z]/', $s))        return 'A senha deve conter pelo menos uma letra maiúscula.';
+    if (!preg_match('/[a-z]/', $s))        return 'A senha deve conter pelo menos uma letra minúscula.';
+    if (!preg_match('/[0-9]/', $s))        return 'A senha deve conter pelo menos um número.';
+    if (!preg_match('/[^a-zA-Z0-9]/', $s)) return 'A senha deve conter pelo menos um caractere especial (!@#$%...).';
+    return '';
+}
+
+/* ── Reset / convite de senha ────────────────────────────────────────────── */
+function senha_reset_enviar(int $usuario_id, string $email, string $nome, int $horas = 1): void {
+    try {
+        db()->prepare("UPDATE senha_resets SET usado = 1 WHERE usuario_id = ? AND usado = 0")->execute([$usuario_id]);
+    } catch (Exception $e) {}
+
+    $token  = bin2hex(random_bytes(32));
+    $hash   = hash('sha256', $token);
+    $expira = date('Y-m-d H:i:s', time() + $horas * 3600);
+
+    try {
+        db()->prepare("INSERT INTO senha_resets (usuario_id, token_hash, expira_em) VALUES (?, ?, ?)")
+            ->execute([$usuario_id, $hash, $expira]);
+    } catch (Exception $e) { return; }
+
+    $link     = 'https://naiot.com.br/portal/redefinir-senha.php?token=' . urlencode($token);
+    $nome_esc = htmlspecialchars($nome);
+    $convite  = $horas > 2;
+    $titulo   = $convite ? 'Acesso ao Portal NAIOT' : 'Redefinição de senha — Portal NAIOT';
+    $intro    = $convite
+        ? 'Você foi cadastrado no Portal NAIOT. Clique no botão abaixo para definir sua senha e acessar o sistema.'
+        : 'Recebemos uma solicitação de redefinição de senha para esta conta.';
+    $validade = $horas === 1 ? '1 hora' : "$horas horas";
+
+    $msg = <<<HTML
+<html><body style="font-family:Inter,Arial,sans-serif;color:#1f1f1f;max-width:520px;margin:0 auto;padding:32px">
+  <div style="border-top:3px solid #1e6b35;padding-top:24px">
+    <h2 style="color:#1e6b35;margin:0 0 4px">Portal NAIOT</h2>
+    <p style="color:#6a6a6a;margin:0 0 24px;font-size:13px">Comunidade Católica Senhor Jesus</p>
+    <p>Olá, <strong>{$nome_esc}</strong>.</p>
+    <p>{$intro}</p>
+    <div style="text-align:center;margin:28px 0">
+      <a href="{$link}" style="display:inline-block;background:#1e6b35;color:#fff;
+         padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none">
+        {$titulo}
+      </a>
+    </div>
+    <p style="color:#6a6a6a;font-size:12px">Link válido por <strong>{$validade}</strong>.</p>
+    <p style="color:#6a6a6a;font-size:12px;margin-top:8px">Se não foi você, ignore este e-mail.</p>
+    <p style="color:#6a6a6a;font-size:11px;word-break:break-all;margin-top:12px">Ou copie: {$link}</p>
+  </div>
+</body></html>
+HTML;
+
+    $headers  = "From: " . MAIL_FROM_NAME . " <" . MAIL_FROM . ">\r\n";
+    $headers .= "Reply-To: " . MAIL_FROM . "\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\nMIME-Version: 1.0\r\n";
+    @mail($email, $titulo, $msg, $headers);
+}
+
 /* ── MFA — 2FA por e-mail ────────────────────────────────────────────────── */
 define('MFA_DIAS',    30);
 define('MFA_MINUTOS', 10);

@@ -157,6 +157,9 @@ $site_key   = RECAPTCHA_SITE_KEY;
       <button type="submit" class="btn btn-primary" id="btn-entrar" style="width:100%;justify-content:center;margin-top:8px">
         Entrar
       </button>
+      <p style="text-align:center;margin-top:14px">
+        <a href="/portal/esqueci-senha.php" style="font-size:.81rem;color:var(--muted)">Esqueci minha senha</a>
+      </p>
     </form>
     <?php if ($site_key): ?>
     <p class="recaptcha-aviso">

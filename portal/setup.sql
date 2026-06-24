@@ -44,6 +44,19 @@ CREATE TABLE IF NOT EXISTS mfa_codigos (
     INDEX idx_expira  (expira_em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tokens para redefinição de senha (válidos por 1 hora) e convites (7 dias)
+CREATE TABLE IF NOT EXISTS senha_resets (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuario_id  INT UNSIGNED NOT NULL,
+    token_hash  VARCHAR(64)  NOT NULL,
+    expira_em   DATETIME     NOT NULL,
+    usado       TINYINT(1)   NOT NULL DEFAULT 0,
+    criado_em   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_usuario (usuario_id),
+    INDEX idx_token   (token_hash),
+    INDEX idx_expira  (expira_em)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Dispositivos confiáveis (cookie válido por 30 dias)
 CREATE TABLE IF NOT EXISTS mfa_dispositivos (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

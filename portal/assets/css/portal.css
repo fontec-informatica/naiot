@@ -439,6 +439,26 @@ input[type=checkbox]{accent-color:var(--g);width:14px;height:14px;cursor:pointer
 }
 
 /* ══════════════════════════
+   FORÇA DE SENHA
+══════════════════════════ */
+.senha-forca{margin-top:8px}
+.forca-barra{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.forca-fill{height:100%;width:0;border-radius:3px;transition:width .35s,background .35s}
+.forca-fill.fraca  {background:var(--vermelho)}
+.forca-fill.media  {background:#d97706}
+.forca-fill.forte  {background:var(--verde)}
+.forca-lista{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:3px 16px;padding:0;margin:0 0 6px}
+.forca-lista li{font-size:.72rem;color:var(--muted);padding-left:16px;position:relative;line-height:1.7}
+.forca-lista li::before{content:'✗';position:absolute;left:0;color:var(--vermelho);font-weight:700}
+.forca-lista li.ok{color:var(--txt)}
+.forca-lista li.ok::before{content:'✓';color:var(--verde)}
+.forca-label{font-size:.72rem;font-weight:600}
+.forca-label.fraca{color:var(--vermelho)}
+.forca-label.media{color:#d97706}
+.forca-label.forte{color:var(--verde)}
+@media(max-width:400px){.forca-lista{grid-template-columns:1fr}}
+
+/* ══════════════════════════
    AUTOCOMPLETE CIDADES
 ══════════════════════════ */
 .cidade-ac-box{

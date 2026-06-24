@@ -40,8 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erro = 'Nome de usuário inválido. Use apenas letras, números, ponto, hífen e sublinhado (3–50 caracteres).';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = 'E-mail inválido.';
-        } elseif ($senha && strlen($senha) < 8) {
-            $erro = 'A nova senha deve ter no mínimo 8 caracteres.';
+        } elseif ($senha && !senha_valida($senha)) {
+            $erro = senha_erro($senha);
         } else {
             if ($usuario) {
                 $dup = db()->prepare('SELECT id FROM usuarios WHERE usuario = ? AND id != ?');
@@ -147,8 +147,18 @@ include dirname(__DIR__) . '/_layout.php';
 
     <div class="form-group">
       <label for="senha">Nova senha <span style="font-weight:400;color:var(--muted)">(deixe em branco para não alterar)</span></label>
-      <input type="password" id="senha" name="senha">
-      <span class="form-hint">Mínimo 8 caracteres.</span>
+      <input type="password" id="senha" name="senha" autocomplete="new-password">
+      <div class="senha-forca" id="sf-wrap" style="display:none">
+        <div class="forca-barra"><div class="forca-fill" id="sf-fill"></div></div>
+        <ul class="forca-lista" id="sf-lista">
+          <li data-req="length">Mínimo 8 caracteres</li>
+          <li data-req="upper">Letra maiúscula (A–Z)</li>
+          <li data-req="lower">Letra minúscula (a–z)</li>
+          <li data-req="number">Número (0–9)</li>
+          <li data-req="special">Caractere especial (!@#...)</li>
+        </ul>
+        <div class="forca-label" id="sf-label"></div>
+      </div>
     </div>
 
     <div class="form-group">
@@ -261,15 +271,42 @@ include dirname(__DIR__) . '/_layout.php';
   if (radAdmin)  radAdmin.addEventListener('change', atualizar);
   if (radMods)   radMods.addEventListener('change', atualizar);
 
-  // Visual: marcar/desmarcar borda ao clicar no checkbox
   checks.forEach(function(label) {
     var cb = label.querySelector('input[type=checkbox]');
-    if (cb) cb.addEventListener('change', function() {
-      label.classList.toggle('on', cb.checked);
-    });
+    if (cb) cb.addEventListener('change', function() { label.classList.toggle('on', cb.checked); });
   });
 
   atualizar();
+
+  // ── Medidor de força de senha ──
+  var campo   = document.getElementById('senha');
+  var sfWrap  = document.getElementById('sf-wrap');
+  var sfFill  = document.getElementById('sf-fill');
+  var sfLista = document.getElementById('sf-lista');
+  var sfLabel = document.getElementById('sf-label');
+  var niveis  = ['Fraca', 'Média', 'Forte'];
+  var classes = ['fraca', 'media', 'forte'];
+  var larguras = ['33%', '66%', '100%'];
+
+  function checar(s) {
+    return { length: s.length >= 8, upper: /[A-Z]/.test(s), lower: /[a-z]/.test(s), number: /[0-9]/.test(s), special: /[^a-zA-Z0-9]/.test(s) };
+  }
+
+  if (campo) {
+    campo.addEventListener('input', function () {
+      var s = campo.value;
+      if (!s) { sfWrap.style.display = 'none'; return; }
+      sfWrap.style.display = '';
+      var r = checar(s);
+      var pts = Object.values(r).filter(Boolean).length;
+      sfLista.querySelectorAll('li').forEach(function(li){ li.classList.toggle('ok', r[li.dataset.req]); });
+      var n = pts <= 2 ? 0 : pts <= 4 ? 1 : 2;
+      sfFill.style.width = larguras[n];
+      sfFill.className = 'forca-fill ' + classes[n];
+      sfLabel.textContent = niveis[n];
+      sfLabel.className = 'forca-label ' + classes[n];
+    });
+  }
 })();
 </script>
 
