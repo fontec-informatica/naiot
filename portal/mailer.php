@@ -17,7 +17,7 @@ function mailer_enviar(string $para, string $assunto, string $corpo_html): bool 
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
-        $mail->AuthType   = 'LOGIN';
+        $mail->AuthType   = 'PLAIN';
         $mail->Username   = SMTP_USER;
         $mail->Password   = SMTP_PASS;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
