@@ -5,6 +5,9 @@ requer_perfil(['admin', 'secretaria']);
 $titulo       = 'Próximos Eventos';
 $pagina_ativa = 'eventos';
 
+// Auto-desativa eventos cuja data já passou
+db()->exec("UPDATE eventos SET ativo = 0 WHERE ativo = 1 AND COALESCE(data_fim, data_evento) < CURDATE()");
+
 // Ações rápidas
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $acao = $_POST['acao'] ?? '';
