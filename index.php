@@ -1012,10 +1012,11 @@ new Carousel('ce', 'dots-ce', 4500);
 /* ── Alinha barra de evento à largura real da imagem ── */
 function syncEvtCaptions() {
   var mobile = window.innerWidth <= 768;
+  var arrowOuter = null, arrowW = 0;
   document.querySelectorAll('.evt-inner').forEach(function(el) {
-    var img  = el.querySelector('img');
-    var cap  = el.querySelector('.evt-caption');
-    var cta  = el.querySelector('.evt-cta-bar');
+    var img = el.querySelector('img');
+    var cap = el.querySelector('.evt-caption');
+    var cta = el.querySelector('.evt-cta-bar');
     if (!img) return;
     if (mobile) {
       if (cap) cap.style.width = '';
@@ -1023,17 +1024,18 @@ function syncEvtCaptions() {
       return;
     }
     var w = img.offsetWidth;
+    if (!w) return; // imagem ainda não pintada (lazy) — ignorar
     if (cap) cap.style.width = w + 'px';
     if (cta) cta.style.width = w + 'px';
-    var outer = el.closest('.carousel-outer');
-    if (outer) {
-      var gap = (outer.offsetWidth - w) / 2;
-      var prev = outer.querySelector('.c-prev');
-      var next = outer.querySelector('.c-next');
-      if (prev) prev.style.left  = Math.max(0, gap - 22) + 'px';
-      if (next) next.style.right = Math.max(0, gap - 22) + 'px';
-    }
+    if (!arrowOuter) { arrowOuter = el.closest('.carousel-outer'); arrowW = w; }
   });
+  if (arrowOuter && arrowW) {
+    var gap  = (arrowOuter.offsetWidth - arrowW) / 2;
+    var prev = arrowOuter.querySelector('.c-prev');
+    var next = arrowOuter.querySelector('.c-next');
+    if (prev) prev.style.left  = Math.max(0, gap - 22) + 'px';
+    if (next) next.style.right = Math.max(0, gap - 22) + 'px';
+  }
 }
 document.querySelectorAll('.evt-inner img').forEach(function(img) {
   img.complete ? syncEvtCaptions() : img.addEventListener('load', syncEvtCaptions);
