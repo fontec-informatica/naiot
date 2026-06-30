@@ -1,8 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/auth.php';
-// Por enquanto somente admin. Para liberar acesso, troque por:
-// requer_perfil(['oracoes']);
-requer_admin();
+requer_perfil(['oracoes']);
 
 $titulo       = 'Orações & Testemunhos';
 $pagina_ativa = 'oracoes';

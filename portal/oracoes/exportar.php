@@ -1,6 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/auth.php';
-requer_admin();
+requer_perfil(['oracoes']);
 require_once dirname(__DIR__) . '/lib/XlsxWriter.php';
 
 $pdo  = db();

@@ -114,12 +114,13 @@ function home_por_perfil(string $perfil): string {
     if ($perfil === 'secretaria') return '/portal/inscricoes/';
     if ($perfil === 'financeiro') return '/portal/financeiro/';
     $mods = json_decode($perfil, true) ?: [];
-    $prioridade = ['financeiro', 'inscricoes', 'eventos', 'membros'];
+    $prioridade = ['financeiro', 'inscricoes', 'eventos', 'membros', 'oracoes'];
     $rotas = [
         'financeiro' => '/portal/financeiro/',
         'inscricoes' => '/portal/inscricoes/',
         'eventos'    => '/portal/eventos/',
         'membros'    => '/portal/membros/',
+        'oracoes'    => '/portal/oracoes/',
     ];
     foreach ($prioridade as $m) {
         if (in_array($m, $mods, true)) return $rotas[$m];
