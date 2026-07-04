@@ -14,6 +14,7 @@ $icons = [
   'usuarios'   => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
   'membros'    => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M16 3.13a4 4 0 010 7.75"/><path d="M21 21v-2a4 4 0 00-3-3.87"/></svg>',
   'van'        => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+  'estoque'    => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8L12 3 3 8m18 0v9a1 1 0 01-1 1H4a1 1 0 01-1-1V8m18 0l-9 5-9-5"/></svg>',
 ];
 
 // Dashboard aponta para a home correta de cada perfil
@@ -38,6 +39,7 @@ $menu = [
   'membros'    => ['icon' => $icons['membros'],    'label' => 'Membros',       'href' => '/portal/membros/',    'modulo' => 'membros'],
   'van'        => ['icon' => $icons['van'],        'label' => 'Missões Van',   'href' => '/portal/van/',        'modulo' => 'van'],
   'oracoes'    => ['icon' => $icons['oracoes'],    'label' => 'Orações',       'href' => '/portal/oracoes/',    'modulo' => 'oracoes'],
+  'estoque'    => ['icon' => $icons['estoque'],    'label' => 'Estoque',       'href' => '/portal/estoque/',    'modulo' => 'estoque'],
   'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'modulo' => 'usuarios'],
 ];
 ?>

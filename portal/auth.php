@@ -39,6 +39,7 @@ const MODULOS_PORTAL = [
     'membros'    => 'Membros',
     'van'        => 'Missões Van',
     'oracoes'    => 'Orações & Testemunhos',
+    'estoque'    => 'Estoque',
     'usuarios'   => 'Usuários',
 ];
 

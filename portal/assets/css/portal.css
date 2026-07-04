@@ -367,6 +367,13 @@ input[type=checkbox]{accent-color:var(--g);width:14px;height:14px;cursor:pointer
 .btn-sm:hover{transform:none}
 
 /* ══════════════════════════
+   LAYOUT MESTRE-DETALHE (lista + form lateral)
+══════════════════════════ */
+.split-layout{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start;min-width:0}
+.split-layout>*{min-width:0}
+@media(max-width:860px){.split-layout{grid-template-columns:1fr}}
+
+/* ══════════════════════════
    ALERTAS
 ══════════════════════════ */
 .alerta{padding:11px 15px;border-radius:8px;margin-bottom:18px;font-size:.84rem}
