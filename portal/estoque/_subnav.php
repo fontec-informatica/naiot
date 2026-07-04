@@ -1,5 +1,10 @@
 <?php
 // Sub-navegação do ambiente Livraria. Cada página define $loja_secao antes de incluir este arquivo.
+if (!function_exists('tem_modulo') || !tem_modulo('estoque')) {
+    http_response_code(403);
+    exit;
+}
+
 $loja_secoes = [
   'produtos'      => ['label' => 'Produtos',      'href' => '/portal/estoque/'],
   'categorias'    => ['label' => 'Categorias',    'href' => '/portal/estoque/categorias.php'],
