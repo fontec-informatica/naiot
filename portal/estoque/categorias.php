@@ -2,8 +2,9 @@
 require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin', 'estoque']);
 
-$titulo       = 'Categorias — Estoque';
+$titulo       = 'Livraria — Categorias';
 $pagina_ativa = 'estoque';
+$loja_secao   = 'categorias';
 $erro         = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
@@ -52,16 +53,14 @@ $categorias = db()->query('
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
+<?php include __DIR__ . '/_subnav.php'; ?>
+
 <?php if (!empty($_GET['criado'])): ?>
   <div class="alerta alerta-ok" style="margin-bottom:16px">Categoria criada com sucesso.</div>
 <?php endif; ?>
 <?php if (!empty($_GET['excluido'])): ?>
   <div class="alerta alerta-ok" style="margin-bottom:16px">Categoria excluída com sucesso.</div>
 <?php endif; ?>
-
-<div style="margin-bottom:16px">
-  <a href="/portal/estoque/" style="font-size:.82rem;color:var(--cinza3)">← Voltar para produtos</a>
-</div>
 
 <div class="split-layout">
 

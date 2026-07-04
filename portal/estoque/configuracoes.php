@@ -2,8 +2,9 @@
 require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin', 'estoque']);
 
-$titulo       = 'Configurações — Estoque';
+$titulo       = 'Livraria — Configurações';
 $pagina_ativa = 'estoque';
+$loja_secao   = 'configuracoes';
 $erro = '';
 
 $config = db()->query('SELECT * FROM estoque_config LIMIT 1')->fetch();
@@ -48,16 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div style="margin-bottom:16px">
-  <a href="/portal/estoque/" style="font-size:.82rem;color:var(--cinza3)">← Voltar para produtos</a>
-</div>
+<?php include __DIR__ . '/_subnav.php'; ?>
 
 <?php if (!empty($_GET['salvo'])): ?>
   <div class="alerta alerta-ok" style="margin-bottom:16px">Configurações salvas com sucesso.</div>
 <?php endif; ?>
 
 <div class="form-wrap">
-  <h2>Configurações do módulo Estoque</h2>
+  <h2>Configurações da Livraria</h2>
 
   <?php if ($erro): ?>
     <div class="alerta alerta-erro"><?= htmlspecialchars($erro) ?></div>

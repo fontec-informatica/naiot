@@ -2,8 +2,9 @@
 require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin', 'estoque']);
 
-$titulo       = 'Editar Produto';
+$titulo       = 'Livraria — Editar Produto';
 $pagina_ativa = 'estoque';
+$loja_secao   = 'produtos';
 $erro = '';
 
 $id = (int)($_GET['id'] ?? 0);
@@ -96,6 +97,8 @@ $categorias = db()->query("SELECT * FROM estoque_categorias WHERE ativo = 1 OR i
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
+<?php include __DIR__ . '/_subnav.php'; ?>
+
 <div class="form-wrap">
   <h2>Editar produto</h2>
 
@@ -103,95 +106,114 @@ include dirname(__DIR__) . '/_layout.php';
     <div class="alerta alerta-erro"><?= htmlspecialchars($erro) ?></div>
   <?php endif; ?>
 
-  <div class="form-group" style="background:var(--off);padding:12px 14px;border-radius:var(--r);display:flex;justify-content:space-between;align-items:center">
-    <span><strong>Código interno:</strong> <?= htmlspecialchars($produto['codigo_interno']) ?></span>
-    <span><strong>Estoque atual:</strong> <?= (int)$produto['estoque_atual'] ?> <?= htmlspecialchars($produto['unidade']) ?></span>
+  <div class="form-tabs">
+    <button type="button" class="ativo" data-tab="gerais">Dados gerais</button>
+    <button type="button" data-tab="precos">Preços</button>
+    <button type="button" data-tab="estoque">Estoque</button>
   </div>
 
   <form method="post" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
-    <div class="form-group">
-      <label for="nome">Nome do produto</label>
-      <input type="text" id="nome" name="nome"
-             value="<?= htmlspecialchars($_POST['nome'] ?? $produto['nome']) ?>" required>
-    </div>
+    <div class="tab-pane ativo" data-tab-pane="gerais">
 
-    <div class="form-group">
-      <label for="descricao">Descrição <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
-      <input type="text" id="descricao" name="descricao"
-             value="<?= htmlspecialchars($_POST['descricao'] ?? $produto['descricao'] ?? '') ?>">
-    </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nome">Nome do produto</label>
+          <input type="text" id="nome" name="nome"
+                 value="<?= htmlspecialchars($_POST['nome'] ?? $produto['nome']) ?>" required>
+        </div>
+        <div class="form-group">
+          <label for="codigo_barras">Código de barras <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+          <input type="text" id="codigo_barras" name="codigo_barras"
+                 value="<?= htmlspecialchars($_POST['codigo_barras'] ?? $produto['codigo_barras'] ?? '') ?>">
+        </div>
+      </div>
 
-    <div class="form-row">
       <div class="form-group">
-        <label for="categoria_id">Categoria</label>
-        <select id="categoria_id" name="categoria_id">
-          <option value="">Sem categoria</option>
-          <?php foreach ($categorias as $c): ?>
-            <option value="<?= $c['id'] ?>" <?= (int)($_POST['categoria_id'] ?? $produto['categoria_id']) === (int)$c['id'] ? 'selected' : '' ?>>
-              <?= htmlspecialchars($c['nome']) ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
+        <label for="descricao">Descrição <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <input type="text" id="descricao" name="descricao"
+               value="<?= htmlspecialchars($_POST['descricao'] ?? $produto['descricao'] ?? '') ?>">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="categoria_id">Categoria</label>
+          <select id="categoria_id" name="categoria_id">
+            <option value="">Sem categoria</option>
+            <?php foreach ($categorias as $c): ?>
+              <option value="<?= $c['id'] ?>" <?= (int)($_POST['categoria_id'] ?? $produto['categoria_id']) === (int)$c['id'] ? 'selected' : '' ?>>
+                <?= htmlspecialchars($c['nome']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="unidade">Unidade</label>
+          <select id="unidade" name="unidade">
+            <?php foreach (['un' => 'Unidade', 'kg' => 'Quilo', 'cx' => 'Caixa', 'pct' => 'Pacote', 'lt' => 'Litro'] as $val => $lbl): ?>
+              <option value="<?= $val ?>" <?= ($_POST['unidade'] ?? $produto['unidade']) === $val ? 'selected' : '' ?>><?= $lbl ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="sku_atual">Código (SKU)</label>
+        <input type="text" id="sku_atual" value="<?= htmlspecialchars($produto['codigo_interno']) ?>" disabled>
+      </div>
+
+      <?php if ($produto['imagem']): ?>
+      <div class="form-group">
+        <label>Foto atual</label>
+        <img src="/assets/img/estoque/produtos/<?= htmlspecialchars($produto['imagem']) ?>"
+             alt="" style="max-height:120px;border-radius:6px;display:block;margin-bottom:8px">
+      </div>
+      <?php endif; ?>
+
+      <div class="form-group">
+        <label for="imagem"><?= $produto['imagem'] ? 'Substituir foto' : 'Foto do produto' ?> <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
+        <input type="file" id="imagem" name="imagem" accept="image/jpeg,image/png,image/webp,image/gif">
+        <span class="form-hint">JPG, PNG, WebP ou GIF — máximo 8 MB.</span>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" name="ativo" value="1"
+                 <?= (($_POST['ativo'] ?? $produto['ativo']) ? 'checked' : '') ?>>
+          Produto ativo
+        </label>
+        <span class="form-hint">Produtos inativos não aparecem na busca do PDV nem na listagem padrão.</span>
+      </div>
+
+    </div>
+
+    <div class="tab-pane" data-tab-pane="precos">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="preco_custo">Preço de custo (R$)</label>
+          <input type="text" id="preco_custo" name="preco_custo" class="money-input" inputmode="numeric"
+                 value="<?= htmlspecialchars($_POST['preco_custo'] ?? number_format($produto['preco_custo'], 2, ',', '')) ?>">
+        </div>
+        <div class="form-group">
+          <label for="preco_venda">Preço de venda (R$)</label>
+          <input type="text" id="preco_venda" name="preco_venda" class="money-input" inputmode="numeric"
+                 value="<?= htmlspecialchars($_POST['preco_venda'] ?? number_format($produto['preco_venda'], 2, ',', '')) ?>">
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" data-tab-pane="estoque">
+      <div class="form-group" style="background:var(--off);padding:12px 14px;border-radius:var(--r)">
+        <strong>Estoque atual:</strong> <?= (int)$produto['estoque_atual'] ?> <?= htmlspecialchars($produto['unidade']) ?>
+        <span class="form-hint" style="margin-top:6px">Ajustes de quantidade serão feitos pela tela de Movimentações (em breve).</span>
       </div>
       <div class="form-group">
-        <label for="unidade">Unidade</label>
-        <select id="unidade" name="unidade">
-          <?php foreach (['un' => 'Unidade', 'kg' => 'Quilo', 'cx' => 'Caixa', 'pct' => 'Pacote', 'lt' => 'Litro'] as $val => $lbl): ?>
-            <option value="<?= $val ?>" <?= ($_POST['unidade'] ?? $produto['unidade']) === $val ? 'selected' : '' ?>><?= $lbl ?></option>
-          <?php endforeach; ?>
-        </select>
+        <label for="estoque_minimo">Estoque mínimo</label>
+        <input type="number" id="estoque_minimo" name="estoque_minimo" min="0"
+               value="<?= htmlspecialchars($_POST['estoque_minimo'] ?? $produto['estoque_minimo']) ?>">
+        <span class="form-hint">Alerta de estoque baixo abaixo deste valor.</span>
       </div>
-    </div>
-
-    <div class="form-group">
-      <label for="codigo_barras">Código de barras <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
-      <input type="text" id="codigo_barras" name="codigo_barras"
-             value="<?= htmlspecialchars($_POST['codigo_barras'] ?? $produto['codigo_barras'] ?? '') ?>">
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="preco_custo">Preço de custo (R$)</label>
-        <input type="text" id="preco_custo" name="preco_custo"
-               value="<?= htmlspecialchars($_POST['preco_custo'] ?? number_format($produto['preco_custo'], 2, ',', '')) ?>">
-      </div>
-      <div class="form-group">
-        <label for="preco_venda">Preço de venda (R$)</label>
-        <input type="text" id="preco_venda" name="preco_venda"
-               value="<?= htmlspecialchars($_POST['preco_venda'] ?? number_format($produto['preco_venda'], 2, ',', '')) ?>">
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="estoque_minimo">Estoque mínimo</label>
-      <input type="number" id="estoque_minimo" name="estoque_minimo" min="0"
-             value="<?= htmlspecialchars($_POST['estoque_minimo'] ?? $produto['estoque_minimo']) ?>">
-      <span class="form-hint">Alerta de estoque baixo abaixo deste valor.</span>
-    </div>
-
-    <?php if ($produto['imagem']): ?>
-    <div class="form-group">
-      <label>Foto atual</label>
-      <img src="/assets/img/estoque/produtos/<?= htmlspecialchars($produto['imagem']) ?>"
-           alt="" style="max-height:120px;border-radius:6px;display:block;margin-bottom:8px">
-    </div>
-    <?php endif; ?>
-
-    <div class="form-group">
-      <label for="imagem"><?= $produto['imagem'] ? 'Substituir foto' : 'Foto do produto' ?> <span style="font-weight:400;color:var(--cinza3)">(opcional)</span></label>
-      <input type="file" id="imagem" name="imagem" accept="image/jpeg,image/png,image/webp,image/gif">
-      <span class="form-hint">JPG, PNG, WebP ou GIF — máximo 8 MB.</span>
-    </div>
-
-    <div class="form-group">
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-        <input type="checkbox" name="ativo" value="1"
-               <?= (($_POST['ativo'] ?? $produto['ativo']) ? 'checked' : '') ?>>
-        Produto ativo
-      </label>
-      <span class="form-hint">Produtos inativos não aparecem na busca do PDV nem na listagem padrão.</span>
     </div>
 
     <div style="display:flex;gap:12px;margin-top:8px">
@@ -200,5 +222,21 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
   </form>
 </div>
+
+<script src="/portal/assets/js/moeda-mask.js"></script>
+<script>
+(function () {
+  var botoes = document.querySelectorAll('.form-tabs button');
+  var panes  = document.querySelectorAll('.tab-pane');
+  botoes.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      botoes.forEach(function (b) { b.classList.remove('ativo'); });
+      panes.forEach(function (p) { p.classList.remove('ativo'); });
+      btn.classList.add('ativo');
+      document.querySelector('.tab-pane[data-tab-pane="' + btn.dataset.tab + '"]').classList.add('ativo');
+    });
+  });
+})();
+</script>
 
 <?php include dirname(__DIR__) . '/_layout_end.php'; ?>

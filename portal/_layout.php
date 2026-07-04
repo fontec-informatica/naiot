@@ -39,7 +39,7 @@ $menu = [
   'membros'    => ['icon' => $icons['membros'],    'label' => 'Membros',       'href' => '/portal/membros/',    'modulo' => 'membros'],
   'van'        => ['icon' => $icons['van'],        'label' => 'Missões Van',   'href' => '/portal/van/',        'modulo' => 'van'],
   'oracoes'    => ['icon' => $icons['oracoes'],    'label' => 'Orações',       'href' => '/portal/oracoes/',    'modulo' => 'oracoes'],
-  'estoque'    => ['icon' => $icons['estoque'],    'label' => 'Estoque',       'href' => '/portal/estoque/',    'modulo' => 'estoque'],
+  'estoque'    => ['icon' => $icons['estoque'],    'label' => 'Livraria',      'href' => '/portal/estoque/',    'modulo' => 'estoque'],
   'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'modulo' => 'usuarios'],
 ];
 ?>

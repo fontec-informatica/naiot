@@ -83,12 +83,12 @@ try {
     $msgs[] = ['erro', $e->getMessage()];
 }
 
-$titulo = 'Setup Estoque';
+$titulo = 'Setup Livraria';
 $pagina_ativa = 'estoque';
 include dirname(__DIR__) . '/_layout.php';
 ?>
 <div class="form-wrap">
-  <h2>Setup — Módulo Estoque</h2>
+  <h2>Setup — Módulo Livraria</h2>
   <?php foreach ($msgs as [$tipo, $msg]): ?>
     <div class="alerta <?= $tipo === 'ok' ? 'alerta-ok' : 'alerta-erro' ?>"><?= htmlspecialchars($msg) ?></div>
   <?php endforeach; ?>
