@@ -15,6 +15,14 @@ $u = $usuario->fetch();
 if (!$u) { header('Location: /portal/usuarios/'); exit; }
 
 $eh_proprio = ($id === ($_SESSION['usuario_id'] ?? 0));
+$sou_admin  = (($_SESSION['usuario_perfil'] ?? '') === 'admin');
+
+// Usuário não-admin não pode visualizar/editar a conta de um administrador
+if ($u['perfil'] === 'admin' && !$sou_admin && !$eh_proprio) {
+    http_response_code(403);
+    include dirname(__DIR__) . '/403.php';
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_valido()) {
@@ -55,9 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (!$erro) {
                 if ($eh_proprio) {
-                    $novo_perfil = 'admin';
+                    // Usuário não pode alterar o próprio nível de acesso
+                    $novo_perfil = $u['perfil'];
                 } elseif ($tipo === 'admin') {
-                    $novo_perfil = 'admin';
+                    if (!$sou_admin) {
+                        $erro = 'Apenas administradores podem conceder acesso de administrador.';
+                    } else {
+                        $novo_perfil = 'admin';
+                    }
                 } else {
                     $modulos_sel = array_intersect(
                         $_POST['modulos'] ?? [],
@@ -65,7 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                     $novo_perfil = json_encode(array_values($modulos_sel));
                 }
+            }
 
+            if (!$erro) {
                 if ($senha) {
                     db()->prepare('UPDATE usuarios SET nome=?, usuario=?, email=?, perfil=?, senha_hash=? WHERE id=?')
                         ->execute([$nome, $usuario ?: null, $email, $novo_perfil, password_hash($senha, PASSWORD_DEFAULT), $id]);
@@ -165,18 +180,18 @@ include dirname(__DIR__) . '/_layout.php';
       <label>Permissões de acesso</label>
 
       <?php if ($eh_proprio): ?>
-        <input type="hidden" name="tipo_acesso" value="admin">
         <div class="perm-wrap">
           <div class="perm-opt sel">
             <div class="perm-opt-info">
-              <strong>Administrador — acesso total</strong>
-              <span>Você não pode alterar o próprio perfil.</span>
+              <strong><?= htmlspecialchars(label_perfil($u['perfil'])) ?></strong>
+              <span>Você não pode alterar o próprio nível de acesso.</span>
             </div>
           </div>
         </div>
 
       <?php else: ?>
         <div class="perm-wrap">
+          <?php if ($sou_admin): ?>
           <!-- Opção: Admin -->
           <label class="perm-opt <?= $eh_admin_atual ? 'sel' : '' ?>" id="opt-admin">
             <input type="radio" name="tipo_acesso" value="admin" id="radio-admin" <?= $eh_admin_atual ? 'checked' : '' ?>>
@@ -185,6 +200,7 @@ include dirname(__DIR__) . '/_layout.php';
               <span>Acesso total a todos os módulos e configurações</span>
             </div>
           </label>
+          <?php endif; ?>
 
           <!-- Opção: Módulos personalizados -->
           <label class="perm-opt perm-divisor <?= !$eh_admin_atual ? 'sel' : '' ?>" id="opt-modulos">

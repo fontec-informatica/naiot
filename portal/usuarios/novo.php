@@ -36,6 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dup2->execute([$email]);
                 if ($dup2->fetch()) { $erro = 'Já existe um usuário com esse e-mail.'; }
             }
+            if (!$erro && $tipo === 'admin' && ($_SESSION['usuario_perfil'] ?? '') !== 'admin') {
+                $erro = 'Apenas administradores podem conceder acesso de administrador.';
+            }
             if (!$erro) {
                 if ($tipo === 'admin') {
                     $novo_perfil = 'admin';
@@ -154,6 +157,7 @@ include dirname(__DIR__) . '/_layout.php';
     <div class="form-group">
       <label>Permissões de acesso</label>
       <div class="perm-wrap">
+        <?php if (($_SESSION['usuario_perfil'] ?? '') === 'admin'): ?>
         <!-- Opção: Admin -->
         <label class="perm-opt" id="opt-admin">
           <input type="radio" name="tipo_acesso" value="admin" id="radio-admin">
@@ -162,6 +166,7 @@ include dirname(__DIR__) . '/_layout.php';
             <span>Acesso total a todos os módulos e configurações</span>
           </div>
         </label>
+        <?php endif; ?>
 
         <!-- Opção: Módulos personalizados -->
         <label class="perm-opt perm-divisor sel" id="opt-modulos">
