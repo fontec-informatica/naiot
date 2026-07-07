@@ -18,7 +18,7 @@ $disposition  = in_array($anx['tipo_mime'], $inline_types) ? 'inline' : 'attachm
 
 header('Content-Type: ' . $anx['tipo_mime']);
 header('Content-Disposition: ' . $disposition . '; filename="' . addslashes($anx['nome_original']) . '"');
-header('Content-Length: ' . $anx['tamanho']);
+header('Content-Length: ' . filesize($caminho));
 header('Cache-Control: private, max-age=3600');
 header('X-Content-Type-Options: nosniff');
 

@@ -46,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         $mimes_ok  = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
         if (!$img_data || !isset($mimes_ok[$mime_b64])) {
             $erros[] = 'Foto inválida.';
+        } elseif (strlen($img_data) > 5 * 1024 * 1024) {
+            $erros[] = 'Foto: máximo 5 MB.';
         } else {
             $ext       = $mimes_ok[$mime_b64];
             $foto_nome = uniqid('mb_', true) . '.' . $ext;

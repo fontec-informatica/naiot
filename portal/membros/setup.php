@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS membros (
   bairro        VARCHAR(100),
   cidade        VARCHAR(100),
   telefone      VARCHAR(30),
+  cpf           VARCHAR(14),
   ativo         TINYINT(1) NOT NULL DEFAULT 1,
   criado_em     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -107,5 +108,11 @@ try {
 try {
     $pdo->exec("ALTER TABLE membros ADD COLUMN sexo VARCHAR(20) NULL DEFAULT NULL AFTER estado_civil");
 } catch (PDOException $e) { /* coluna já existe */ }
+try {
+    $pdo->exec("ALTER TABLE membros ADD COLUMN cpf VARCHAR(14) NULL DEFAULT NULL AFTER telefone");
+} catch (PDOException $e) { /* coluna já existe */ }
+try {
+    $pdo->exec("ALTER TABLE membros ADD UNIQUE KEY uq_cpf (cpf)");
+} catch (PDOException $e) { /* já existe, ou há duplicata cadastrada */ }
 
 echo '<p style="font-family:sans-serif;padding:20px;color:green">✓ Tabelas criadas/verificadas com sucesso. <a href="/portal/membros/">Ir para Membros</a></p>';

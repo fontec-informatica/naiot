@@ -131,7 +131,6 @@ include dirname(__DIR__) . '/_layout.php';
 .dre-table .dre-section{background:var(--off);font-family:'Cinzel',serif;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green-dk)}
 .dre-table .dre-total{font-weight:700;background:#f9f9f7}
 .dre-table .dre-saldo{font-family:'Cinzel',serif;font-weight:700;font-size:.88rem;background:var(--off)}
-.origem-labels{doacao:'Doação',dizimo:'Dízimo',contribuicao:'Contribuição',inscricao:'Inscrição',mensalidade:'Mensalidade',outro:'Outro'}
 </style>
 
 <div class="fin-nav">

@@ -28,7 +28,7 @@ class XlsxReader
         $ssRaw = $zip->getFromName('xl/sharedStrings.xml');
         if ($ssRaw !== false) {
             libxml_use_internal_errors(true);
-            $ss = simplexml_load_string($ssRaw);
+            $ss = simplexml_load_string($ssRaw, 'SimpleXMLElement', LIBXML_NONET);
             if ($ss) {
                 foreach ($ss->si as $si) {
                     if (isset($si->t)) {
@@ -55,7 +55,7 @@ class XlsxReader
         }
 
         libxml_use_internal_errors(true);
-        $ws = simplexml_load_string($wsRaw);
+        $ws = simplexml_load_string($wsRaw, 'SimpleXMLElement', LIBXML_NONET);
         if (!$ws) {
             return [];
         }
