@@ -49,6 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_FILES['anexos']['name'][0])) {
         $permitidos = ['application/pdf' => 'pdf', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
         $uploads_dir = __DIR__ . '/uploads/';
+        // A tela tem um único seletor de "tipo do documento" para todo o lote de
+        // arquivos anexados de uma vez — vale para todos, não é por arquivo.
+        $tipo_doc = $_POST['tipo_doc'][0] ?? 'outro';
         foreach ($_FILES['anexos']['tmp_name'] as $i => $tmp) {
             if (!$tmp || $_FILES['anexos']['error'][$i] !== UPLOAD_ERR_OK) continue;
             $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -59,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nome = 'fin_' . uniqid() . '.' . $permitidos[$mime];
             if (move_uploaded_file($tmp, $uploads_dir . $nome)) {
                 db()->prepare("INSERT INTO financeiro_anexos (lancamento_id,nome_original,nome_arquivo,tipo_mime,tamanho,tipo_doc) VALUES (?,?,?,?,?,?)")
-                    ->execute([$novo_id, $_FILES['anexos']['name'][$i], $nome, $mime, $_FILES['anexos']['size'][$i], $_POST['tipo_doc'][$i] ?? 'outro']);
+                    ->execute([$novo_id, $_FILES['anexos']['name'][$i], $nome, $mime, $_FILES['anexos']['size'][$i], $tipo_doc]);
             }
         }
     }

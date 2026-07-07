@@ -12,8 +12,9 @@ require_once __DIR__ . '/lib/phpmailer/SMTP.php';
  * Retorna true em caso de sucesso, false em falha.
  */
 function mailer_enviar(string $para, string $assunto, string $corpo_html): bool {
-    $mail = new PHPMailer(true);
+    $mail = null;
     try {
+        $mail = new PHPMailer(true);
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
@@ -22,6 +23,7 @@ function mailer_enviar(string $para, string $assunto, string $corpo_html): bool 
         $mail->Password   = SMTP_PASS;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = SMTP_PORT;
+        $mail->Timeout    = 15;
         $mail->CharSet    = 'UTF-8';
 
         $mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
@@ -36,7 +38,7 @@ function mailer_enviar(string $para, string $assunto, string $corpo_html): bool 
         $mail->send();
         return true;
     } catch (Exception $e) {
-        error_log('[mailer] Falha ao enviar para ' . $para . ': ' . $mail->ErrorInfo);
+        error_log('[mailer] Falha ao enviar para ' . $para . ': ' . ($mail->ErrorInfo ?? $e->getMessage()));
         return false;
     }
 }

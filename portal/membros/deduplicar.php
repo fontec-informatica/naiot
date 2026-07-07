@@ -47,31 +47,39 @@ function pontuar(array $m): int {
 }
 
 function mesclar_e_remover(PDO $pdo, int $manter_id, int $remover_id): void {
-    // Transfere relações
-    foreach ([
-        ['membros_grupo_rel',      'grupo_id'],
-        ['membros_cargo_rel',      'cargo_id'],
-        ['membros_habilidade_rel', 'habilidade_id'],
-        ['membros_pastoreio_rel',  'pastoreio_id'],
-    ] as [$tabela, $col]) {
-        $pdo->prepare("INSERT IGNORE INTO {$tabela} ({$col}, membro_id)
-            SELECT {$col}, ? FROM {$tabela} WHERE membro_id=?")
-            ->execute([$manter_id, $remover_id]);
+    $pdo->beginTransaction();
+    try {
+        // Transfere relações
+        foreach ([
+            ['membros_grupo_rel',      'grupo_id'],
+            ['membros_cargo_rel',      'cargo_id'],
+            ['membros_habilidade_rel', 'habilidade_id'],
+            ['membros_pastoreio_rel',  'pastoreio_id'],
+        ] as [$tabela, $col]) {
+            $pdo->prepare("INSERT IGNORE INTO {$tabela} ({$col}, membro_id)
+                SELECT {$col}, ? FROM {$tabela} WHERE membro_id=?")
+                ->execute([$manter_id, $remover_id]);
+        }
+        // Preenche campos em branco do mantido com dados do removido
+        $pdo->prepare("UPDATE membros m JOIN membros dup ON dup.id=?
+            SET
+              m.telefone    = IF(m.telefone    IS NULL OR m.telefone='',    dup.telefone,    m.telefone),
+              m.data_nasc   = IF(m.data_nasc   IS NULL,                     dup.data_nasc,   m.data_nasc),
+              m.endereco    = IF(m.endereco    IS NULL OR m.endereco='',    dup.endereco,    m.endereco),
+              m.bairro      = IF(m.bairro      IS NULL OR m.bairro='',      dup.bairro,      m.bairro),
+              m.cidade      = IF(m.cidade      IS NULL OR m.cidade='',      dup.cidade,      m.cidade),
+              m.estado_civil= IF(m.estado_civil IS NULL OR m.estado_civil='',dup.estado_civil,m.estado_civil),
+              m.sexo        = IF(m.sexo        IS NULL OR m.sexo='',        dup.sexo,        m.sexo)
+            WHERE m.id=?")
+            ->execute([$remover_id, $manter_id]);
+        // Inativa duplicata
+        $pdo->prepare("UPDATE membros SET ativo=0 WHERE id=?")->execute([$remover_id]);
+
+        $pdo->commit();
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
     }
-    // Preenche campos em branco do mantido com dados do removido
-    $pdo->prepare("UPDATE membros m JOIN membros dup ON dup.id=?
-        SET
-          m.telefone    = IF(m.telefone    IS NULL OR m.telefone='',    dup.telefone,    m.telefone),
-          m.data_nasc   = IF(m.data_nasc   IS NULL,                     dup.data_nasc,   m.data_nasc),
-          m.endereco    = IF(m.endereco    IS NULL OR m.endereco='',    dup.endereco,    m.endereco),
-          m.bairro      = IF(m.bairro      IS NULL OR m.bairro='',      dup.bairro,      m.bairro),
-          m.cidade      = IF(m.cidade      IS NULL OR m.cidade='',      dup.cidade,      m.cidade),
-          m.estado_civil= IF(m.estado_civil IS NULL OR m.estado_civil='',dup.estado_civil,m.estado_civil),
-          m.sexo        = IF(m.sexo        IS NULL OR m.sexo='',        dup.sexo,        m.sexo)
-        WHERE m.id=?")
-        ->execute([$remover_id, $manter_id]);
-    // Inativa duplicata
-    $pdo->prepare("UPDATE membros SET ativo=0 WHERE id=?")->execute([$remover_id]);
 }
 
 // ── Query base ───────────────────────────────────────────────────────────
@@ -105,6 +113,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
         $todos      = buscar_membros($pdo);
         $grupos_dup = detectar_grupos($todos);
         $resolvidos = 0;
+        $pulados    = 0;
+
+        // Nome parecido (85%) sozinho não é confiável o bastante para mesclar
+        // automaticamente sem revisão humana (ex.: pai e filho com nomes parecidos).
+        // Exige também telefone OU data de nascimento iguais entre os dois registros.
+        $confirma = function(array $a, array $b): bool {
+            if (!empty($a['telefone']) && !empty($b['telefone']) && $a['telefone'] === $b['telefone']) return true;
+            if (!empty($a['data_nasc']) && !empty($b['data_nasc']) && $a['data_nasc'] === $b['data_nasc']) return true;
+            return false;
+        };
 
         foreach ($grupos_dup as $grupo) {
             // Ordena: maior pontuação primeiro, menor ID como desempate
@@ -114,12 +132,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             });
             $manter = $grupo[0];
             for ($i = 1; $i < count($grupo); $i++) {
+                if (!$confirma($manter, $grupo[$i])) {
+                    $pulados++;
+                    continue;
+                }
                 mesclar_e_remover($pdo, $manter['id'], $grupo[$i]['id']);
                 $resolvidos++;
             }
         }
 
-        $msg = ['ok', "Correção automática concluída: {$resolvidos} duplicata(s) removida(s) e mesclada(s)."];
+        $msg = ['ok', "Correção automática concluída: {$resolvidos} duplicata(s) removida(s) e mesclada(s)."
+            . ($pulados ? " {$pulados} par(es) com nome parecido foram deixados para revisão manual (sem telefone/nascimento em comum para confirmar)." : '')];
 
     // ── Resolver duplicata individual ─────────────────────────────────────
     } elseif ($acao === 'resolver') {

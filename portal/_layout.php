@@ -1,4 +1,8 @@
 <?php
+if (!function_exists('usuario_logado') || !usuario_logado()) {
+    http_response_code(403);
+    exit;
+}
 $nome   = $_SESSION['usuario_nome']   ?? '';
 $perfil = $_SESSION['usuario_perfil'] ?? '';
 $inicial = mb_strtoupper(mb_substr(trim($nome), 0, 1)) ?: 'U';

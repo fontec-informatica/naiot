@@ -21,7 +21,9 @@ $pagina_ativa = 'inscricoes';
 
 $salvo = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
+    $status_validos = ['pendente', 'confirmado', 'cancelado', 'checkin'];
     $novo_status = $_POST['status'] ?? $ins['status'];
+    if (!in_array($novo_status, $status_validos, true)) { $novo_status = $ins['status']; }
     $obs         = trim($_POST['observacoes'] ?? '');
 
     $checkin_at = $ins['checkin_at'];

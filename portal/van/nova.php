@@ -67,39 +67,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 
     if (!$erros) {
         $pdo = db();
-        if (!$id) {
-            $pdo->prepare("
-                INSERT INTO van_viagens
-                  (destino,data_texto,data_saida,data_retorno,motorista_id,motorista_nome,motorista_cpf,
-                   coordenador_id,coordenador_nome,coordenador_cpf,status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)
-            ")->execute([$destino,$data_texto,$data_saida,$data_retorno,
-                         $mot_id,$mot_nome?:null,$mot_cpf?:null,
-                         $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status]);
-            $id = (int)$pdo->lastInsertId();
-        } else {
-            $pdo->prepare("
-                UPDATE van_viagens SET
-                  destino=?,data_texto=?,data_saida=?,data_retorno=?,
-                  motorista_id=?,motorista_nome=?,motorista_cpf=?,
-                  coordenador_id=?,coordenador_nome=?,coordenador_cpf=?,status=?
-                WHERE id=?
-            ")->execute([$destino,$data_texto,$data_saida,$data_retorno,
-                         $mot_id,$mot_nome?:null,$mot_cpf?:null,
-                         $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status,$id]);
-        }
+        $pdo->beginTransaction();
+        try {
+            if (!$id) {
+                $pdo->prepare("
+                    INSERT INTO van_viagens
+                      (destino,data_texto,data_saida,data_retorno,motorista_id,motorista_nome,motorista_cpf,
+                       coordenador_id,coordenador_nome,coordenador_cpf,status)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                ")->execute([$destino,$data_texto,$data_saida,$data_retorno,
+                             $mot_id,$mot_nome?:null,$mot_cpf?:null,
+                             $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status]);
+                $id = (int)$pdo->lastInsertId();
+            } else {
+                $pdo->prepare("
+                    UPDATE van_viagens SET
+                      destino=?,data_texto=?,data_saida=?,data_retorno=?,
+                      motorista_id=?,motorista_nome=?,motorista_cpf=?,
+                      coordenador_id=?,coordenador_nome=?,coordenador_cpf=?,status=?
+                    WHERE id=?
+                ")->execute([$destino,$data_texto,$data_saida,$data_retorno,
+                             $mot_id,$mot_nome?:null,$mot_cpf?:null,
+                             $coord_id?:null,$coord_nome?:null,$coord_cpf?:null,$status,$id]);
+            }
 
-        // Salvar passageiros
-        $pdo->prepare("DELETE FROM van_passageiros WHERE viagem_id=?")->execute([$id]);
-        $ins = $pdo->prepare("INSERT INTO van_passageiros (viagem_id,ordem,membro_id,nome,cpf_rg,nota,tipo) VALUES (?,?,?,?,?,?,?)");
-        foreach ($pass_arr as $i => $p) {
-            $pnome = trim($p['nome'] ?? '');
-            if (!$pnome) continue;
-            $pmid  = !empty($p['membro_id']) ? (int)$p['membro_id'] : null;
-            $pcpf  = trim($p['cpf_rg'] ?? '');
-            $pnota = trim($p['nota']   ?? '');
-            $ptipo = in_array($p['tipo'] ?? '', ['normal','cadeirinha','colo']) ? $p['tipo'] : 'normal';
-            $ins->execute([$id,$i,$pmid,$pnome,$pcpf?:null,$pnota?:null,$ptipo]);
+            // Salvar passageiros
+            $pdo->prepare("DELETE FROM van_passageiros WHERE viagem_id=?")->execute([$id]);
+            $ins = $pdo->prepare("INSERT INTO van_passageiros (viagem_id,ordem,membro_id,nome,cpf_rg,nota,tipo) VALUES (?,?,?,?,?,?,?)");
+            foreach ($pass_arr as $i => $p) {
+                $pnome = trim($p['nome'] ?? '');
+                if (!$pnome) continue;
+                $pmid  = !empty($p['membro_id']) ? (int)$p['membro_id'] : null;
+                $pcpf  = trim($p['cpf_rg'] ?? '');
+                $pnota = trim($p['nota']   ?? '');
+                $ptipo = in_array($p['tipo'] ?? '', ['normal','cadeirinha','colo']) ? $p['tipo'] : 'normal';
+                $ins->execute([$id,$i,$pmid,$pnome,$pcpf?:null,$pnota?:null,$ptipo]);
+            }
+
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
         }
 
         if ($acao === 'imprimir') {

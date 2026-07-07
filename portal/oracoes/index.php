@@ -44,8 +44,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 }
 
 // ── Contagens para badges ──────────────────────────────────────────────────
-$cnt = fn(string $tab, string $st) =>
-    (int)db()->query("SELECT COUNT(*) FROM {$tab} WHERE status='{$st}'")->fetchColumn();
+// Whitelist explícita: nome de tabela/status nunca pode vir de request aqui,
+// mas fica travado por segurança (defesa em profundidade).
+$cnt = function(string $tab, string $st) use ($tabelas_validas): int {
+    if (!in_array($tab, $tabelas_validas, true)) { throw new InvalidArgumentException('tabela inválida'); }
+    if (!in_array($st, ['pendente','aprovado','rejeitado'], true)) { throw new InvalidArgumentException('status inválido'); }
+    $stmt = db()->prepare("SELECT COUNT(*) FROM {$tab} WHERE status = ?");
+    $stmt->execute([$st]);
+    return (int)$stmt->fetchColumn();
+};
 
 $pendentes_o = $cnt('oracoes',    'pendente');
 $pendentes_t = $cnt('testemunhos','pendente');

@@ -1,6 +1,6 @@
 # Impedir execução de PHP e listagem nesta pasta de uploads
 Options -Indexes -ExecCGI
-<FilesMatch "\.php[0-9]?$">
+<FilesMatch "\.(php|php[0-9]|phtml|pht|phar)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

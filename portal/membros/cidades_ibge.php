@@ -38,7 +38,15 @@ if (!$json) {
     exit;
 }
 
-$raw     = json_decode($json, true);
+$raw = json_decode($json, true);
+if (!is_array($raw)) {
+    // API respondeu algo que não é JSON válido (ex: página de erro/manutenção)
+    if (file_exists($cache_file)) { readfile($cache_file); exit; }
+    http_response_code(503);
+    echo '[]';
+    exit;
+}
+
 $cidades = [];
 foreach ($raw as $m) {
     $cidades[] = [
