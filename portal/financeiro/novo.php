@@ -47,16 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Processar anexos
     if (!empty($_FILES['anexos']['name'][0])) {
-        $permitidos = ['application/pdf','image/jpeg','image/png','image/webp','image/gif'];
+        $permitidos = ['application/pdf' => 'pdf', 'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
         $uploads_dir = __DIR__ . '/uploads/';
         foreach ($_FILES['anexos']['tmp_name'] as $i => $tmp) {
             if (!$tmp || $_FILES['anexos']['error'][$i] !== UPLOAD_ERR_OK) continue;
             $finfo = new finfo(FILEINFO_MIME_TYPE);
             $mime  = $finfo->file($tmp);
-            if (!in_array($mime, $permitidos)) continue;
+            if (!isset($permitidos[$mime])) continue;
             if ($_FILES['anexos']['size'][$i] > 10 * 1024 * 1024) continue;
-            $ext  = pathinfo($_FILES['anexos']['name'][$i], PATHINFO_EXTENSION);
-            $nome = 'fin_' . uniqid() . '.' . strtolower($ext);
+            // Extensão derivada do mime validado (nunca do nome enviado pelo usuário)
+            $nome = 'fin_' . uniqid() . '.' . $permitidos[$mime];
             if (move_uploaded_file($tmp, $uploads_dir . $nome)) {
                 db()->prepare("INSERT INTO financeiro_anexos (lancamento_id,nome_original,nome_arquivo,tipo_mime,tamanho,tipo_doc) VALUES (?,?,?,?,?,?)")
                     ->execute([$novo_id, $_FILES['anexos']['name'][$i], $nome, $mime, $_FILES['anexos']['size'][$i], $_POST['tipo_doc'][$i] ?? 'outro']);

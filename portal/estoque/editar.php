@@ -68,25 +68,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (!$erro) {
-                db()->prepare('UPDATE estoque_produtos SET
-                    categoria_id=?, nome=?, descricao=?, codigo_barras=?, unidade=?,
-                    preco_custo=?, preco_venda=?, estoque_minimo=?, imagem=?, ativo=?
-                    WHERE id=?')
-                    ->execute([
-                        $categoria_id,
-                        $nome,
-                        $descricao ?: null,
-                        $codigo_barras ?: null,
-                        $unidade,
-                        $preco_custo,
-                        $preco_venda,
-                        $estoque_minimo,
-                        $nova_imagem,
-                        $ativo,
-                        $id,
-                    ]);
-                header('Location: /portal/estoque/?editado=1');
-                exit;
+                try {
+                    db()->prepare('UPDATE estoque_produtos SET
+                        categoria_id=?, nome=?, descricao=?, codigo_barras=?, unidade=?,
+                        preco_custo=?, preco_venda=?, estoque_minimo=?, imagem=?, ativo=?
+                        WHERE id=?')
+                        ->execute([
+                            $categoria_id,
+                            $nome,
+                            $descricao ?: null,
+                            $codigo_barras ?: null,
+                            $unidade,
+                            $preco_custo,
+                            $preco_venda,
+                            $estoque_minimo,
+                            $nova_imagem,
+                            $ativo,
+                            $id,
+                        ]);
+                    header('Location: /portal/estoque/?editado=1');
+                    exit;
+                } catch (PDOException $e) {
+                    if ((int)$e->getCode() === 23000) {
+                        $erro = 'Esse código de barras já foi cadastrado por outra pessoa agora há pouco. Verifique e tente novamente.';
+                    } else {
+                        throw $e;
+                    }
+                }
             }
         }
     }

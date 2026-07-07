@@ -52,13 +52,32 @@ try {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         KEY idx_categoria (categoria_id),
-        KEY idx_codigo_barras (codigo_barras),
-        KEY idx_codigo_interno (codigo_interno),
+        UNIQUE KEY uq_codigo_barras (codigo_barras),
+        UNIQUE KEY uq_codigo_interno (codigo_interno),
         KEY idx_ativo (ativo),
         KEY idx_nome (nome),
         CONSTRAINT fk_produto_categoria FOREIGN KEY (categoria_id) REFERENCES estoque_categorias(id) ON DELETE RESTRICT
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     $msgs[] = ['ok', 'Tabela estoque_produtos OK'];
+
+    // Migração: converte os índices normais em UNIQUE para instalações já existentes
+    // (evita SKU/código de barras duplicado por cadastro simultâneo — race condition)
+    try {
+        $db->exec("ALTER TABLE estoque_produtos DROP INDEX idx_codigo_barras, ADD UNIQUE KEY uq_codigo_barras (codigo_barras)");
+        $msgs[] = ['ok', 'Índice único de código de barras aplicado'];
+    } catch (PDOException $e) { /* já é único, ou há duplicata — ver mensagem abaixo */
+        if (!str_contains($e->getMessage(), "check that column/key exists")) {
+            $msgs[] = ['erro', 'codigo_barras: ' . $e->getMessage()];
+        }
+    }
+    try {
+        $db->exec("ALTER TABLE estoque_produtos DROP INDEX idx_codigo_interno, ADD UNIQUE KEY uq_codigo_interno (codigo_interno)");
+        $msgs[] = ['ok', 'Índice único de código interno aplicado'];
+    } catch (PDOException $e) {
+        if (!str_contains($e->getMessage(), "check that column/key exists")) {
+            $msgs[] = ['erro', 'codigo_interno: ' . $e->getMessage()];
+        }
+    }
 
     $n = (int)$db->query("SELECT COUNT(*) FROM estoque_config")->fetchColumn();
     if ($n === 0) {

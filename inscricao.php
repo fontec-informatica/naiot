@@ -114,20 +114,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pode_inscrever && !$inscricao_ok) 
                 $token      = bin2hex(random_bytes(32));
                 $status_ini = ($valor_pago > 0) ? 'pendente' : 'confirmado';
 
-                db()->prepare("
-                    INSERT INTO inscricoes
-                        (evento_id, lote_id, nome, email, telefone, cpf, data_nascimento,
-                         valor_pago, forma_pagamento, status, observacoes, token, ip)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-                ")->execute([
-                    $id, $lote_id_final, $nome, $email, $telefone,
-                    $cpf ?: null, $dn ?: null, $valor_pago, $forma,
-                    $status_ini, $obs ?: null, $token,
-                    $_SERVER['REMOTE_ADDR'] ?? null,
-                ]);
+                // inscricoes/evento_lotes são MyISAM (sem transação/row-lock), então
+                // usamos LOCK TABLES para checar vagas e inserir de forma atômica e
+                // evitar overselling por inscrições simultâneas na última vaga.
+                db()->exec('LOCK TABLES inscricoes WRITE');
+                try {
+                    if ($evento['vagas']) {
+                        $cnt = db()->prepare("SELECT COUNT(*) FROM inscricoes WHERE evento_id = ? AND status != 'cancelado'");
+                        $cnt->execute([$id]);
+                        if ((int)$cnt->fetchColumn() >= $evento['vagas']) {
+                            $erro = 'As vagas deste evento acabaram de esgotar. Tente outro evento ou fale conosco.';
+                        }
+                    }
 
-                header("Location: /inscricao.php?id=$id&ok=$token");
-                exit;
+                    if (!$erro && $lote_id_final) {
+                        foreach ($lotes as $l) {
+                            if ((int)$l['id'] === $lote_id_final && $l['vagas'] !== null) {
+                                $cnt = db()->prepare("SELECT COUNT(*) FROM inscricoes WHERE lote_id = ? AND status != 'cancelado'");
+                                $cnt->execute([$lote_id_final]);
+                                if ((int)$cnt->fetchColumn() >= $l['vagas']) {
+                                    $erro = 'As vagas desta categoria acabaram de esgotar. Escolha outra categoria.';
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!$erro) {
+                        db()->prepare("
+                            INSERT INTO inscricoes
+                                (evento_id, lote_id, nome, email, telefone, cpf, data_nascimento,
+                                 valor_pago, forma_pagamento, status, observacoes, token, ip)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        ")->execute([
+                            $id, $lote_id_final, $nome, $email, $telefone,
+                            $cpf ?: null, $dn ?: null, $valor_pago, $forma,
+                            $status_ini, $obs ?: null, $token,
+                            $_SERVER['REMOTE_ADDR'] ?? null,
+                        ]);
+                    }
+                } finally {
+                    db()->exec('UNLOCK TABLES');
+                }
+
+                if (!$erro) {
+                    header("Location: /inscricao.php?id=$id&ok=$token");
+                    exit;
+                }
             }
         }
     }

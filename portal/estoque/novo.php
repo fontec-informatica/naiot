@@ -70,26 +70,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ->execute([$config['id']]);
                 }
 
-                db()->prepare('INSERT INTO estoque_produtos
-                    (categoria_id, nome, descricao, codigo_barras, codigo_interno, unidade, preco_custo, preco_venda, estoque_atual, estoque_minimo, imagem, ativo)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
-                    ->execute([
-                        $categoria_id,
-                        $nome,
-                        $descricao ?: null,
-                        $codigo_barras ?: null,
-                        $codigo_interno,
-                        $unidade,
-                        $preco_custo,
-                        $preco_venda,
-                        $estoque_inicial,
-                        $estoque_minimo,
-                        $imagem,
-                        $ativo,
-                    ]);
+                try {
+                    db()->prepare('INSERT INTO estoque_produtos
+                        (categoria_id, nome, descricao, codigo_barras, codigo_interno, unidade, preco_custo, preco_venda, estoque_atual, estoque_minimo, imagem, ativo)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+                        ->execute([
+                            $categoria_id,
+                            $nome,
+                            $descricao ?: null,
+                            $codigo_barras ?: null,
+                            $codigo_interno,
+                            $unidade,
+                            $preco_custo,
+                            $preco_venda,
+                            $estoque_inicial,
+                            $estoque_minimo,
+                            $imagem,
+                            $ativo,
+                        ]);
 
-                header('Location: /portal/estoque/?criado=1');
-                exit;
+                    header('Location: /portal/estoque/?criado=1');
+                    exit;
+                } catch (PDOException $e) {
+                    if ((int)$e->getCode() === 23000) {
+                        // Duas pessoas cadastraram ao mesmo tempo (código de barras ou SKU duplicado)
+                        $erro = 'Esse código de barras já foi cadastrado por outra pessoa agora há pouco. Verifique e tente novamente.';
+                    } else {
+                        throw $e;
+                    }
+                }
             }
         }
     }
