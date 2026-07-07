@@ -200,10 +200,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
                             continue;
                         }
 
-                        // Parse valor
+                        // Parse valor — aceita "150,00", "150.00", "1.234,56" e "1,234.56"
                         $raw_valor = str_replace(['R$','r$',' '], '', $raw_valor);
-                        $raw_valor = str_replace('.', '', $raw_valor); // remove separador de milhar
-                        $raw_valor = str_replace(',', '.', $raw_valor);
+                        $tem_virgula = str_contains($raw_valor, ',');
+                        $tem_ponto   = str_contains($raw_valor, '.');
+                        if ($tem_virgula && $tem_ponto) {
+                            // o separador mais à direita é o decimal; o outro é milhar
+                            if (strrpos($raw_valor, ',') > strrpos($raw_valor, '.')) {
+                                $raw_valor = str_replace('.', '', $raw_valor);
+                                $raw_valor = str_replace(',', '.', $raw_valor);
+                            } else {
+                                $raw_valor = str_replace(',', '', $raw_valor);
+                            }
+                        } elseif ($tem_virgula) {
+                            $raw_valor = str_replace(',', '.', $raw_valor);
+                        }
+                        // só ponto (ou nenhum separador): já está no formato correto
                         $valor = (float)$raw_valor;
                         if ($valor <= 0) {
                             $erros_linha[] = "Linha $numLinha: valor inválido ou zero";

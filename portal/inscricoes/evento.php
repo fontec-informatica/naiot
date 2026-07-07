@@ -37,6 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
 }
 
 /* ── Exportar CSV ── */
+function csv_seguro(?string $v): string {
+    $v = (string)($v ?? '');
+    // Neutraliza CSV/Formula Injection: campo vindo de formulário público
+    // não pode virar fórmula ao ser aberto no Excel/LibreOffice.
+    return preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v;
+}
+
 if (isset($_GET['exportar'])) {
     $rows = db()->prepare("
         SELECT i.*, l.nome AS lote_nome
@@ -52,13 +59,13 @@ if (isset($_GET['exportar'])) {
     fputcsv($out, ['#','Nome','E-mail','Telefone','CPF','Nascimento','Lote','Valor','Pagamento','Status','Observações','Check-in','Data Inscrição'], ';');
     foreach ($rows->fetchAll() as $r) {
         fputcsv($out, [
-            $r['id'], $r['nome'], $r['email'], $r['telefone'] ?? '', $r['cpf'] ?? '',
+            $r['id'], csv_seguro($r['nome']), csv_seguro($r['email']), csv_seguro($r['telefone'] ?? ''), csv_seguro($r['cpf'] ?? ''),
             $r['data_nascimento'] ? date('d/m/Y', strtotime($r['data_nascimento'])) : '',
             $r['lote_nome'] ?? '',
             number_format($r['valor_pago'], 2, ',', '.'),
             $r['forma_pagamento'],
             $r['status'],
-            $r['observacoes'] ?? '',
+            csv_seguro($r['observacoes'] ?? ''),
             $r['checkin_at'] ? date('d/m/Y H:i', strtotime($r['checkin_at'])) : '',
             date('d/m/Y H:i', strtotime($r['created_at'])),
         ], ';');
