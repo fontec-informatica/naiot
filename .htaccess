@@ -7,6 +7,14 @@
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
+# ── /links sem barra no final (arquivo, sem diretório envolvido) ─────────
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/links/$
+    RewriteRule ^ /links [R=301,L]
+
+    RewriteRule ^links$ links.php [L]
+</IfModule>
+
 # ── Desabilitar listagem de diretórios ────────────────────────────────────
 Options -Indexes
 
