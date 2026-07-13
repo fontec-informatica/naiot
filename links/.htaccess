@@ -1,0 +1,14 @@
+# Impedir o redirect automático do Apache que adiciona "/" no final da URL
+DirectorySlash Off
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /links/
+
+    # Se acessarem com a barra no final, redirecionar para sem barra
+    RewriteCond %{REQUEST_URI} ^/links/$
+    RewriteRule ^ /links [R=301,L]
+
+    # Servir o index.php normalmente quando acessarem /links
+    RewriteRule ^$ index.php [L]
+</IfModule>
