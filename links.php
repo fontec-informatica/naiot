@@ -232,7 +232,7 @@
         <div class="logo-wrap">
             <img src="/assets/img/logo.png" alt="NAIOT">
         </div>
-        <h1>NAIOT</h1>
+        <h1>Comunidade Naiot</h1>
         <p>Comunidade Católica Senhor Jesus</p>
         <span class="badge">✝ Links Oficiais</span>
     </div>
