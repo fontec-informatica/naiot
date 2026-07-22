@@ -6,6 +6,7 @@
     <title>NAIOT — Links</title>
     <meta name="description" content="Todos os links oficiais da NAIOT — Comunidade Católica Senhor Jesus, Campo Limpo de Goiás, GO.">
     <meta name="robots" content="index, follow">
+    <link rel="icon" href="/assets/img/logo.png" type="image/png">
 
     <!-- Open Graph -->
     <meta property="og:title" content="NAIOT — Links Oficiais">
