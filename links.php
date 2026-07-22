@@ -14,7 +14,7 @@
     <meta property="og:url" content="https://naiot.com.br/links">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
@@ -32,7 +32,7 @@
         }
 
         body {
-            font-family: 'EB Garamond', Georgia, serif;
+            font-family: 'DM Sans', sans-serif;
             background: var(--green-pale);
             min-height: 100vh;
             display: flex;
@@ -89,19 +89,16 @@
         }
 
         .header h1 {
-            font-family: 'Cinzel', serif;
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: .04em;
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
             color: var(--green-dk);
             margin-bottom: 6px;
         }
 
         .header p {
-            font-size: 15px;
+            font-size: 14px;
             color: var(--cinza);
             font-weight: 400;
-            font-style: italic;
         }
 
         .badge {
@@ -109,7 +106,6 @@
             margin-top: 10px;
             background: var(--green);
             color: #fff;
-            font-family: 'Cinzel', serif;
             font-size: 11px;
             font-weight: 600;
             letter-spacing: 1px;
@@ -163,7 +159,6 @@
 
         .link-btn .text {
             flex: 1;
-            font-family: 'EB Garamond', Georgia, serif;
         }
 
         .link-btn .text span {
@@ -172,7 +167,6 @@
             font-weight: 400;
             color: #999;
             margin-top: 1px;
-            font-style: italic;
         }
 
         .link-btn .arrow {
