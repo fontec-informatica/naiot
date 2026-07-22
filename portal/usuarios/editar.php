@@ -16,9 +16,17 @@ if (!$u) { header('Location: /portal/usuarios/'); exit; }
 
 $eh_proprio = ($id === ($_SESSION['usuario_id'] ?? 0));
 $sou_admin  = (($_SESSION['usuario_perfil'] ?? '') === 'admin');
+$eh_mestre  = !empty($u['mestre']);
 
 // Usuário não-admin não pode visualizar/editar a conta de um administrador
 if ($u['perfil'] === 'admin' && !$sou_admin && !$eh_proprio) {
+    http_response_code(403);
+    include dirname(__DIR__) . '/403.php';
+    exit;
+}
+
+// A conta mestre só pode ser vista/editada por ela mesma — nem outro admin acessa
+if ($eh_mestre && !$eh_proprio) {
     http_response_code(403);
     include dirname(__DIR__) . '/403.php';
     exit;

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email         VARCHAR(180)  NOT NULL UNIQUE,
     senha_hash    VARCHAR(255)  NOT NULL,
     perfil        VARCHAR(255)  NOT NULL DEFAULT 'secretaria',
+    mestre        TINYINT(1)    NOT NULL DEFAULT 0,
     ativo         TINYINT(1)    NOT NULL DEFAULT 1,
     criado_em     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ultimo_acesso DATETIME      NULL
@@ -15,12 +16,15 @@ CREATE TABLE IF NOT EXISTS usuarios (
 
 -- Usuário admin inicial — TROQUE A SENHA APÓS O PRIMEIRO LOGIN
 -- Senha padrão: Naiot@2024
-INSERT INTO usuarios (nome, email, senha_hash, perfil)
+-- mestre=1: nenhum outro usuário (nem outro admin) pode ver, editar ou excluir esta conta
+INSERT INTO usuarios (nome, usuario, email, senha_hash, perfil, mestre)
 VALUES (
     'Administrador',
+    'admin',
     'admin@naiot.com.br',
     '$2y$12$RxNz5D1HfABxr.cXzJr3.O9bLZbHvSwWAJiMzF7KAHGfFAZGcTm.S',
-    'admin'
+    'admin',
+    1
 );
 
 -- Tabela para controle de tentativas de login (rate limiting / brute force)

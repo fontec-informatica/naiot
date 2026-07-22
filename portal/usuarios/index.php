@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     exit;
 }
 
-$usuarios = db()->query('SELECT id, nome, usuario, email, perfil, ativo, criado_em, ultimo_acesso FROM usuarios ORDER BY nome')->fetchAll();
+$usuarios = db()->query('SELECT id, nome, usuario, email, perfil, mestre, ativo, criado_em, ultimo_acesso FROM usuarios ORDER BY nome')->fetchAll();
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
@@ -65,6 +65,9 @@ include dirname(__DIR__) . '/_layout.php';
             $cls = $u['perfil'] === 'admin' ? 'badge-admin' : 'badge-secretaria';
           ?>
           <span class="badge <?= $cls ?>"><?= htmlspecialchars($lbl) ?></span>
+          <?php if ($u['mestre']): ?>
+            <span class="badge badge-mestre">Mestre</span>
+          <?php endif; ?>
         </td>
         <td style="color:var(--cinza3);font-size:.82rem">
           <?= $u['ultimo_acesso'] ? date('d/m/Y H:i', strtotime($u['ultimo_acesso'])) : '—' ?>
@@ -77,8 +80,10 @@ include dirname(__DIR__) . '/_layout.php';
           <?php endif; ?>
         </td>
         <td style="display:flex;gap:8px">
+          <?php if (!$u['mestre'] || $u['id'] === ($_SESSION['usuario_id'] ?? 0)): ?>
           <a href="/portal/usuarios/editar.php?id=<?= $u['id'] ?>"
              class="btn btn-ghost btn-sm">Editar</a>
+          <?php endif; ?>
           <?php if ($u['perfil'] !== 'admin'): ?>
           <form method="post">
             <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
