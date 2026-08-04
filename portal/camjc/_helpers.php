@@ -45,3 +45,14 @@ function camjc_unidade_padrao(): array {
     }
     return $unidade;
 }
+
+/* ── Duração do programa terapêutico ── */
+const CAMJC_DURACAO_PROGRAMA_MESES = 9;
+const CAMJC_STATUS_SAIDA = ['alta', 'evasao', 'transferencia', 'nao_admitida'];
+
+/** Previsão de conclusão do programa: data de acolhimento + 9 meses. */
+function camjc_previsao_saida(string $data_acolhimento): string {
+    $d = new DateTime($data_acolhimento);
+    $d->modify('+' . CAMJC_DURACAO_PROGRAMA_MESES . ' months');
+    return $d->format('Y-m-d');
+}

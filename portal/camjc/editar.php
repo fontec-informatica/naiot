@@ -74,6 +74,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $status = 'acolhida';
             }
 
+            $data_saida   = $_POST['data_saida'] ?: null;
+            $motivo_saida = trim($_POST['motivo_saida'] ?? '') ?: null;
+            if (in_array($status, CAMJC_STATUS_SAIDA, true) && !$data_saida) {
+                $data_saida = ($status === 'alta' && $data_acolhimento)
+                    ? camjc_previsao_saida($data_acolhimento)
+                    : date('Y-m-d');
+            }
+
             // Foto — opcional na triagem, importante ao admitir (não obrigatória aqui)
             $nova_foto = $a['foto'];
             $foto_erro = '';
@@ -125,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     UPDATE camjc_acolhidas SET
                         nome=?, foto=?, data_nasc=?, estado_civil=?, rg=?, cpf=?, endereco=?, bairro=?, cep=?, cidade=?, estado=?,
                         telefone=?, celular=?, responsavel_nome=?, responsavel_endereco=?, responsavel_rg=?, responsavel_cpf=?,
-                        responsavel_data_nasc=?, responsavel_telefone=?, status=?, data_acolhimento=?, atualizado_em=NOW()
+                        responsavel_data_nasc=?, responsavel_telefone=?, status=?, data_acolhimento=?, data_saida=?, motivo_saida=?, atualizado_em=NOW()
                     WHERE id=?
                 ")->execute([
                     $nome,
@@ -149,6 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     trim($_POST['responsavel_telefone'] ?? '') ?: null,
                     $status,
                     $data_acolhimento,
+                    $data_saida,
+                    $motivo_saida,
                     $id,
                 ]);
 
@@ -310,6 +320,18 @@ include dirname(__DIR__) . '/_layout.php';
         <div class="form-group">
           <label for="data_acolhimento">Data de acolhimento</label>
           <input type="date" id="data_acolhimento" name="data_acolhimento" value="<?= $v('data_acolhimento', $a['data_acolhimento']) ?>">
+          <span class="form-hint" id="previsao_saida_hint" style="display:none"></span>
+        </div>
+      </div>
+      <div class="form-row" id="saida_wrap" style="display:none">
+        <div class="form-group">
+          <label for="data_saida">Data de saída</label>
+          <input type="date" id="data_saida" name="data_saida" value="<?= $v('data_saida', $a['data_saida']) ?>">
+          <span class="form-hint">Alta: sugerida automaticamente 9 meses após o acolhimento — ajuste se houver cerimônia em outra data. Demais saídas: sugerida a data de hoje.</span>
+        </div>
+        <div class="form-group">
+          <label for="motivo_saida">Motivo / observações da saída</label>
+          <input type="text" id="motivo_saida" name="motivo_saida" value="<?= $v('motivo_saida', $a['motivo_saida']) ?>">
         </div>
       </div>
     </div>
@@ -413,17 +435,61 @@ include dirname(__DIR__) . '/_layout.php';
     return hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
   }
 
+  // ── Status → Data de saída + previsão de conclusão (9 meses) ──
+  var STATUS_SAIDA = ['alta', 'evasao', 'transferencia', 'nao_admitida'];
+  var wrapSaida     = document.getElementById('saida_wrap');
+  var campoSaida    = document.getElementById('data_saida');
+  var hintPrevisao  = document.getElementById('previsao_saida_hint');
+
+  function somarMeses(dataISO, meses) {
+    var p = dataISO.split('-');
+    var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+    d.setMonth(d.getMonth() + meses);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function fmtBR(dataISO) {
+    var p = dataISO.split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+
+  function atualizarPrevisao() {
+    if (selStatus.value === 'acolhida' && campoData.value) {
+      hintPrevisao.textContent = 'Previsão de conclusão do programa (9 meses): ' + fmtBR(somarMeses(campoData.value, 9));
+      hintPrevisao.style.display = '';
+    } else {
+      hintPrevisao.style.display = 'none';
+    }
+  }
+
+  function atualizarSaida() {
+    var mostrar = STATUS_SAIDA.indexOf(selStatus.value) !== -1;
+    wrapSaida.style.display = mostrar ? '' : 'none';
+    if (mostrar && !campoSaida.value) {
+      if (selStatus.value === 'alta') {
+        campoSaida.value = somarMeses(campoData.value || hojeISO(), 9);
+      } else {
+        campoSaida.value = hojeISO();
+      }
+    }
+  }
+
   if (selStatus && campoData) {
     selStatus.addEventListener('change', function () {
       if (selStatus.value === 'acolhida' && !campoData.value) {
         campoData.value = hojeISO();
       }
+      atualizarPrevisao();
+      atualizarSaida();
     });
     campoData.addEventListener('change', function () {
       if (campoData.value && STATUS_PRE_ACOLHIMENTO.indexOf(selStatus.value) !== -1) {
         selStatus.value = 'acolhida';
       }
+      atualizarPrevisao();
     });
+    atualizarPrevisao();
+    atualizarSaida();
   }
 
   // ── Foto: seleção de arquivo mostra preview ──

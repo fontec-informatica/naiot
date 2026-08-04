@@ -68,6 +68,17 @@ try {
         $msgs[] = ['ok', 'Coluna foto adicionada em camjc_acolhidas'];
     }
 
+    // Migração idempotente: data e motivo de saída (alta/evasão/transferência/não admitida)
+    $col = $db->query("
+        SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'camjc_acolhidas' AND COLUMN_NAME = 'data_saida'
+    ")->fetchColumn();
+    if (!$col) {
+        $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN data_saida DATE NULL AFTER data_acolhimento");
+        $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN motivo_saida TEXT NULL AFTER data_saida");
+        $msgs[] = ['ok', 'Colunas data_saida e motivo_saida adicionadas em camjc_acolhidas'];
+    }
+
     $db->exec("CREATE TABLE IF NOT EXISTS camjc_triagens (
         id                              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         acolhida_id                     INT UNSIGNED NOT NULL,

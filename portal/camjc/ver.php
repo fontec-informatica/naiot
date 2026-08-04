@@ -165,6 +165,15 @@ include dirname(__DIR__) . '/_layout.php';
       <?php if ($end): ?><div class="cj-campo"><div class="cj-campo-label">Endereço</div><div class="cj-campo-val"><?= htmlspecialchars($end) ?><?= $a['cep'] ? ' — CEP ' . htmlspecialchars($a['cep']) : '' ?></div></div><?php endif; ?>
       <?php if ($a['telefone'] || $a['celular']): ?><div class="cj-campo"><div class="cj-campo-label">Contato</div><div class="cj-campo-val"><?= htmlspecialchars(implode(' / ', array_filter([$a['telefone'], $a['celular']]))) ?></div></div><?php endif; ?>
       <?php if ($a['data_acolhimento']): ?><div class="cj-campo"><div class="cj-campo-label">Data de acolhimento</div><div class="cj-campo-val"><?= date('d/m/Y', strtotime($a['data_acolhimento'])) ?></div></div><?php endif; ?>
+      <?php if ($a['status'] === 'acolhida' && $a['data_acolhimento']): ?>
+      <div class="cj-campo"><div class="cj-campo-label">Previsão de conclusão (9 meses)</div><div class="cj-campo-val"><?= date('d/m/Y', strtotime(camjc_previsao_saida($a['data_acolhimento']))) ?></div></div>
+      <?php endif; ?>
+      <?php if ($a['data_saida']): ?>
+      <div class="cj-campo"><div class="cj-campo-label">Data de saída</div><div class="cj-campo-val"><?= date('d/m/Y', strtotime($a['data_saida'])) ?></div></div>
+      <?php endif; ?>
+      <?php if ($a['motivo_saida']): ?>
+      <div class="cj-campo"><div class="cj-campo-label">Motivo da saída</div><div class="cj-campo-val"><?= nl2br(htmlspecialchars($a['motivo_saida'])) ?></div></div>
+      <?php endif; ?>
       <div class="cj-campo"><div class="cj-campo-label">Unidade</div><div class="cj-campo-val"><?= htmlspecialchars($a['unidade_nome']) ?></div></div>
     </div>
 

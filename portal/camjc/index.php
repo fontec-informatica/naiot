@@ -168,6 +168,18 @@ include dirname(__DIR__) . '/_layout.php';
             Acolhida em <?= date('d/m/Y', strtotime($a['data_acolhimento'])) ?>
           </div>
           <?php endif; ?>
+          <?php if ($a['status'] === 'acolhida' && $a['data_acolhimento']): ?>
+          <div class="cj-info-row">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Previsão: <?= date('d/m/Y', strtotime(camjc_previsao_saida($a['data_acolhimento']))) ?>
+          </div>
+          <?php endif; ?>
+          <?php if ($a['data_saida']): ?>
+          <div class="cj-info-row">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            Saída em <?= date('d/m/Y', strtotime($a['data_saida'])) ?>
+          </div>
+          <?php endif; ?>
           <div class="cj-info-row">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
             <?= (int)$a['total_triagens'] ?> triagem<?= (int)$a['total_triagens'] === 1 ? '' : 'ns' ?>
