@@ -44,12 +44,18 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
 .assinatura-linha .linha { border-bottom: 1px solid #000; width: 100%; height: 20pt; }
 .assinatura-linha .rot { margin-top: 3pt; font-size: 9.5pt; }
 .rodape { text-align: center; font-size: 8.5pt; line-height: 1.6; margin-top: 20pt; border-top: 1px solid #000; padding-top: 5pt; }
+.rodape-print { display: none; }
 
 @media print {
   body { background: #fff; margin: 0; padding: 0 }
   .barra-acoes { display: none }
   @page { size: A4; margin: 0 }
-  .pagina { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; }
+  .pagina { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; padding-bottom: 26mm !important; }
+  .rodape { display: none !important }
+  .rodape-print {
+    display: block !important; position: fixed; left: 16mm; right: 16mm; bottom: 6mm;
+    text-align: center; font-size: 8.5pt; line-height: 1.6; border-top: 1px solid #000; padding-top: 5pt; background: #fff;
+  }
 }
 </style>
 </head>
@@ -150,6 +156,11 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
     GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
     Comunidade Católica Senhor Jesus — Mantenedora da Casa de Acolhimento Mulheres de Jesus Cristo
   </div>
+</div>
+
+<div class="rodape-print">
+  GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
+  Comunidade Católica Senhor Jesus — Mantenedora da Casa de Acolhimento Mulheres de Jesus Cristo
 </div>
 
 <script>
