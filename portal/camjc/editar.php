@@ -3,6 +3,13 @@ require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin', 'camjc']);
 require_once __DIR__ . '/_helpers.php';
 
+// Permissions-Policy global do portal bloqueia câmera (camera=()) — sem isso o
+// navegador nem chega a pedir permissão ao usuário, já rejeita direto.
+// Libera câmera só nesta página (mesmo padrão que o login.php usa pra CSP).
+if (!headers_sent()) {
+    header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
+}
+
 $id = (int)($_GET['id'] ?? 0);
 if (!$id) { header('Location: /portal/camjc/'); exit; }
 

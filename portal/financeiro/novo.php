@@ -2,6 +2,12 @@
 require_once dirname(__DIR__) . '/auth.php';
 requer_perfil(['admin','financeiro']);
 
+// Permissions-Policy global do portal bloqueia câmera (camera=()) — sem isso o
+// navegador nem chega a pedir permissão ao usuário, já rejeita direto.
+if (!headers_sent()) {
+    header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()');
+}
+
 $titulo = 'Novo Lançamento';
 $pagina_ativa = 'financeiro';
 $erro = '';
