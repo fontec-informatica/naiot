@@ -104,6 +104,10 @@ $projetos_vida = db()->prepare("SELECT * FROM camjc_projetos_vida WHERE acolhida
 $projetos_vida->execute([$id]);
 $projetos_vida = $projetos_vida->fetchAll();
 
+$ressocializacoes = db()->prepare("SELECT * FROM camjc_ressocializacao WHERE acolhida_id = ? ORDER BY data_resposta DESC, id DESC");
+$ressocializacoes->execute([$id]);
+$ressocializacoes = $ressocializacoes->fetchAll();
+
 $anexos = db()->prepare("SELECT * FROM camjc_anexos WHERE acolhida_id = ? ORDER BY criado_em DESC");
 $anexos->execute([$id]);
 $anexos = $anexos->fetchAll();
@@ -165,6 +169,7 @@ include dirname(__DIR__) . '/_layout.php';
     <a href="/portal/camjc/anamnese_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova anamnese</a>
     <a href="/portal/camjc/pas_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova evolução/PAS</a>
     <a href="/portal/camjc/projeto_vida_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Novo projeto de vida</a>
+    <a href="/portal/camjc/ressoc_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova avaliação de ressocialização</a>
     <?php if ($triagens): ?>
     <a href="/portal/camjc/imprimir.php?id=<?= $triagens[0]['id'] ?>" target="_blank" class="btn btn-primary btn-sm">🖨 Imprimir triagem</a>
     <?php endif; ?>
@@ -184,6 +189,8 @@ include dirname(__DIR__) . '/_layout.php';
 <?php if (!empty($_GET['saida_editada'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Saída temporária atualizada.</div><?php endif; ?>
 <?php if (!empty($_GET['projeto_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Projeto de Vida salvo com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['projeto_editado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Projeto de Vida atualizado.</div><?php endif; ?>
+<?php if (!empty($_GET['ressoc_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Avaliação de ressocialização salva com sucesso.</div><?php endif; ?>
+<?php if (!empty($_GET['ressoc_editada'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Avaliação de ressocialização atualizada.</div><?php endif; ?>
 <?php if ($erro): ?><div class="alerta alerta-erro" style="margin-bottom:16px"><?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
 <div class="cj-ver-grid">
@@ -439,6 +446,33 @@ include dirname(__DIR__) . '/_layout.php';
       <?php endif; ?>
       <div class="cj-campo">
         <div class="cj-campo-vazio">Conteúdo completo (7 áreas de saúde) disponível na impressão.</div>
+      </div>
+    </div>
+    <?php endforeach; endif; ?>
+
+    <?php if (!empty($ressocializacoes)): foreach ($ressocializacoes as $rz): ?>
+    <div class="cj-card cj-triagem-block">
+      <div class="cj-card-head" style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Avaliação de Ressocialização — <?= date('d/m/Y', strtotime($rz['data_resposta'])) ?><?= $rz['numero_visita'] ? ' (' . htmlspecialchars($rz['numero_visita']) . ' visita)' : '' ?></h3>
+        <div style="display:flex;gap:12px">
+          <a href="/portal/camjc/ressoc_editar.php?id=<?= $rz['id'] ?>" style="font-size:.75rem;color:var(--muted)">Editar</a>
+          <a href="/portal/camjc/ressoc_imprimir.php?id=<?= $rz['id'] ?>" target="_blank" style="font-size:.75rem;color:var(--green)">🖨 Imprimir</a>
+        </div>
+      </div>
+      <?php if (!empty($rz['nome_familiar'])): ?>
+      <div class="cj-campo">
+        <div class="cj-campo-label">Respondido por</div>
+        <div class="cj-campo-val"><?= htmlspecialchars($rz['nome_familiar']) ?><?= $rz['grau_parentesco'] ? ' (' . htmlspecialchars($rz['grau_parentesco']) . ')' : '' ?></div>
+      </div>
+      <?php endif; ?>
+      <?php if (!empty($rz['observacoes_finais'])): ?>
+      <div class="cj-campo">
+        <div class="cj-campo-label">Considerações finais da família</div>
+        <div class="cj-campo-val"><?= nl2br(htmlspecialchars($rz['observacoes_finais'])) ?></div>
+      </div>
+      <?php endif; ?>
+      <div class="cj-campo">
+        <div class="cj-campo-vazio">Questionário completo (~90 perguntas, 23 seções) disponível na impressão.</div>
       </div>
     </div>
     <?php endforeach; endif; ?>

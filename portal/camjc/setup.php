@@ -237,6 +237,23 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $msgs[] = ['ok', 'Tabela camjc_projetos_vida OK'];
 
+    $db->exec("CREATE TABLE IF NOT EXISTS camjc_ressocializacao (
+        id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        acolhida_id          INT UNSIGNED NOT NULL,
+        nome_familiar        VARCHAR(150) NULL,
+        grau_parentesco      VARCHAR(80) NULL,
+        numero_visita        VARCHAR(10) NULL,
+        data_resposta        DATE NOT NULL,
+        respostas             TEXT NULL,
+        observacoes_finais   TEXT NULL,
+        criado_por           INT UNSIGNED NULL,
+        criado_em            DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        atualizado_em        DATETIME NULL,
+        KEY idx_acolhida (acolhida_id),
+        CONSTRAINT fk_ressoc_acolhida FOREIGN KEY (acolhida_id) REFERENCES camjc_acolhidas(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $msgs[] = ['ok', 'Tabela camjc_ressocializacao OK'];
+
     $db->exec("CREATE TABLE IF NOT EXISTS camjc_termos_assinados (
         id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         acolhida_id     INT UNSIGNED NOT NULL,
