@@ -6,12 +6,14 @@ require_once __DIR__ . '/_helpers.php';
 $titulo       = 'Casa das Mulheres';
 $pagina_ativa = 'camjc';
 
+$eh_admin      = ($_SESSION['usuario_perfil'] ?? '') === 'admin';
 $status_filtro = $_GET['status'] ?? '';
 $busca         = trim($_GET['q'] ?? '');
+$ver_lixeira   = $eh_admin && $status_filtro === 'lixeira';
 
-$where  = "WHERE 1=1";
+$where  = $ver_lixeira ? "WHERE a.excluido_em IS NOT NULL" : "WHERE a.excluido_em IS NULL";
 $params = [];
-if ($status_filtro && isset(CAMJC_STATUS[$status_filtro])) {
+if (!$ver_lixeira && $status_filtro && isset(CAMJC_STATUS[$status_filtro])) {
     $where .= " AND a.status = ?";
     $params[] = $status_filtro;
 }
@@ -31,9 +33,10 @@ $st = db()->prepare("
 $st->execute($params);
 $acolhidas = $st->fetchAll();
 
-// Contagem por status (para os filtros da barra lateral)
-$contagens = db()->query("SELECT status, COUNT(*) AS total FROM camjc_acolhidas GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
+// Contagem por status (para os filtros da barra lateral) — exclui registros na lixeira
+$contagens = db()->query("SELECT status, COUNT(*) AS total FROM camjc_acolhidas WHERE excluido_em IS NULL GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
 $total_geral = array_sum($contagens);
+$total_lixeira = $eh_admin ? (int)db()->query("SELECT COUNT(*) FROM camjc_acolhidas WHERE excluido_em IS NOT NULL")->fetchColumn() : 0;
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
@@ -87,7 +90,7 @@ include dirname(__DIR__) . '/_layout.php';
 
 <div class="cj-header">
   <div>
-    <div class="cj-titulo"><?= $status_filtro ? htmlspecialchars(camjc_status_label($status_filtro)) : 'Todas as acolhidas' ?></div>
+    <div class="cj-titulo"><?= $ver_lixeira ? 'Lixeira' : ($status_filtro ? htmlspecialchars(camjc_status_label($status_filtro)) : 'Todas as acolhidas') ?></div>
     <div class="cj-sub"><?= count($acolhidas) ?> registro<?= count($acolhidas) === 1 ? '' : 's' ?> encontrado<?= count($acolhidas) === 1 ? '' : 's' ?></div>
   </div>
   <div class="cj-actions">
@@ -98,6 +101,8 @@ include dirname(__DIR__) . '/_layout.php';
     <a href="/portal/camjc/nova.php" class="btn btn-primary btn-sm">+ Nova candidata</a>
   </div>
 </div>
+
+<?php if (!empty($_GET['excluido_perm'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Registro excluído permanentemente.</div><?php endif; ?>
 
 <div class="cj-layout">
   <div class="cj-sidebar">
@@ -119,6 +124,15 @@ include dirname(__DIR__) . '/_layout.php';
         </a>
       </li>
       <?php endforeach; ?>
+      <?php if ($eh_admin): ?>
+      <li style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px">
+        <a href="/portal/camjc/?status=lixeira" class="<?= $ver_lixeira ? 'sel' : '' ?>">
+          <span class="cj-dot" style="background:#6b7280"></span>
+          Lixeira
+          <span class="cj-count"><?= $total_lixeira ?></span>
+        </a>
+      </li>
+      <?php endif; ?>
     </ul>
   </div>
 
@@ -187,7 +201,9 @@ include dirname(__DIR__) . '/_layout.php';
         </div>
         <div class="cj-card-footer">
           <a href="/portal/camjc/ver.php?id=<?= $a['id'] ?>" class="btn btn-ghost btn-sm">Ver</a>
+          <?php if (!$ver_lixeira): ?>
           <a href="/portal/camjc/editar.php?id=<?= $a['id'] ?>" class="btn btn-ghost btn-sm">Editar</a>
+          <?php endif; ?>
         </div>
       </div>
       <?php endforeach; endif; ?>

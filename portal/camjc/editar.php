@@ -17,6 +17,7 @@ $st = db()->prepare("SELECT * FROM camjc_acolhidas WHERE id = ?");
 $st->execute([$id]);
 $a = $st->fetch();
 if (!$a) { header('Location: /portal/camjc/'); exit; }
+if (!empty($a['excluido_em'])) { header("Location: /portal/camjc/ver.php?id={$id}"); exit; }
 
 $st2 = db()->prepare("SELECT * FROM camjc_triagens WHERE acolhida_id = ? ORDER BY data_triagem DESC, id DESC LIMIT 1");
 $st2->execute([$id]);

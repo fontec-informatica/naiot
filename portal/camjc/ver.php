@@ -78,6 +78,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido() && ($_POST['acao'] ??
     exit;
 }
 
+// Enviar para a lixeira (soft-delete) — dado sensível nunca é apagado direto
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido() && ($_POST['acao'] ?? '') === 'excluir') {
+    db()->prepare("UPDATE camjc_acolhidas SET excluido_em = NOW(), excluido_por = ? WHERE id = ?")
+        ->execute([$_SESSION['usuario_id'] ?? null, $id]);
+    camjc_log('excluiu', $id, $a['nome']);
+    header("Location: /portal/camjc/ver.php?id={$id}&excluido=1");
+    exit;
+}
+
+// Restaurar da lixeira
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido() && ($_POST['acao'] ?? '') === 'restaurar') {
+    db()->prepare("UPDATE camjc_acolhidas SET excluido_em = NULL, excluido_por = NULL WHERE id = ?")
+        ->execute([$id]);
+    camjc_log('restaurou', $id, $a['nome']);
+    header("Location: /portal/camjc/ver.php?id={$id}&restaurado=1");
+    exit;
+}
+
+// Exclusão permanente — só admin, só a partir da lixeira, exige digitar o nome exato
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido() && ($_POST['acao'] ?? '') === 'excluir_permanente') {
+    if (($_SESSION['usuario_perfil'] ?? '') !== 'admin') {
+        $erro = 'Apenas administradores podem excluir permanentemente.';
+    } elseif (empty($a['excluido_em'])) {
+        $erro = 'Envie o registro para a lixeira antes de excluir permanentemente.';
+    } elseif (trim($_POST['confirmar_nome'] ?? '') !== $a['nome']) {
+        $erro = 'O nome digitado não confere com o nome da acolhida. Exclusão cancelada.';
+    } else {
+        $nome_bak = $a['nome'];
+        $cpf_bak  = $a['cpf'];
+        $db = db();
+        try {
+            $db->beginTransaction();
+
+            $anx_arqs = $db->prepare("SELECT nome_arquivo FROM camjc_anexos WHERE acolhida_id = ?");
+            $anx_arqs->execute([$id]);
+            $arquivos_remover = array_column($anx_arqs->fetchAll(), 'nome_arquivo');
+            $foto_remover = $a['foto'] ?? null;
+
+            foreach ([
+                'camjc_anexos', 'camjc_termos_assinados', 'camjc_saidas_temporarias',
+                'camjc_ressocializacao', 'camjc_projetos_vida', 'camjc_pas',
+                'camjc_anamneses', 'camjc_triagens',
+            ] as $tabela) {
+                $db->prepare("DELETE FROM $tabela WHERE acolhida_id = ?")->execute([$id]);
+            }
+            $db->prepare("DELETE FROM camjc_acolhidas WHERE id = ?")->execute([$id]);
+
+            $db->commit();
+
+            foreach ($arquivos_remover as $arq) { @unlink(__DIR__ . '/uploads/' . basename($arq)); }
+            if ($foto_remover) { @unlink(__DIR__ . '/fotos/' . basename($foto_remover)); }
+
+            camjc_log('excluiu_permanente', null, "Acolhida #{$id} — {$nome_bak}" . ($cpf_bak ? " (CPF {$cpf_bak})" : ''));
+            header("Location: /portal/camjc/?excluido_perm=1");
+            exit;
+        } catch (Exception $e) {
+            if ($db->inTransaction()) $db->rollBack();
+            $erro = 'Erro ao excluir permanentemente: ' . $e->getMessage();
+        }
+    }
+}
+
 camjc_log('visualizou', $id);
 
 $triagens = db()->prepare("SELECT * FROM camjc_triagens WHERE acolhida_id = ? ORDER BY data_triagem DESC, id DESC");
@@ -111,6 +173,13 @@ $ressocializacoes = $ressocializacoes->fetchAll();
 $anexos = db()->prepare("SELECT * FROM camjc_anexos WHERE acolhida_id = ? ORDER BY criado_em DESC");
 $anexos->execute([$id]);
 $anexos = $anexos->fetchAll();
+
+$excluido_por_nome = '';
+if (!empty($a['excluido_por'])) {
+    $u = db()->prepare("SELECT nome FROM usuarios WHERE id = ?");
+    $u->execute([$a['excluido_por']]);
+    $excluido_por_nome = $u->fetchColumn() ?: '';
+}
 
 $idade = '';
 if ($a['data_nasc']) {
@@ -165,6 +234,7 @@ include dirname(__DIR__) . '/_layout.php';
 <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
   <a href="/portal/camjc/" style="font-size:.78rem;color:var(--muted)">← Casa das Mulheres</a>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <?php if (empty($a['excluido_em'])): ?>
     <a href="/portal/camjc/editar.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Editar</a>
     <a href="/portal/camjc/anamnese_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova anamnese</a>
     <a href="/portal/camjc/pas_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova evolução/PAS</a>
@@ -173,8 +243,42 @@ include dirname(__DIR__) . '/_layout.php';
     <?php if ($triagens): ?>
     <a href="/portal/camjc/imprimir.php?id=<?= $triagens[0]['id'] ?>" target="_blank" class="btn btn-primary btn-sm">🖨 Imprimir triagem</a>
     <?php endif; ?>
+    <form method="post" onsubmit="return confirm('Enviar este registro para a lixeira? Os dados continuam preservados e podem ser restaurados depois.')" style="display:inline">
+      <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+      <input type="hidden" name="acao" value="excluir">
+      <button type="submit" class="btn btn-danger btn-sm">🗑 Excluir</button>
+    </form>
+    <?php else: ?>
+    <form method="post" onsubmit="return confirm('Restaurar este registro da lixeira?')" style="display:inline">
+      <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+      <input type="hidden" name="acao" value="restaurar">
+      <button type="submit" class="btn btn-primary btn-sm">↩ Restaurar</button>
+    </form>
+    <?php endif; ?>
   </div>
 </div>
+
+<?php if (!empty($a['excluido_em'])): ?>
+<div class="alerta alerta-erro" style="margin-bottom:16px">
+  <strong>Este registro está na lixeira</strong> — excluído em <?= date('d/m/Y', strtotime($a['excluido_em'])) ?> às <?= date('H:i', strtotime($a['excluido_em'])) ?><?= $excluido_por_nome ? ' por ' . htmlspecialchars($excluido_por_nome) : '' ?>. Os dados foram preservados e podem ser restaurados a qualquer momento.
+</div>
+<?php if (($_SESSION['usuario_perfil'] ?? '') === 'admin'): ?>
+<div class="cj-card" style="margin-bottom:20px;border-color:#dc2626">
+  <div class="cj-card-head" style="background:#fef2f2"><h3 style="color:#dc2626">Excluir permanentemente</h3></div>
+  <div style="padding:16px 20px">
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">
+      Esta ação apaga definitivamente o cadastro e <strong>todos</strong> os registros vinculados (triagens, anamneses, evoluções/PAS, projetos de vida, avaliações de ressocialização, termos assinados, saídas temporárias, documentos e foto). Não pode ser desfeita.
+    </p>
+    <form method="post" onsubmit="return confirm('Confirma a exclusão PERMANENTE e IRREVERSÍVEL deste registro e de todo o histórico vinculado?')" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+      <input type="hidden" name="acao" value="excluir_permanente">
+      <input type="text" name="confirmar_nome" placeholder="Digite o nome exato: <?= htmlspecialchars($a['nome']) ?>" required style="flex:1;min-width:220px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.85rem">
+      <button type="submit" class="btn btn-danger btn-sm">Excluir permanentemente</button>
+    </form>
+  </div>
+</div>
+<?php endif; ?>
+<?php endif; ?>
 
 <?php if (!empty($_GET['criado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Cadastro e triagem salvos com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['editado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Alterações salvas com sucesso.</div><?php endif; ?>
@@ -191,6 +295,8 @@ include dirname(__DIR__) . '/_layout.php';
 <?php if (!empty($_GET['projeto_editado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Projeto de Vida atualizado.</div><?php endif; ?>
 <?php if (!empty($_GET['ressoc_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Avaliação de ressocialização salva com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['ressoc_editada'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Avaliação de ressocialização atualizada.</div><?php endif; ?>
+<?php if (!empty($_GET['excluido'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Registro enviado para a lixeira.</div><?php endif; ?>
+<?php if (!empty($_GET['restaurado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Registro restaurado da lixeira.</div><?php endif; ?>
 <?php if ($erro): ?><div class="alerta alerta-erro" style="margin-bottom:16px"><?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
 <div class="cj-ver-grid">

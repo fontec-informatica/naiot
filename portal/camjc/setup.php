@@ -79,6 +79,19 @@ try {
         $msgs[] = ['ok', 'Colunas data_saida e motivo_saida adicionadas em camjc_acolhidas'];
     }
 
+    // Migração idempotente: exclusão (lixeira) — nunca apaga dado sensível sem antes
+    // passar por soft-delete; excluido_em preenchido = registro na lixeira.
+    $col = $db->query("
+        SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'camjc_acolhidas' AND COLUMN_NAME = 'excluido_em'
+    ")->fetchColumn();
+    if (!$col) {
+        $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN excluido_em DATETIME NULL AFTER atualizado_em");
+        $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN excluido_por INT UNSIGNED NULL AFTER excluido_em");
+        $db->exec("ALTER TABLE camjc_acolhidas ADD KEY idx_excluido (excluido_em)");
+        $msgs[] = ['ok', 'Colunas excluido_em e excluido_por adicionadas em camjc_acolhidas (lixeira)'];
+    }
+
     $db->exec("CREATE TABLE IF NOT EXISTS camjc_triagens (
         id                              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         acolhida_id                     INT UNSIGNED NOT NULL,
