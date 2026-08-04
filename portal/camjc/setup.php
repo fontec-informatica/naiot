@@ -57,6 +57,17 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $msgs[] = ['ok', 'Tabela camjc_acolhidas OK'];
 
+    // Migração idempotente: adiciona coluna foto se ainda não existir
+    // (foto é opcional na triagem, importante ao admitir — ver camjc/editar.php)
+    $col = $db->query("
+        SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'camjc_acolhidas' AND COLUMN_NAME = 'foto'
+    ")->fetchColumn();
+    if (!$col) {
+        $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN foto VARCHAR(255) NULL AFTER nome");
+        $msgs[] = ['ok', 'Coluna foto adicionada em camjc_acolhidas'];
+    }
+
     $db->exec("CREATE TABLE IF NOT EXISTS camjc_triagens (
         id                              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         acolhida_id                     INT UNSIGNED NOT NULL,

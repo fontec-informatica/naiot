@@ -56,17 +56,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $status = $_POST['status'] ?? $a['status'];
             if (!isset(CAMJC_STATUS[$status])) $status = $a['status'];
 
+            $data_acolhimento = $_POST['data_acolhimento'] ?: null;
+            // Se marcou como Acolhida mas esqueceu a data, assume hoje — evita
+            // o status "Acolhida" ficar sem data_acolhimento (inconsistência).
+            if ($status === 'acolhida' && !$data_acolhimento) {
+                $data_acolhimento = date('Y-m-d');
+            }
+
+            // Foto — opcional na triagem, importante ao admitir (não obrigatória aqui)
+            $nova_foto = $a['foto'];
+            $foto_erro = '';
+            $foto_b64  = trim($_POST['foto_webcam'] ?? '');
+            if ($foto_b64 && preg_match('/^data:image\/(jpeg|png|webp);base64,/', $foto_b64)) {
+                $img_data  = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $foto_b64), true);
+                $finfo_b64 = new finfo(FILEINFO_MIME_TYPE);
+                $mime_b64  = $finfo_b64->buffer($img_data ?: '');
+                $mimes_ok  = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                if (!$img_data || !isset($mimes_ok[$mime_b64])) {
+                    $foto_erro = 'Foto inválida.';
+                } elseif (strlen($img_data) > 5 * 1024 * 1024) {
+                    $foto_erro = 'Foto: máximo 5 MB.';
+                } else {
+                    $dir_fotos = __DIR__ . '/fotos/';
+                    if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
+                    $nova_foto = 'camjc_' . uniqid('', true) . '.' . $mimes_ok[$mime_b64];
+                    file_put_contents($dir_fotos . $nova_foto, $img_data);
+                }
+            } elseif (!empty($_FILES['foto']['tmp_name'])) {
+                $f = $_FILES['foto'];
+                if ($f['error'] !== UPLOAD_ERR_OK) {
+                    $foto_erro = 'Erro ao receber a foto.';
+                } elseif ($f['size'] > 5 * 1024 * 1024) {
+                    $foto_erro = 'Foto: máximo 5 MB.';
+                } else {
+                    $finfo_up = new finfo(FILEINFO_MIME_TYPE);
+                    $mime_up  = $finfo_up->file($f['tmp_name']);
+                    $mimes_ok = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                    if (!isset($mimes_ok[$mime_up])) {
+                        $foto_erro = 'Foto: somente JPG, PNG ou WebP.';
+                    } else {
+                        $dir_fotos = __DIR__ . '/fotos/';
+                        if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
+                        $nova_foto = 'camjc_' . uniqid('', true) . '.' . $mimes_ok[$mime_up];
+                        move_uploaded_file($f['tmp_name'], $dir_fotos . $nova_foto);
+                    }
+                }
+            }
+
+            if ($foto_erro) { $erro = $foto_erro; goto fim_post; }
+
+            $foto_antiga = ($nova_foto !== $a['foto']) ? $a['foto'] : null;
+
             $pdo = db();
             $pdo->beginTransaction();
             try {
                 $pdo->prepare("
                     UPDATE camjc_acolhidas SET
-                        nome=?, data_nasc=?, estado_civil=?, rg=?, cpf=?, endereco=?, bairro=?, cep=?, cidade=?, estado=?,
+                        nome=?, foto=?, data_nasc=?, estado_civil=?, rg=?, cpf=?, endereco=?, bairro=?, cep=?, cidade=?, estado=?,
                         telefone=?, celular=?, responsavel_nome=?, responsavel_endereco=?, responsavel_rg=?, responsavel_cpf=?,
                         responsavel_data_nasc=?, responsavel_telefone=?, status=?, data_acolhimento=?, atualizado_em=NOW()
                     WHERE id=?
                 ")->execute([
                     $nome,
+                    $nova_foto,
                     $_POST['data_nasc'] ?: null,
                     trim($_POST['estado_civil'] ?? '') ?: null,
                     trim($_POST['rg'] ?? '') ?: null,
@@ -85,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['responsavel_data_nasc'] ?: null,
                     trim($_POST['responsavel_telefone'] ?? '') ?: null,
                     $status,
-                    $_POST['data_acolhimento'] ?: null,
+                    $data_acolhimento,
                     $id,
                 ]);
 
@@ -108,6 +160,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 $pdo->commit();
+                if ($foto_antiga) {
+                    $caminho_antigo = __DIR__ . '/fotos/' . $foto_antiga;
+                    if (file_exists($caminho_antigo)) unlink($caminho_antigo);
+                }
                 camjc_log('editou', $id);
                 header("Location: /portal/camjc/ver.php?id={$id}&editado=1");
                 exit;
@@ -118,6 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+fim_post:
 
 // Dados para preencher o formulário: POST tem prioridade em caso de erro de validação
 $v = fn($campo, $default = '') => htmlspecialchars($_POST[$campo] ?? $default ?? '');
@@ -138,7 +195,7 @@ include dirname(__DIR__) . '/_layout.php';
     <button type="button" data-tab="obs">Observações</button>
   </div>
 
-  <form method="post" novalidate>
+  <form method="post" enctype="multipart/form-data" novalidate>
     <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
 
     <div class="tab-pane ativo" data-tab-pane="pessoais">
@@ -149,10 +206,26 @@ include dirname(__DIR__) . '/_layout.php';
           <option value="<?= $chave ?>" <?= (($_POST['status'] ?? $a['status']) === $chave) ? 'selected' : '' ?>><?= $label ?></option>
           <?php endforeach; ?>
         </select>
+        <span class="form-hint">Ao selecionar "Acolhida", a data de acolhimento abaixo é preenchida automaticamente com a data de hoje (se estiver em branco) — você pode ajustar.</span>
       </div>
       <div class="form-group">
         <label for="nome">Nome completo <span style="color:var(--red)">*</span></label>
         <input type="text" id="nome" name="nome" value="<?= $v('nome', $a['nome']) ?>" required>
+      </div>
+
+      <div class="form-group">
+        <label>Foto <span style="font-weight:400;color:var(--cinza3)">(não é necessária na triagem — importante ao admitir)</span></label>
+        <div id="foto_preview_wrap" style="margin-bottom:8px<?= empty($a['foto']) ? ';display:none' : '' ?>">
+          <img id="foto_preview_img" src="<?= !empty($a['foto']) ? '/portal/camjc/foto.php?id=' . $id : '' ?>" alt="" style="max-height:120px;border-radius:6px;display:block">
+        </div>
+        <input type="hidden" name="foto_webcam" id="foto_webcam">
+        <input type="file" name="foto" id="foto_input" accept="image/jpeg,image/png,image/webp" style="display:none">
+        <input type="file" id="foto_camera_input" accept="image/*" capture="environment" style="display:none">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" onclick="document.getElementById('foto_input').click()" class="btn btn-ghost btn-sm">📎 Selecionar arquivo</button>
+          <button type="button" id="btn-abrir-camera" class="btn btn-ghost btn-sm">📷 Câmera</button>
+        </div>
+        <span class="form-hint">JPG, PNG ou WebP — máx. 5MB.</span>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -290,6 +363,23 @@ include dirname(__DIR__) . '/_layout.php';
   </form>
 </div>
 
+<!-- Modal câmera -->
+<div id="foto_webcam_modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:14px;padding:20px;width:min(420px,94vw);box-shadow:0 8px 40px rgba(0,0,0,.35)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <strong style="font-family:'Cinzel',serif;font-size:.82rem;color:var(--green-dk)">📷 Câmera</strong>
+      <button type="button" onclick="camjcFecharCamera()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);line-height:1">×</button>
+    </div>
+    <video id="foto_video" autoplay playsinline muted style="width:100%;border-radius:10px;background:#000;display:block"></video>
+    <canvas id="foto_canvas" style="display:none"></canvas>
+    <p id="foto_cam_erro" style="color:var(--red);font-size:.78rem;margin-top:10px;display:none"></p>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button type="button" onclick="camjcTirarFoto()" class="btn btn-primary btn-sm">Tirar foto</button>
+      <button type="button" onclick="camjcFecharCamera()" class="btn btn-ghost btn-sm">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   var botoes = Array.from(document.querySelectorAll('.form-tabs button'));
@@ -319,6 +409,108 @@ include dirname(__DIR__) . '/_layout.php';
   btnVoltar.addEventListener('click', function () { irPara(atual - 1); });
 
   irPara(0);
+
+  // ── Status → auto-preenche data de acolhimento (visível, editável) ──
+  var selStatus = document.getElementById('status');
+  var campoData = document.getElementById('data_acolhimento');
+  if (selStatus && campoData) {
+    selStatus.addEventListener('change', function () {
+      if (selStatus.value === 'acolhida' && !campoData.value) {
+        var hoje = new Date();
+        campoData.value = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+      }
+    });
+  }
+
+  // ── Foto: seleção de arquivo mostra preview ──
+  var fotoInput = document.getElementById('foto_input');
+  var fotoWebcamCampo = document.getElementById('foto_webcam');
+  var previewWrap = document.getElementById('foto_preview_wrap');
+  var previewImg  = document.getElementById('foto_preview_img');
+
+  function mostrarPreview(src) {
+    previewImg.src = src;
+    previewWrap.style.display = '';
+  }
+
+  if (fotoInput) {
+    fotoInput.addEventListener('change', function () {
+      if (!fotoInput.files[0]) return;
+      fotoWebcamCampo.value = '';
+      var reader = new FileReader();
+      reader.onload = function (e) { mostrarPreview(e.target.result); };
+      reader.readAsDataURL(fotoInput.files[0]);
+    });
+  }
+
+  var camInput = document.getElementById('foto_camera_input');
+  if (camInput) {
+    camInput.addEventListener('change', function () {
+      if (!camInput.files[0]) return;
+      fotoWebcamCampo.value = '';
+      if (fotoInput) {
+        var dt = new DataTransfer();
+        dt.items.add(camInput.files[0]);
+        fotoInput.files = dt.files;
+      }
+      var reader = new FileReader();
+      reader.onload = function (e) { mostrarPreview(e.target.result); };
+      reader.readAsDataURL(camInput.files[0]);
+    });
+  }
+
+  // ── Câmera (desktop via getUserMedia, mobile via input nativo) ──
+  var _stream = null;
+  window.camjcAbrirCamera = function () {
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+      camInput.click();
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Seu navegador não suporta acesso à câmera. Use um navegador moderno com HTTPS.');
+      return;
+    }
+    document.getElementById('foto_webcam_modal').style.display = 'flex';
+    document.getElementById('foto_cam_erro').style.display = 'none';
+    camjcIniciarStream();
+  };
+
+  async function camjcIniciarStream() {
+    if (_stream) { _stream.getTracks().forEach(function (t) { t.stop(); }); _stream = null; }
+    try {
+      _stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      var v = document.getElementById('foto_video');
+      v.srcObject = _stream;
+    } catch (e) {
+      var msg = e.name === 'NotAllowedError'
+        ? 'Permissão negada. Clique no cadeado na barra de endereço e permita o acesso à câmera.'
+        : 'Erro ao acessar câmera: ' + e.message;
+      var el = document.getElementById('foto_cam_erro');
+      el.textContent = msg; el.style.display = 'block';
+    }
+  }
+
+  window.camjcTirarFoto = function () {
+    var video  = document.getElementById('foto_video');
+    var canvas = document.getElementById('foto_canvas');
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    var dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    fotoWebcamCampo.value = dataUrl;
+    if (fotoInput) fotoInput.value = '';
+    mostrarPreview(dataUrl);
+    camjcFecharCamera();
+  };
+
+  window.camjcFecharCamera = function () {
+    if (_stream) { _stream.getTracks().forEach(function (t) { t.stop(); }); _stream = null; }
+    document.getElementById('foto_webcam_modal').style.display = 'none';
+    document.getElementById('foto_video').srcObject = null;
+  };
+
+  var btnAbrirCamera = document.getElementById('btn-abrir-camera');
+  if (btnAbrirCamera) btnAbrirCamera.addEventListener('click', camjcAbrirCamera);
 })();
 </script>
 

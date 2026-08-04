@@ -146,6 +146,11 @@ include dirname(__DIR__) . '/_layout.php';
         }
       ?>
       <div class="cj-card">
+        <?php if (!empty($a['foto'])): ?>
+        <div style="width:100%;aspect-ratio:16/9;background:var(--green-pale);overflow:hidden">
+          <img src="/portal/camjc/foto.php?id=<?= $a['id'] ?>" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
+        </div>
+        <?php endif; ?>
         <div class="cj-card-body">
           <div class="cj-card-nome"><?= htmlspecialchars($a['nome']) ?></div>
           <span class="cj-badge" style="color:<?= camjc_status_cor($a['status']) ?>;background:<?= camjc_status_cor($a['status']) ?>18">

@@ -69,7 +69,11 @@ if (!$erro && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $data_triagem      = $_POST['data_triagem'] ?: date('Y-m-d');
             $data_acolhimento  = $_POST['data_acolhimento'] ?: null;
-            $status            = $data_acolhimento ? 'acolhida' : 'em_triagem';
+            $status            = $_POST['status'] ?? 'em_triagem';
+            if (!isset(CAMJC_STATUS[$status])) $status = 'em_triagem';
+            // Se marcou como Acolhida mas esqueceu a data, assume hoje — evita
+            // o status "Acolhida" ficar sem data_acolhimento (inconsistência).
+            if ($status === 'acolhida' && !$data_acolhimento) $data_acolhimento = date('Y-m-d');
             $resp_triagem_nome = trim($_POST['responsavel_triagem_nome'] ?? '') ?: null;
             $observacoes       = trim($_POST['observacoes'] ?? '') ?: null;
 
@@ -132,6 +136,15 @@ include dirname(__DIR__) . '/_layout.php';
 
     <!-- ── Dados pessoais ── -->
     <div class="tab-pane ativo" data-tab-pane="pessoais">
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" name="status">
+          <?php foreach (CAMJC_STATUS as $chave => $label): ?>
+          <option value="<?= $chave ?>" <?= (($_POST['status'] ?? 'em_triagem') === $chave) ? 'selected' : '' ?>><?= $label ?></option>
+          <?php endforeach; ?>
+        </select>
+        <span class="form-hint">Ao selecionar "Acolhida", a data de acolhimento abaixo é preenchida automaticamente com a data de hoje (se estiver em branco) — você pode ajustar.</span>
+      </div>
       <div class="form-group">
         <label for="nome">Nome completo <span style="color:var(--red)">*</span></label>
         <input type="text" id="nome" name="nome" value="<?= htmlspecialchars($_POST['nome'] ?? '') ?>" required>
@@ -306,6 +319,18 @@ include dirname(__DIR__) . '/_layout.php';
   btnVoltar.addEventListener('click', function () { irPara(atual - 1); });
 
   irPara(0);
+
+  // ── Status → auto-preenche data de acolhimento (visível, editável) ──
+  var selStatus = document.getElementById('status');
+  var campoData = document.getElementById('data_acolhimento');
+  if (selStatus && campoData) {
+    selStatus.addEventListener('change', function () {
+      if (selStatus.value === 'acolhida' && !campoData.value) {
+        var hoje = new Date();
+        campoData.value = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+      }
+    });
+  }
 })();
 </script>
 

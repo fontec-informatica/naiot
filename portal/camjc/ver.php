@@ -152,6 +152,11 @@ include dirname(__DIR__) . '/_layout.php';
           <?= htmlspecialchars(camjc_status_label($a['status'])) ?>
         </span>
       </div>
+      <?php if (!empty($a['foto'])): ?>
+      <div style="padding:16px 20px 0">
+        <img src="/portal/camjc/foto.php?id=<?= $id ?>" alt="" style="width:100%;max-height:220px;object-fit:cover;border-radius:8px;display:block">
+      </div>
+      <?php endif; ?>
       <div class="cj-campo"><div class="cj-campo-label">Nome</div><div class="cj-campo-val"><?= htmlspecialchars($a['nome']) ?></div></div>
       <?php if ($idade): ?><div class="cj-campo"><div class="cj-campo-label">Idade</div><div class="cj-campo-val"><?= $idade ?> <span style="color:var(--muted);font-size:.78rem">(<?= date('d/m/Y', strtotime($a['data_nasc'])) ?>)</span></div></div><?php endif; ?>
       <?php if ($a['estado_civil']): ?><div class="cj-campo"><div class="cj-campo-label">Estado civil</div><div class="cj-campo-val"><?= htmlspecialchars($a['estado_civil']) ?></div></div><?php endif; ?>
