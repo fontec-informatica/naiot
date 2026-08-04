@@ -31,7 +31,7 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
 .btn-imp:hover { background: #235e36 }
 .btn-vol { background: none; color: #2d7a45; border: 1.5px solid #2d7a45; padding: 7px 16px; border-radius: 6px; font-size: .88rem; cursor: pointer; font-weight: 600; text-decoration: none; font-family: inherit; }
 
-.pagina { width: 210mm; min-height: 297mm; background: #fff; margin: 20px auto; padding: 18mm 20mm; box-shadow: 0 2px 14px rgba(0,0,0,.18); }
+.pagina { width: 210mm; min-height: 297mm; background: #fff; margin: 20px auto; padding: 18mm 20mm; box-shadow: 0 2px 14px rgba(0,0,0,.18); display: flex; flex-direction: column; }
 .cab { text-align: center; }
 .cab img { max-height: 52pt; max-width: 160pt; }
 .cab-linha { border: none; border-top: 1.5px solid #000; margin: 6pt 0 14pt; }
@@ -43,19 +43,14 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
 .assinatura-linha { margin-bottom: 24pt; font-size: 10.5pt; }
 .assinatura-linha .linha { border-bottom: 1px solid #000; width: 100%; height: 20pt; }
 .assinatura-linha .rot { margin-top: 3pt; font-size: 9.5pt; }
-.rodape { text-align: center; font-size: 8.5pt; line-height: 1.6; margin-top: 20pt; border-top: 1px solid #000; padding-top: 5pt; }
-.rodape-print { display: none; }
+.rodape { margin-top: auto; padding-top: 20pt; text-align: center; font-size: 8.5pt; line-height: 1.6; }
+.rodape-inner { border-top: 1px solid #000; padding-top: 5pt; }
 
 @media print {
   body { background: #fff; margin: 0; padding: 0 }
   .barra-acoes { display: none }
   @page { size: A4; margin: 0 }
-  .pagina { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; padding-bottom: 26mm !important; }
-  .rodape { display: none !important }
-  .rodape-print {
-    display: block !important; position: fixed; left: 16mm; right: 16mm; bottom: 6mm;
-    text-align: center; font-size: 8.5pt; line-height: 1.6; border-top: 1px solid #000; padding-top: 5pt; background: #fff;
-  }
+  .pagina { box-shadow: none !important; margin: 0 !important; width: auto !important; }
 }
 </style>
 </head>
@@ -153,14 +148,11 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
   <?php endif; ?>
 
   <div class="rodape">
-    GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
-    Comunidade Católica Senhor Jesus — Mantenedora da Casa de Acolhimento Mulheres de Jesus Cristo
+    <div class="rodape-inner">
+      GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
+      Comunidade Católica Senhor Jesus — Mantenedora da Casa de Acolhimento Mulheres de Jesus Cristo
+    </div>
   </div>
-</div>
-
-<div class="rodape-print">
-  GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
-  Comunidade Católica Senhor Jesus — Mantenedora da Casa de Acolhimento Mulheres de Jesus Cristo
 </div>
 
 <script>
