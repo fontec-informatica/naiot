@@ -194,6 +194,49 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $msgs[] = ['ok', 'Tabela camjc_pas OK'];
 
+    $db->exec("CREATE TABLE IF NOT EXISTS camjc_projetos_vida (
+        id                              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        acolhida_id                     INT UNSIGNED NOT NULL,
+        data_projeto                    DATE NOT NULL,
+        valores_base                    TEXT NULL,
+        pontos_fortes                   TEXT NULL,
+        pontos_melhorar                 TEXT NULL,
+        oportunidades                   TEXT NULL,
+        ameacas                         TEXT NULL,
+        tempo_planejamento              TEXT NULL,
+        recursos_financeiros            TEXT NULL,
+        missao                          TEXT NULL,
+        saude_fisica_atual              TEXT NULL,
+        saude_fisica_alimentacao        TEXT NULL,
+        saude_fisica_sono               TEXT NULL,
+        saude_fisica_meta               TEXT NULL,
+        saude_fisica_pratica            TEXT NULL,
+        saude_espiritual_estabilidade   TEXT NULL,
+        saude_espiritual_interior       TEXT NULL,
+        saude_espiritual_capela         TEXT NULL,
+        saude_espiritual_oracao         TEXT NULL,
+        saude_espiritual_metas          TEXT NULL,
+        saude_intelectual_leituras      TEXT NULL,
+        saude_intelectual_curso         TEXT NULL,
+        saude_intelectual_estudo        TEXT NULL,
+        saude_familiar_tratamento       TEXT NULL,
+        saude_familiar_impedimento      TEXT NULL,
+        saude_familiar_reconciliacao    TEXT NULL,
+        saude_social_sociedade          TEXT NULL,
+        saude_social_ajuda              TEXT NULL,
+        saude_social_cidadania          TEXT NULL,
+        saude_financeira_recursos       TEXT NULL,
+        saude_financeira_profissao      TEXT NULL,
+        saude_financeira_planejamento   TEXT NULL,
+        metas                           TEXT NULL,
+        criado_por                      INT UNSIGNED NULL,
+        criado_em                       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        atualizado_em                   DATETIME NULL,
+        KEY idx_acolhida (acolhida_id),
+        CONSTRAINT fk_projetovida_acolhida FOREIGN KEY (acolhida_id) REFERENCES camjc_acolhidas(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $msgs[] = ['ok', 'Tabela camjc_projetos_vida OK'];
+
     $db->exec("CREATE TABLE IF NOT EXISTS camjc_termos_assinados (
         id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         acolhida_id     INT UNSIGNED NOT NULL,
