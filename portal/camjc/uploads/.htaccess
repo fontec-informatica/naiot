@@ -1,0 +1,17 @@
+# Dados sensíveis (LGPD art. 5º II) — bloqueia TODO acesso direto a esta pasta.
+# Os arquivos só podem ser baixados via /portal/camjc/arquivo.php, que verifica
+# autenticação, permissão do módulo e registra o acesso em camjc_acesso_log.
+Options -Indexes -ExecCGI
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
