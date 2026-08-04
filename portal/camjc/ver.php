@@ -75,6 +75,10 @@ $anamneses = db()->prepare("SELECT * FROM camjc_anamneses WHERE acolhida_id = ? 
 $anamneses->execute([$id]);
 $anamneses = $anamneses->fetchAll();
 
+$pas_lista = db()->prepare("SELECT * FROM camjc_pas WHERE acolhida_id = ? ORDER BY data_avaliacao DESC, id DESC");
+$pas_lista->execute([$id]);
+$pas_lista = $pas_lista->fetchAll();
+
 $anexos = db()->prepare("SELECT * FROM camjc_anexos WHERE acolhida_id = ? ORDER BY criado_em DESC");
 $anexos->execute([$id]);
 $anexos = $anexos->fetchAll();
@@ -134,6 +138,7 @@ include dirname(__DIR__) . '/_layout.php';
   <div style="display:flex;gap:8px;flex-wrap:wrap">
     <a href="/portal/camjc/editar.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Editar</a>
     <a href="/portal/camjc/anamnese_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova anamnese</a>
+    <a href="/portal/camjc/pas_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova evolução/PAS</a>
     <?php if ($triagens): ?>
     <a href="/portal/camjc/imprimir.php?id=<?= $triagens[0]['id'] ?>" target="_blank" class="btn btn-primary btn-sm">🖨 Imprimir triagem</a>
     <?php endif; ?>
@@ -146,6 +151,8 @@ include dirname(__DIR__) . '/_layout.php';
 <?php if (!empty($_GET['anexo_del'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Documento removido.</div><?php endif; ?>
 <?php if (!empty($_GET['anamnese_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Anamnese salva com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['anamnese_editada'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Anamnese atualizada com sucesso.</div><?php endif; ?>
+<?php if (!empty($_GET['pas_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Evolução/PAS salva com sucesso.</div><?php endif; ?>
+<?php if (!empty($_GET['pas_editado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Evolução/PAS atualizada com sucesso.</div><?php endif; ?>
 <?php if ($erro): ?><div class="alerta alerta-erro" style="margin-bottom:16px"><?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
 <div class="cj-ver-grid">
@@ -281,6 +288,39 @@ include dirname(__DIR__) . '/_layout.php';
         <?php endif; ?>
       </div>
       <?php endforeach; ?>
+    </div>
+    <?php endforeach; endif; ?>
+
+    <?php if (!empty($pas_lista)): foreach ($pas_lista as $p): ?>
+    <div class="cj-card cj-triagem-block">
+      <div class="cj-card-head" style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Evolução / PAS — <?= date('d/m/Y', strtotime($p['data_avaliacao'])) ?></h3>
+        <div style="display:flex;gap:12px">
+          <a href="/portal/camjc/pas_editar.php?id=<?= $p['id'] ?>" style="font-size:.75rem;color:var(--muted)">Editar</a>
+          <a href="/portal/camjc/pas_imprimir.php?id=<?= $p['id'] ?>" target="_blank" style="font-size:.75rem;color:var(--green)">🖨 Imprimir</a>
+        </div>
+      </div>
+      <div class="cj-campo">
+        <div class="cj-campo-label">Avaliação geral</div>
+        <div class="cj-campo-val"><?= htmlspecialchars(camjc_escala_label($p['aval_geral']) ?: 'Não avaliado') ?></div>
+      </div>
+      <div class="cj-campo">
+        <div class="cj-campo-label">Vínculo familiar</div>
+        <div class="cj-campo-val"><?= htmlspecialchars(!empty($p['vinculo_situacao']) ? (CAMJC_VINCULO_SITUACOES[$p['vinculo_situacao']] ?? $p['vinculo_situacao']) : 'Não informado') ?><?= $p['vinculo_qualidade'] ? ' — ' . htmlspecialchars(camjc_escala_label($p['vinculo_qualidade'])) : '' ?></div>
+      </div>
+      <div class="cj-campo">
+        <div class="cj-campo-label">Importância de mudar / Confiança na abstinência (0-10)</div>
+        <div class="cj-campo-val"><?= $p['importancia_mudanca'] ?? '—' ?> / <?= $p['confianca_abstinencia'] ?? '—' ?></div>
+      </div>
+      <?php if (!empty($p['parecer_profissional'])): ?>
+      <div class="cj-campo">
+        <div class="cj-campo-label">Parecer do profissional</div>
+        <div class="cj-campo-val"><?= nl2br(htmlspecialchars($p['parecer_profissional'])) ?></div>
+      </div>
+      <?php endif; ?>
+      <div class="cj-campo">
+        <div class="cj-campo-vazio">Avaliação completa (11 critérios, atividades, percepção por área) disponível na impressão.</div>
+      </div>
     </div>
     <?php endforeach; endif; ?>
 
