@@ -106,4 +106,6 @@ include dirname(__DIR__) . '/_layout.php';
   </form>
 </div>
 
+<script src="/portal/assets/js/camjc-form.js"></script>
+
 <?php include dirname(__DIR__) . '/_layout_end.php'; ?>

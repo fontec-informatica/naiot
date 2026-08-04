@@ -387,9 +387,11 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
-    <div style="display:flex;gap:12px;margin-top:8px">
+    <div style="display:flex;gap:12px;margin-top:8px;align-items:center">
+      <button type="button" id="btn-voltar" class="btn btn-ghost" style="display:none">← Voltar</button>
+      <button type="button" id="btn-proximo" class="btn btn-primary">Próximo →</button>
       <button type="submit" class="btn btn-primary">Salvar alterações</button>
-      <a href="/portal/camjc/ver.php?id=<?= $id ?>" class="btn btn-ghost">Cancelar</a>
+      <a href="/portal/camjc/ver.php?id=<?= $id ?>" class="btn btn-ghost" style="margin-left:auto">Cancelar</a>
     </div>
   </form>
 </div>
@@ -411,20 +413,9 @@ include dirname(__DIR__) . '/_layout.php';
   </div>
 </div>
 
+<script src="/portal/assets/js/camjc-form.js"></script>
 <script>
 (function () {
-  var botoes = Array.from(document.querySelectorAll('.form-tabs button'));
-  var panes  = Array.from(document.querySelectorAll('.tab-pane'));
-
-  botoes.forEach(function (btn, idx) {
-    btn.addEventListener('click', function () {
-      botoes.forEach(function (b) { b.classList.remove('ativo'); });
-      panes.forEach(function (p) { p.classList.remove('ativo'); });
-      btn.classList.add('ativo');
-      panes[idx].classList.add('ativo');
-    });
-  });
-
   // ── Status ↔ Data de acolhimento — sincronizados nos dois sentidos (visível, editável) ──
   var selStatus = document.getElementById('status');
   var campoData = document.getElementById('data_acolhimento');

@@ -124,26 +124,15 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
-    <div style="display:flex;gap:12px;margin-top:8px">
+    <div style="display:flex;gap:12px;margin-top:8px;align-items:center">
+      <button type="button" id="btn-voltar" class="btn btn-ghost" style="display:none">← Voltar</button>
+      <button type="button" id="btn-proximo" class="btn btn-primary">Próximo →</button>
       <button type="submit" class="btn btn-primary">Salvar anamnese</button>
-      <a href="/portal/camjc/ver.php?id=<?= $acolhida_id ?>" class="btn btn-ghost">Cancelar</a>
+      <a href="/portal/camjc/ver.php?id=<?= $acolhida_id ?>" class="btn btn-ghost" style="margin-left:auto">Cancelar</a>
     </div>
   </form>
 </div>
 
-<script>
-(function () {
-  var botoes = document.querySelectorAll('.form-tabs button');
-  var panes  = document.querySelectorAll('.tab-pane');
-  botoes.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      botoes.forEach(function (b) { b.classList.remove('ativo'); });
-      panes.forEach(function (p) { p.classList.remove('ativo'); });
-      btn.classList.add('ativo');
-      document.querySelector('.tab-pane[data-tab-pane="' + btn.dataset.tab + '"]').classList.add('ativo');
-    });
-  });
-})();
-</script>
+<script src="/portal/assets/js/camjc-form.js"></script>
 
 <?php include dirname(__DIR__) . '/_layout_end.php'; ?>
