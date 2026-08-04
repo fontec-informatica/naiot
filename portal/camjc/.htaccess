@@ -1,0 +1,9 @@
+# Libera câmera apenas em editar.php (captura de foto ao admitir a acolhida).
+# O .htaccess da raiz do site bloqueia câmera globalmente (Permissions-Policy) e,
+# como o Apache roda depois do PHP, um header() no próprio arquivo não é suficiente
+# para sobrescrever isso — precisa ser feito aqui, no mesmo nível (Apache).
+<FilesMatch "^editar\.php$">
+    <IfModule mod_headers.c>
+        Header always set Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()"
+    </IfModule>
+</FilesMatch>
