@@ -88,11 +88,30 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
 
 .rodape { text-align: center; font-size: 8.5pt; line-height: 1.6; margin-top: 16pt; border-top: 1px solid #000; padding-top: 5pt; }
 
+/* Rodapé fixo — só usado na impressão (o Chrome repete elementos
+   position:fixed no rodapé de TODAS as páginas impressas). O .rodape
+   normal (que flui após o conteúdo) é escondido no print para não duplicar. */
+.rodape-print { display: none; }
+
 @media print {
   body { background: #fff; margin: 0; padding: 0 }
   .barra-acoes { display: none }
   @page { size: A4; margin: 0 }
-  .pagina { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; }
+  .pagina { box-shadow: none !important; margin: 0 !important; width: auto !important; min-height: 0 !important; padding-bottom: 26mm !important; }
+  .rodape { display: none !important }
+  .rodape-print {
+    display: block !important;
+    position: fixed;
+    left: 16mm;
+    right: 16mm;
+    bottom: 6mm;
+    text-align: center;
+    font-size: 8.5pt;
+    line-height: 1.6;
+    border-top: 1px solid #000;
+    padding-top: 5pt;
+    background: #fff;
+  }
 }
 </style>
 </head>
@@ -175,6 +194,12 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
     GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
     Comunidade Católica Senhor Jesus — Mantenedora da Casa de Acolhimento Mulheres de Jesus Cristo
   </div>
+</div>
+
+<!-- Rodapé fixo — só aparece na impressão, repetido em todas as páginas -->
+<div class="rodape-print">
+  GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
+  Comunidade Católica Senhor Jesus — Mantenedora da Casa de Acolhimento Mulheres de Jesus Cristo
 </div>
 
 <script>

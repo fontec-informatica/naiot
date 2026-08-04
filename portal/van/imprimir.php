@@ -151,6 +151,11 @@ body {
   padding-top: 5pt;
 }
 
+/* Rodapé fixo — só usado na impressão (o Chrome repete elementos
+   position:fixed no rodapé de TODAS as páginas impressas). O .rodape
+   normal (dentro de cada .pagina) é escondido no print para não duplicar. */
+.rodape-print { display: none; }
+
 /* ── Página 2 ── */
 .declaracao {
   font-size: 10.5pt;
@@ -192,7 +197,7 @@ body {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     margin: 0 !important;
-    padding: 14mm 16mm !important;
+    padding: 14mm 16mm 26mm !important;
     box-shadow: none !important;
     background: #fff !important;
     transform: none !important;
@@ -200,6 +205,20 @@ body {
   }
   .tabela-pass { page-break-inside: avoid !important; break-inside: avoid !important }
   .spacer { display: none !important }
+  .rodape { display: none !important }
+  .rodape-print {
+    display: block !important;
+    position: fixed;
+    left: 16mm;
+    right: 16mm;
+    bottom: 6mm;
+    text-align: center;
+    font-size: 8.5pt;
+    line-height: 1.6;
+    border-top: 1px solid #000;
+    padding-top: 5pt;
+    background: #fff;
+  }
 }
 </style>
 </head>
@@ -345,6 +364,12 @@ body {
     ● 62 – 99127 - 5563 / 99404 - 1501 &nbsp;&nbsp; http://naiot.com.br/novo/
   </div>
 
+</div>
+
+<!-- Rodapé fixo — só aparece na impressão, repetido em todas as páginas -->
+<div class="rodape-print">
+  GO 330, km 20, s/n, Fazenda Poções, Zona Rural, Campo Limpo de Goiás – GO – BRA.<br>
+  ● 62 – 99127 - 5563 / 99404 - 1501 &nbsp;&nbsp; http://naiot.com.br/novo/
 </div>
 
 <script>
