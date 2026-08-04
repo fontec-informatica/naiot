@@ -65,6 +65,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido() && ($_POST['acao'] ??
     exit;
 }
 
+// Marcar termo legal como assinado
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido() && ($_POST['acao'] ?? '') === 'marcar_termo') {
+    $tipo_termo = $_POST['tipo_termo'] ?? '';
+    $data_assin = $_POST['data_assinatura'] ?: date('Y-m-d');
+    if (isset(CAMJC_TERMOS[$tipo_termo])) {
+        db()->prepare("INSERT INTO camjc_termos_assinados (acolhida_id, tipo, data_assinatura, criado_por) VALUES (?,?,?,?)")
+            ->execute([$id, $tipo_termo, $data_assin, $_SESSION['usuario_id'] ?? null]);
+        camjc_log('marcou_termo_assinado', $id, $tipo_termo);
+    }
+    header("Location: /portal/camjc/ver.php?id={$id}&termo_ok=1");
+    exit;
+}
+
 camjc_log('visualizou', $id);
 
 $triagens = db()->prepare("SELECT * FROM camjc_triagens WHERE acolhida_id = ? ORDER BY data_triagem DESC, id DESC");
@@ -78,6 +91,14 @@ $anamneses = $anamneses->fetchAll();
 $pas_lista = db()->prepare("SELECT * FROM camjc_pas WHERE acolhida_id = ? ORDER BY data_avaliacao DESC, id DESC");
 $pas_lista->execute([$id]);
 $pas_lista = $pas_lista->fetchAll();
+
+$termos_assinados = db()->prepare("SELECT tipo, MAX(data_assinatura) AS ultima FROM camjc_termos_assinados WHERE acolhida_id = ? GROUP BY tipo");
+$termos_assinados->execute([$id]);
+$termos_assinados = $termos_assinados->fetchAll(PDO::FETCH_KEY_PAIR);
+
+$saidas_temp = db()->prepare("SELECT * FROM camjc_saidas_temporarias WHERE acolhida_id = ? ORDER BY data_saida DESC, id DESC");
+$saidas_temp->execute([$id]);
+$saidas_temp = $saidas_temp->fetchAll();
 
 $anexos = db()->prepare("SELECT * FROM camjc_anexos WHERE acolhida_id = ? ORDER BY criado_em DESC");
 $anexos->execute([$id]);
@@ -153,6 +174,9 @@ include dirname(__DIR__) . '/_layout.php';
 <?php if (!empty($_GET['anamnese_editada'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Anamnese atualizada com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['pas_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Evolução/PAS salva com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['pas_editado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Evolução/PAS atualizada com sucesso.</div><?php endif; ?>
+<?php if (!empty($_GET['termo_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Termo marcado como assinado.</div><?php endif; ?>
+<?php if (!empty($_GET['saida_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Saída temporária registrada.</div><?php endif; ?>
+<?php if (!empty($_GET['saida_editada'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Saída temporária atualizada.</div><?php endif; ?>
 <?php if ($erro): ?><div class="alerta alerta-erro" style="margin-bottom:16px"><?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
 <div class="cj-ver-grid">
@@ -243,6 +267,61 @@ include dirname(__DIR__) . '/_layout.php';
           <button type="submit" class="btn btn-ghost btn-sm">📎 Anexar documento</button>
         </form>
       </div>
+    </div>
+
+    <!-- Termos legais -->
+    <div class="cj-card">
+      <div class="cj-card-head"><h3>Termos legais</h3></div>
+      <div style="padding:6px 0">
+        <?php foreach (CAMJC_TERMOS as $tipo_termo => $label_termo): ?>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border)">
+          <div style="min-width:0">
+            <div style="font-size:.82rem;font-weight:600"><?= htmlspecialchars($label_termo) ?></div>
+            <?php if (!empty($termos_assinados[$tipo_termo])): ?>
+              <div style="font-size:.72rem;color:var(--green)">✓ Assinado em <?= date('d/m/Y', strtotime($termos_assinados[$tipo_termo])) ?></div>
+            <?php else: ?>
+              <div style="font-size:.72rem;color:var(--muted)">Pendente</div>
+            <?php endif; ?>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <a href="/portal/camjc/termo_imprimir.php?tipo=<?= $tipo_termo ?>&acolhida_id=<?= $id ?>" target="_blank" class="btn btn-ghost btn-sm">🖨</a>
+            <?php if (empty($termos_assinados[$tipo_termo])): ?>
+            <form method="post" onsubmit="return confirm('Confirmar que este termo foi assinado?')">
+              <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+              <input type="hidden" name="acao" value="marcar_termo">
+              <input type="hidden" name="tipo_termo" value="<?= $tipo_termo ?>">
+              <input type="hidden" name="data_assinatura" value="<?= date('Y-m-d') ?>">
+              <button type="submit" class="btn btn-primary btn-sm">✓</button>
+            </form>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+
+    <!-- Saídas temporárias -->
+    <div class="cj-card">
+      <div class="cj-card-head" style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Saídas temporárias</h3>
+        <a href="/portal/camjc/saida_temp_nova.php?acolhida_id=<?= $id ?>" style="font-size:.75rem;color:var(--green)">+ Nova</a>
+      </div>
+      <?php if (empty($saidas_temp)): ?>
+        <div style="padding:16px 20px" class="cj-campo-vazio">Nenhuma saída temporária registrada.</div>
+      <?php else: foreach ($saidas_temp as $st_temp): ?>
+        <div style="padding:10px 20px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+            <div style="font-size:.82rem;font-weight:600"><?= date('d/m/Y', strtotime($st_temp['data_saida'])) ?></div>
+            <div style="display:flex;gap:10px">
+              <a href="/portal/camjc/saida_temp_editar.php?id=<?= $st_temp['id'] ?>" style="font-size:.72rem;color:var(--muted)">Editar</a>
+              <a href="/portal/camjc/saida_temp_imprimir.php?id=<?= $st_temp['id'] ?>" target="_blank" style="font-size:.72rem;color:var(--green)">🖨</a>
+            </div>
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">
+            <?= $st_temp['data_retorno_real'] ? 'Retornou em ' . date('d/m/Y', strtotime($st_temp['data_retorno_real'])) : ($st_temp['data_retorno_prevista'] ? 'Retorno previsto: ' . date('d/m/Y', strtotime($st_temp['data_retorno_prevista'])) : 'Sem retorno registrado') ?>
+          </div>
+        </div>
+      <?php endforeach; endif; ?>
     </div>
   </div>
 

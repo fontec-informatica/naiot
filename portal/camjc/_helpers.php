@@ -131,3 +131,19 @@ const CAMJC_PERCEPCAO_AREAS = [
 function camjc_escala_label(?string $valor): string {
     return $valor ? (CAMJC_ESCALA_SATISFACAO[$valor] ?? $valor) : '';
 }
+
+/* ── Termos legais (assinatura única, fluxo imprimir → assinar → anexar) ── */
+const CAMJC_TERMOS = [
+    'compromisso_unico'    => 'Termo de Compromisso',
+    'submissao_voluntaria' => 'Termo de Submissão Voluntária ao Programa Terapêutico',
+    'autorizacao_imagem'   => 'Termo de Autorização de Uso de Imagem e Voz',
+];
+
+/** Nome do mês por extenso em português (strftime está obsoleto desde o PHP 8.1). */
+function mb_strftime_pt(int $mes): string {
+    return [
+        1 => 'janeiro', 2 => 'fevereiro', 3 => 'março', 4 => 'abril',
+        5 => 'maio', 6 => 'junho', 7 => 'julho', 8 => 'agosto',
+        9 => 'setembro', 10 => 'outubro', 11 => 'novembro', 12 => 'dezembro',
+    ][$mes] ?? '';
+}

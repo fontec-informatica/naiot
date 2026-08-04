@@ -194,6 +194,40 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $msgs[] = ['ok', 'Tabela camjc_pas OK'];
 
+    $db->exec("CREATE TABLE IF NOT EXISTS camjc_termos_assinados (
+        id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        acolhida_id     INT UNSIGNED NOT NULL,
+        tipo            VARCHAR(40) NOT NULL,
+        data_assinatura DATE NOT NULL,
+        observacoes     TEXT NULL,
+        criado_por      INT UNSIGNED NULL,
+        criado_em       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_acolhida (acolhida_id),
+        KEY idx_tipo (tipo),
+        CONSTRAINT fk_termo_acolhida FOREIGN KEY (acolhida_id) REFERENCES camjc_acolhidas(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $msgs[] = ['ok', 'Tabela camjc_termos_assinados OK'];
+
+    $db->exec("CREATE TABLE IF NOT EXISTS camjc_saidas_temporarias (
+        id                     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        acolhida_id            INT UNSIGNED NOT NULL,
+        data_saida             DATE NOT NULL,
+        destino_motivo         TEXT NULL,
+        responsavel_nome       VARCHAR(150) NULL,
+        responsavel_rg         VARCHAR(20) NULL,
+        responsavel_cpf        VARCHAR(14) NULL,
+        responsavel_telefone   VARCHAR(20) NULL,
+        data_retorno_prevista  DATE NULL,
+        data_retorno_real      DATE NULL,
+        observacoes            TEXT NULL,
+        criado_por             INT UNSIGNED NULL,
+        criado_em              DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        atualizado_em          DATETIME NULL,
+        KEY idx_acolhida (acolhida_id),
+        CONSTRAINT fk_saidatemp_acolhida FOREIGN KEY (acolhida_id) REFERENCES camjc_acolhidas(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $msgs[] = ['ok', 'Tabela camjc_saidas_temporarias OK'];
+
     $db->exec("CREATE TABLE IF NOT EXISTS camjc_anexos (
         id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         acolhida_id    INT UNSIGNED NOT NULL,
