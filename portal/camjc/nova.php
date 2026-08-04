@@ -71,9 +71,15 @@ if (!$erro && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $data_acolhimento  = $_POST['data_acolhimento'] ?: null;
             $status            = $_POST['status'] ?? 'em_triagem';
             if (!isset(CAMJC_STATUS[$status])) $status = 'em_triagem';
-            // Se marcou como Acolhida mas esqueceu a data, assume hoje — evita
-            // o status "Acolhida" ficar sem data_acolhimento (inconsistência).
-            if ($status === 'acolhida' && !$data_acolhimento) $data_acolhimento = date('Y-m-d');
+            // Consistência nos dois sentidos entre status e data de acolhimento:
+            // - Se marcou como Acolhida mas esqueceu a data, assume hoje.
+            // - Se preencheu a data mas o status ainda está "Em triagem"/"Não
+            //   admitida" (esqueceu de mudar o status), promove para Acolhida.
+            if ($status === 'acolhida' && !$data_acolhimento) {
+                $data_acolhimento = date('Y-m-d');
+            } elseif ($data_acolhimento && in_array($status, ['em_triagem', 'nao_admitida'], true)) {
+                $status = 'acolhida';
+            }
             $resp_triagem_nome = trim($_POST['responsavel_triagem_nome'] ?? '') ?: null;
             $observacoes       = trim($_POST['observacoes'] ?? '') ?: null;
 
@@ -320,14 +326,25 @@ include dirname(__DIR__) . '/_layout.php';
 
   irPara(0);
 
-  // ── Status → auto-preenche data de acolhimento (visível, editável) ──
+  // ── Status ↔ Data de acolhimento — sincronizados nos dois sentidos (visível, editável) ──
   var selStatus = document.getElementById('status');
   var campoData = document.getElementById('data_acolhimento');
+  var STATUS_PRE_ACOLHIMENTO = ['em_triagem', 'nao_admitida'];
+
+  function hojeISO() {
+    var hoje = new Date();
+    return hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+  }
+
   if (selStatus && campoData) {
     selStatus.addEventListener('change', function () {
       if (selStatus.value === 'acolhida' && !campoData.value) {
-        var hoje = new Date();
-        campoData.value = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+        campoData.value = hojeISO();
+      }
+    });
+    campoData.addEventListener('change', function () {
+      if (campoData.value && STATUS_PRE_ACOLHIMENTO.indexOf(selStatus.value) !== -1) {
+        selStatus.value = 'acolhida';
       }
     });
   }

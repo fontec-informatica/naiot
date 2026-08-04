@@ -64,10 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!isset(CAMJC_STATUS[$status])) $status = $a['status'];
 
             $data_acolhimento = $_POST['data_acolhimento'] ?: null;
-            // Se marcou como Acolhida mas esqueceu a data, assume hoje — evita
-            // o status "Acolhida" ficar sem data_acolhimento (inconsistência).
+            // Consistência nos dois sentidos entre status e data de acolhimento:
+            // - Se marcou como Acolhida mas esqueceu a data, assume hoje.
+            // - Se preencheu a data mas o status ainda está "Em triagem"/"Não
+            //   admitida" (esqueceu de mudar o status), promove para Acolhida.
             if ($status === 'acolhida' && !$data_acolhimento) {
                 $data_acolhimento = date('Y-m-d');
+            } elseif ($data_acolhimento && in_array($status, ['em_triagem', 'nao_admitida'], true)) {
+                $status = 'acolhida';
             }
 
             // Foto — opcional na triagem, importante ao admitir (não obrigatória aqui)
@@ -361,11 +365,9 @@ include dirname(__DIR__) . '/_layout.php';
       </div>
     </div>
 
-    <div style="display:flex;gap:12px;margin-top:8px;align-items:center">
-      <button type="button" id="btn-voltar" class="btn btn-ghost" style="display:none">← Voltar</button>
-      <button type="button" id="btn-proximo" class="btn btn-primary">Próximo →</button>
-      <button type="submit" id="btn-salvar" class="btn btn-primary" style="display:none">Salvar alterações</button>
-      <a href="/portal/camjc/ver.php?id=<?= $id ?>" class="btn btn-ghost" style="margin-left:auto">Cancelar</a>
+    <div style="display:flex;gap:12px;margin-top:8px">
+      <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      <a href="/portal/camjc/ver.php?id=<?= $id ?>" class="btn btn-ghost">Cancelar</a>
     </div>
   </form>
 </div>
@@ -391,40 +393,35 @@ include dirname(__DIR__) . '/_layout.php';
 (function () {
   var botoes = Array.from(document.querySelectorAll('.form-tabs button'));
   var panes  = Array.from(document.querySelectorAll('.tab-pane'));
-  var btnVoltar  = document.getElementById('btn-voltar');
-  var btnProximo = document.getElementById('btn-proximo');
-  var btnSalvar  = document.getElementById('btn-salvar');
-  var atual = 0;
-
-  function irPara(idx) {
-    atual = Math.max(0, Math.min(idx, botoes.length - 1));
-    botoes.forEach(function (b) { b.classList.remove('ativo'); });
-    panes.forEach(function (p) { p.classList.remove('ativo'); });
-    botoes[atual].classList.add('ativo');
-    panes[atual].classList.add('ativo');
-    btnVoltar.style.display  = atual === 0 ? 'none' : '';
-    btnProximo.style.display = atual === botoes.length - 1 ? 'none' : '';
-    btnSalvar.style.display  = atual === botoes.length - 1 ? '' : 'none';
-    var wrap = document.querySelector('.form-wrap');
-    if (wrap) window.scrollTo({ top: wrap.offsetTop - 20, behavior: 'smooth' });
-  }
 
   botoes.forEach(function (btn, idx) {
-    btn.addEventListener('click', function () { irPara(idx); });
+    btn.addEventListener('click', function () {
+      botoes.forEach(function (b) { b.classList.remove('ativo'); });
+      panes.forEach(function (p) { p.classList.remove('ativo'); });
+      btn.classList.add('ativo');
+      panes[idx].classList.add('ativo');
+    });
   });
-  btnProximo.addEventListener('click', function () { irPara(atual + 1); });
-  btnVoltar.addEventListener('click', function () { irPara(atual - 1); });
 
-  irPara(0);
-
-  // ── Status → auto-preenche data de acolhimento (visível, editável) ──
+  // ── Status ↔ Data de acolhimento — sincronizados nos dois sentidos (visível, editável) ──
   var selStatus = document.getElementById('status');
   var campoData = document.getElementById('data_acolhimento');
+  var STATUS_PRE_ACOLHIMENTO = ['em_triagem', 'nao_admitida'];
+
+  function hojeISO() {
+    var hoje = new Date();
+    return hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+  }
+
   if (selStatus && campoData) {
     selStatus.addEventListener('change', function () {
       if (selStatus.value === 'acolhida' && !campoData.value) {
-        var hoje = new Date();
-        campoData.value = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+        campoData.value = hojeISO();
+      }
+    });
+    campoData.addEventListener('change', function () {
+      if (campoData.value && STATUS_PRE_ACOLHIMENTO.indexOf(selStatus.value) !== -1) {
+        selStatus.value = 'acolhida';
       }
     });
   }
