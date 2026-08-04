@@ -36,6 +36,16 @@ CREATE TABLE IF NOT EXISTS login_tentativas (
     INDEX idx_em (em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabela para controle de envios dos formulários públicos (oração/testemunho em index.php)
+-- Isolada de login_tentativas para não misturar contadores de login/reset com envios públicos
+CREATE TABLE IF NOT EXISTS formulario_tentativas (
+    id  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ip  VARCHAR(45) NOT NULL,
+    em  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_ip (ip),
+    INDEX idx_em (em)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Códigos MFA enviados por e-mail (válidos por 10 minutos)
 CREATE TABLE IF NOT EXISTS mfa_codigos (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

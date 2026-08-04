@@ -11,6 +11,8 @@ if (file_exists(__DIR__ . '/portal/config.php')) {
     } catch (Exception $e) {}
 }
 
+$erro_oracao = $erro_testemunho = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Honeypot: bots preenchem este campo, humanos não veem
     if (!empty($_POST['_hp_website'])) {
@@ -18,20 +20,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     $base_url = strtok($_SERVER['REQUEST_URI'], '?');
+    $ip       = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+    // Rate limit: máx. 5 envios (oração + testemunho somados) por IP a cada 15 minutos
+    $bloqueado_form = false;
+    if ($db_ok) {
+        try {
+            db()->prepare("DELETE FROM formulario_tentativas WHERE em < DATE_SUB(NOW(), INTERVAL 15 MINUTE)")->execute();
+            $st = db()->prepare("SELECT COUNT(*) FROM formulario_tentativas WHERE ip = ? AND em > DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+            $st->execute([$ip]);
+            if ((int)$st->fetchColumn() >= 5) $bloqueado_form = true;
+        } catch (Exception $e) {}
+    }
+    $msg_bloqueio = 'Muitos envios deste endereço em pouco tempo. Aguarde alguns minutos e tente novamente.';
+
     if (!empty($_POST['oracao']) && $db_ok) {
-        $t = mb_substr(trim(strip_tags($_POST['oracao'])), 0, 1000);
-        if (mb_strlen($t) >= 5) {
-            db()->prepare("INSERT INTO oracoes (texto) VALUES (?)")->execute([$t]);
-            header('Location: ' . $base_url . '?ok=oracao#oracao');
-            exit;
+        if ($bloqueado_form) {
+            $erro_oracao = $msg_bloqueio;
+        } else {
+            $t = mb_substr(trim(strip_tags($_POST['oracao'])), 0, 1000);
+            if (mb_strlen($t) >= 5) {
+                db()->prepare("INSERT INTO oracoes (texto) VALUES (?)")->execute([$t]);
+                try { db()->prepare("INSERT INTO formulario_tentativas (ip) VALUES (?)")->execute([$ip]); } catch (Exception $e) {}
+                header('Location: ' . $base_url . '?ok=oracao#oracao');
+                exit;
+            }
         }
     }
     if (!empty($_POST['testemunho']) && $db_ok) {
-        $t = mb_substr(trim(strip_tags($_POST['testemunho'])), 0, 2000);
-        if (mb_strlen($t) >= 5) {
-            db()->prepare("INSERT INTO testemunhos (texto) VALUES (?)")->execute([$t]);
-            header('Location: ' . $base_url . '?ok=testemunho#testemunhos');
-            exit;
+        if ($bloqueado_form) {
+            $erro_testemunho = $msg_bloqueio;
+        } else {
+            $t = mb_substr(trim(strip_tags($_POST['testemunho'])), 0, 2000);
+            if (mb_strlen($t) >= 5) {
+                db()->prepare("INSERT INTO testemunhos (texto) VALUES (?)")->execute([$t]);
+                try { db()->prepare("INSERT INTO formulario_tentativas (ip) VALUES (?)")->execute([$ip]); } catch (Exception $e) {}
+                header('Location: ' . $base_url . '?ok=testemunho#testemunhos');
+                exit;
+            }
         }
     }
 }
@@ -475,6 +501,12 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
   padding: 11px 15px; border-radius: 6px;
   font-size: .9rem; font-style: italic; margin-bottom: 16px;
 }
+.err-msg {
+  background: #fdeceb; color: var(--red);
+  border-left: 3px solid var(--red);
+  padding: 11px 15px; border-radius: 6px;
+  font-size: .9rem; font-style: italic; margin-bottom: 16px;
+}
 textarea {
   width: 100%; border: 1px solid var(--border);
   border-radius: var(--r); padding: 13px 15px;
@@ -822,6 +854,9 @@ footer {
         <?php if (isset($_GET['ok']) && $_GET['ok']==='oracao'): ?>
         <div class="ok-msg">Seu pedido foi recebido. Vamos orar por você! 🙏</div>
         <?php endif; ?>
+        <?php if ($erro_oracao): ?>
+        <div class="err-msg"><?= htmlspecialchars($erro_oracao) ?></div>
+        <?php endif; ?>
         <form method="POST">
           <input type="text" name="_hp_website" style="display:none" tabindex="-1" autocomplete="off">
           <textarea name="oracao" placeholder="Escreva sua intenção de oração..." required maxlength="1000"></textarea>
@@ -871,6 +906,9 @@ footer {
         <p>Divida as graças que Deus realizou em sua vida. Que Ele seja glorificado!</p>
         <?php if (isset($_GET['ok']) && $_GET['ok']==='testemunho'): ?>
         <div class="ok-msg">Seu testemunho foi compartilhado. Que Deus seja glorificado! ✨</div>
+        <?php endif; ?>
+        <?php if ($erro_testemunho): ?>
+        <div class="err-msg"><?= htmlspecialchars($erro_testemunho) ?></div>
         <?php endif; ?>
         <form method="POST">
           <input type="text" name="_hp_website" style="display:none" tabindex="-1" autocomplete="off">
