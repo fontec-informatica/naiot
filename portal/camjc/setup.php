@@ -114,6 +114,35 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $msgs[] = ['ok', 'Tabela camjc_triagens OK'];
 
+    $db->exec("CREATE TABLE IF NOT EXISTS camjc_anamneses (
+        id                              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        acolhida_id                     INT UNSIGNED NOT NULL,
+        data_anamnese                   DATE NOT NULL,
+        nascimento_complicacoes         TEXT NULL,
+        familia_obitos                  TEXT NULL,
+        familia_uso_substancias         TEXT NULL,
+        familia_atitudes                TEXT NULL,
+        familia_ambiente                TEXT NULL,
+        infancia                        TEXT NULL,
+        marital_sexual                  TEXT NULL,
+        filhos                          TEXT NULL,
+        historia_forense                TEXT NULL,
+        droga_primeira_vez              TEXT NULL,
+        droga_evolucao                  TEXT NULL,
+        droga_percepcao_problema        TEXT NULL,
+        droga_padrao_atual              TEXT NULL,
+        droga_abstinencia_primeira_vez  TEXT NULL,
+        droga_periodos_sobriedade       TEXT NULL,
+        droga_ultimo_uso                TEXT NULL,
+        parecer_equipe                  TEXT NULL,
+        criado_por                      INT UNSIGNED NULL,
+        criado_em                       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        atualizado_em                   DATETIME NULL,
+        KEY idx_acolhida (acolhida_id),
+        CONSTRAINT fk_anamnese_acolhida FOREIGN KEY (acolhida_id) REFERENCES camjc_acolhidas(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $msgs[] = ['ok', 'Tabela camjc_anamneses OK'];
+
     $db->exec("CREATE TABLE IF NOT EXISTS camjc_anexos (
         id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         acolhida_id    INT UNSIGNED NOT NULL,

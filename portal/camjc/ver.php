@@ -71,6 +71,10 @@ $triagens = db()->prepare("SELECT * FROM camjc_triagens WHERE acolhida_id = ? OR
 $triagens->execute([$id]);
 $triagens = $triagens->fetchAll();
 
+$anamneses = db()->prepare("SELECT * FROM camjc_anamneses WHERE acolhida_id = ? ORDER BY data_anamnese DESC, id DESC");
+$anamneses->execute([$id]);
+$anamneses = $anamneses->fetchAll();
+
 $anexos = db()->prepare("SELECT * FROM camjc_anexos WHERE acolhida_id = ? ORDER BY criado_em DESC");
 $anexos->execute([$id]);
 $anexos = $anexos->fetchAll();
@@ -127,8 +131,9 @@ include dirname(__DIR__) . '/_layout.php';
 
 <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
   <a href="/portal/camjc/" style="font-size:.78rem;color:var(--muted)">← Casa das Mulheres</a>
-  <div style="display:flex;gap:8px">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
     <a href="/portal/camjc/editar.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Editar</a>
+    <a href="/portal/camjc/anamnese_nova.php?acolhida_id=<?= $id ?>" class="btn btn-ghost btn-sm">+ Nova anamnese</a>
     <?php if ($triagens): ?>
     <a href="/portal/camjc/imprimir.php?id=<?= $triagens[0]['id'] ?>" target="_blank" class="btn btn-primary btn-sm">🖨 Imprimir triagem</a>
     <?php endif; ?>
@@ -139,6 +144,8 @@ include dirname(__DIR__) . '/_layout.php';
 <?php if (!empty($_GET['editado'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Alterações salvas com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['anexo_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Documento anexado com sucesso.</div><?php endif; ?>
 <?php if (!empty($_GET['anexo_del'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Documento removido.</div><?php endif; ?>
+<?php if (!empty($_GET['anamnese_ok'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Anamnese salva com sucesso.</div><?php endif; ?>
+<?php if (!empty($_GET['anamnese_editada'])): ?><div class="alerta alerta-ok" style="margin-bottom:16px">Anamnese atualizada com sucesso.</div><?php endif; ?>
 <?php if ($erro): ?><div class="alerta alerta-erro" style="margin-bottom:16px"><?= htmlspecialchars($erro) ?></div><?php endif; ?>
 
 <div class="cj-ver-grid">
@@ -232,8 +239,51 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
   </div>
 
-  <!-- ── Coluna principal: triagens ── -->
+  <!-- ── Coluna principal: anamneses + triagens ── -->
   <div>
+    <?php if (!empty($anamneses)): foreach ($anamneses as $an): ?>
+    <div class="cj-card cj-triagem-block">
+      <div class="cj-card-head" style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Anamnese — <?= date('d/m/Y', strtotime($an['data_anamnese'])) ?></h3>
+        <div style="display:flex;gap:12px">
+          <a href="/portal/camjc/anamnese_editar.php?id=<?= $an['id'] ?>" style="font-size:.75rem;color:var(--muted)">Editar</a>
+          <a href="/portal/camjc/anamnese_imprimir.php?id=<?= $an['id'] ?>" target="_blank" style="font-size:.75rem;color:var(--green)">🖨 Imprimir</a>
+        </div>
+      </div>
+      <?php
+        $anamnese_perguntas = [
+          'nascimento_complicacoes'        => 'Nascimento (complicações)',
+          'familia_obitos'                 => 'Óbitos na família',
+          'familia_uso_substancias'        => 'Uso/abuso de substâncias na família',
+          'familia_atitudes'               => 'Atitudes dos familiares',
+          'familia_ambiente'               => 'Ambiente familiar',
+          'infancia'                       => 'Infância',
+          'marital_sexual'                 => 'História marital/sexual',
+          'filhos'                         => 'Filhos',
+          'historia_forense'               => 'História forense',
+          'droga_primeira_vez'             => 'Primeira droga / como conseguiu',
+          'droga_evolucao'                 => 'Evolução de cada droga',
+          'droga_percepcao_problema'       => 'Percepção do problema',
+          'droga_padrao_atual'             => 'Padrão atual de uso',
+          'droga_abstinencia_primeira_vez' => 'Primeira abstinência',
+          'droga_periodos_sobriedade'      => 'Períodos de sobriedade',
+          'droga_ultimo_uso'               => 'Último uso',
+          'parecer_equipe'                 => 'Parecer da equipe',
+        ];
+      ?>
+      <?php foreach ($anamnese_perguntas as $campo => $label): ?>
+      <div class="cj-campo">
+        <div class="cj-campo-label"><?= htmlspecialchars($label) ?></div>
+        <?php if (!empty($an[$campo])): ?>
+          <div class="cj-campo-val"><?= nl2br(htmlspecialchars($an[$campo])) ?></div>
+        <?php else: ?>
+          <div class="cj-campo-vazio">Não informado</div>
+        <?php endif; ?>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <?php endforeach; endif; ?>
+
     <?php if (empty($triagens)): ?>
       <div class="cj-card"><div style="padding:24px;text-align:center;color:var(--muted)">Nenhuma triagem registrada.</div></div>
     <?php else: foreach ($triagens as $t): ?>
