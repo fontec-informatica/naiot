@@ -124,7 +124,7 @@ $v = fn($campo, $default = '') => htmlspecialchars($_POST[$campo] ?? $default ??
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
-<div class="form-wrap" style="max-width:820px">
+<div class="form-wrap">
   <h2>Editar — <?= htmlspecialchars($a['nome']) ?></h2>
 
   <?php if ($erro): ?>

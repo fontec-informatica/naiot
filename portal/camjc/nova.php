@@ -112,7 +112,7 @@ if (!$erro && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
-<div class="form-wrap" style="max-width:820px">
+<div class="form-wrap">
   <h2>Nova candidata — Triagem</h2>
 
   <?php if ($erro): ?>
