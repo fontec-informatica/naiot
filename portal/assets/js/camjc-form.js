@@ -59,9 +59,21 @@
     });
   }
 
+  // O Safari no iOS escreve a data por extenso no idioma da página
+  // ("11 de dezembro de 1999"), que não cabe no campo em telas estreitas.
+  // Forçar o locale en-GB faz o próprio Safari desenhar num formato
+  // numérico compacto (dd/mm/aaaa) — só muda a exibição, o valor salvo
+  // continua no formato ISO normal (yyyy-mm-dd).
+  function compactarDatas() {
+    document.querySelectorAll('input[type="date"]').forEach(function (input) {
+      input.setAttribute('lang', 'en-GB');
+    });
+  }
+
   function iniciar() {
     initTabs();
     initFormGuard();
+    compactarDatas();
   }
 
   if (document.readyState === 'loading') {

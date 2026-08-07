@@ -317,8 +317,8 @@ include dirname(__DIR__) . '/_layout.php';
   <?php endif; ?>
 </div>
 
-<script src="/portal/assets/js/camjc-form.js"></script>
-<script src="/portal/assets/js/cidade-autocomplete.js"></script>
+<script src="/portal/assets/js/camjc-form.js?v=<?= filemtime(dirname(__DIR__) . '/assets/js/camjc-form.js') ?>"></script>
+<script src="/portal/assets/js/cidade-autocomplete.js?v=<?= filemtime(dirname(__DIR__) . '/assets/js/cidade-autocomplete.js') ?>"></script>
 <script>
 (function () {
   // ── Status ↔ Data de acolhimento — sincronizados nos dois sentidos (visível, editável) ──
