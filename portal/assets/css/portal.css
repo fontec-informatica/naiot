@@ -409,6 +409,14 @@ input[type=checkbox]{accent-color:var(--g);width:14px;height:14px;cursor:pointer
 .tab-pane{display:none}
 .tab-pane.ativo{display:block}
 
+/* Botões de ação do formulário (Salvar/Cancelar/Voltar/Próximo) —
+   empilha em coluna no mobile, igual ao padrão já usado na Van */
+.form-acoes{display:flex;gap:12px;margin-top:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:600px){
+  .form-acoes{flex-direction:column;align-items:stretch}
+  .form-acoes>*{width:100%;justify-content:center;text-align:center;margin-left:0!important}
+}
+
 /* ══════════════════════════
    PAGINAÇÃO
 ══════════════════════════ */

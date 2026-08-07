@@ -111,7 +111,7 @@ include dirname(__DIR__) . '/_layout.php';
       <textarea id="observacoes" name="observacoes" rows="3"><?= $v('observacoes') ?></textarea>
     </div>
 
-    <div style="display:flex;gap:12px;margin-top:8px">
+    <div class="form-acoes">
       <button type="submit" class="btn btn-primary">Salvar alterações</button>
       <a href="/portal/camjc/ver.php?id=<?= $s['acolhida_id'] ?>" class="btn btn-ghost">Cancelar</a>
     </div>

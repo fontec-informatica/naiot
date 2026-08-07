@@ -142,7 +142,7 @@ include dirname(__DIR__) . '/_layout.php';
     </div>
     <?php endforeach; ?>
 
-    <div style="display:flex;gap:12px;margin-top:8px;align-items:center">
+    <div class="form-acoes">
       <button type="button" id="btn-voltar" class="btn btn-ghost" style="display:none">← Voltar</button>
       <button type="button" id="btn-proximo" class="btn btn-primary">Próximo →</button>
       <button type="submit" class="btn btn-primary">Salvar alterações</button>
