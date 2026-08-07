@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     usuario       VARCHAR(50)   NULL UNIQUE,
     email         VARCHAR(180)  NOT NULL UNIQUE,
     senha_hash    VARCHAR(255)  NOT NULL,
+    sessao_token  VARCHAR(64)   NULL DEFAULT NULL,
     perfil        VARCHAR(255)  NOT NULL DEFAULT 'secretaria',
     mestre        TINYINT(1)    NOT NULL DEFAULT 0,
     ativo         TINYINT(1)    NOT NULL DEFAULT 1,

@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['usuario_perfil'] = $pendente['perfil'];
             $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
             $_SESSION['_ultimo_ativo']  = time();
+            $_SESSION['sessao_token']   = sessao_token_gerar((int)$pendente['id']);
             unset($_SESSION['mfa_pendente'], $_SESSION['mfa_tentativas']);
 
             mfa_registrar_dispositivo($pendente['id']);

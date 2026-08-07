@@ -72,6 +72,7 @@ if (!$bloqueado && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['usuario_perfil'] = $usuario['perfil'];
                     $_SESSION['csrf_token']     = bin2hex(random_bytes(32));
                     $_SESSION['_ultimo_ativo']  = time();
+                    $_SESSION['sessao_token']   = sessao_token_gerar((int)$usuario['id']);
                     db()->prepare('UPDATE usuarios SET ultimo_acesso = NOW() WHERE id = ?')->execute([$usuario['id']]);
                     header('Location: ' . home_por_perfil($usuario['perfil']));
                     exit;
@@ -131,6 +132,10 @@ $site_key   = RECAPTCHA_SITE_KEY;
 
     <?php if ($expirado && !$erro): ?>
       <div class="alerta alerta-aviso">Sua sessão expirou por inatividade. Faça login novamente.</div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['sessao_substituida']) && !$erro && !$expirado): ?>
+      <div class="alerta alerta-aviso">Sua conta foi acessada em outro dispositivo/navegador, então esta sessão foi encerrada.</div>
     <?php endif; ?>
 
     <?php if (isset($_GET['mfa_bloqueado']) && !$erro): ?>

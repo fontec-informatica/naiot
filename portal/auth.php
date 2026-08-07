@@ -67,10 +67,41 @@ function tem_modulo(string $modulo): bool {
     return in_array($modulo, _modulos_do_usuario(), true);
 }
 
+/* ── Sessão única por usuário ────────────────────────────────────────────── */
+// Login novo sobrescreve o token no banco; a sessão antiga (que guarda o
+// token anterior na variável de sessão) deixa de bater e é derrubada na
+// próxima requisição — ou seja, só existe uma sessão válida por usuário.
+function sessao_token_gerar(int $usuario_id): string {
+    $token = bin2hex(random_bytes(32));
+    try {
+        db()->prepare("UPDATE usuarios SET sessao_token = ? WHERE id = ?")->execute([$token, $usuario_id]);
+    } catch (Exception $e) {}
+    return $token;
+}
+
+function sessao_token_valido(): bool {
+    if (empty($_SESSION['usuario_id']) || empty($_SESSION['sessao_token'])) return false;
+    try {
+        $st = db()->prepare("SELECT sessao_token FROM usuarios WHERE id = ?");
+        $st->execute([$_SESSION['usuario_id']]);
+        $atual = $st->fetchColumn();
+        if ($atual === false || $atual === null) return true; // coluna vazia (nunca logou após a migração) — não derruba
+        return hash_equals((string)$atual, (string)$_SESSION['sessao_token']);
+    } catch (Exception $e) {
+        return true; // erro de banco não deve derrubar sessões à toa
+    }
+}
+
 /* ── Guards ──────────────────────────────────────────────────────────────── */
 function requer_login(): void {
     if (!usuario_logado()) {
         header('Location: /portal/login.php');
+        exit;
+    }
+    if (!sessao_token_valido()) {
+        session_unset();
+        session_destroy();
+        header('Location: /portal/login.php?sessao_substituida=1');
         exit;
     }
     // Verificar timeout de inatividade
