@@ -2,7 +2,7 @@
   'use strict';
 
   var cidadesCache = null;
-  var CACHE_KEY = 'naiot_cidades_br_v1';
+  var CACHE_KEY = 'naiot_cidades_v1';
 
   /* regex construida em runtime para evitar problemas de encoding no upload FTP */
   var RE_COMBINING = new RegExp(
@@ -24,6 +24,8 @@
     var wrapper = input.parentNode;
     wrapper.style.position = 'relative';
 
+    var ufAlvo = input.dataset.ufAlvo ? document.getElementById(input.dataset.ufAlvo) : null;
+
     var box = document.createElement('ul');
     box.className = 'cidade-ac-box';
     wrapper.appendChild(box);
@@ -32,6 +34,12 @@
     var clicando = false;
 
     function fechar() { box.innerHTML = ''; box.style.display = 'none'; }
+
+    function selecionar(c) {
+      input.value = c.nome;
+      if (ufAlvo) ufAlvo.value = c.uf;
+      fechar();
+    }
 
     function mostrar(lista) {
       box.innerHTML = '';
@@ -45,8 +53,7 @@
         li.addEventListener('mousedown', function (e) {
           e.preventDefault();
           clicando = true;
-          input.value = c.nome;
-          fechar();
+          selecionar(c);
           input.focus();
           clicando = false;
         });
@@ -59,12 +66,10 @@
       if (q.length < 2) { fechar(); return; }
       if (cidadesCache) { mostrar(filtrar(cidadesCache, q)); return; }
 
-      fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome')
+      fetch('/portal/membros/cidades_ibge.php')
         .then(function (r) { return r.json(); })
         .then(function (data) {
-          cidadesCache = data.map(function (m) {
-            return { nome: m.nome, uf: m.microrregiao.mesorregiao.UF.sigla };
-          });
+          cidadesCache = data;
           try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(cidadesCache)); } catch (_) {}
           mostrar(filtrar(cidadesCache, q));
         })
@@ -101,8 +106,9 @@
         if (ant) ant.classList.add('ativo');
       } else if (e.key === 'Enter' && ativo) {
         e.preventDefault();
-        input.value = ativo.querySelector('.cidade-ac-nome').textContent;
-        fechar();
+        var nome = ativo.querySelector('.cidade-ac-nome').textContent;
+        var uf   = ativo.querySelector('.cidade-ac-uf').textContent;
+        selecionar({ nome: nome, uf: uf });
       } else if (e.key === 'Escape') {
         fechar();
       }

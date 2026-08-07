@@ -291,7 +291,7 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="form-row">
         <div class="form-group">
           <label for="cidade">Cidade atual</label>
-          <input type="text" id="cidade" name="cidade" value="<?= $v('cidade', $a['cidade']) ?>">
+          <input type="text" id="cidade" name="cidade" value="<?= $v('cidade', $a['cidade']) ?>" autocomplete="off" placeholder="Digite para buscar…" data-cidade-ac data-uf-alvo="estado">
         </div>
         <div class="form-group">
           <label for="estado">Estado</label>
@@ -415,6 +415,7 @@ include dirname(__DIR__) . '/_layout.php';
 </div>
 
 <script src="/portal/assets/js/camjc-form.js"></script>
+<script src="/portal/assets/js/cidade-autocomplete.js"></script>
 <script>
 (function () {
   // ── Status ↔ Data de acolhimento — sincronizados nos dois sentidos (visível, editável) ──

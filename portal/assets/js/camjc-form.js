@@ -20,15 +20,22 @@
       panes[atual].classList.add('ativo');
       if (btnVoltar)  btnVoltar.style.display  = atual === 0 ? 'none' : '';
       if (btnProximo) btnProximo.style.display = atual === botoes.length - 1 ? 'none' : '';
+    }
+
+    // No mobile quem rola é o container ".content" (não a janela) — usar
+    // scrollIntoView deixa o navegador escolher o ancestral correto em vez
+    // de forçar window.scrollTo, que "briga" com o scroll interno e faz a
+    // página trepidar no iOS Safari.
+    function rolarParaTopo() {
       var wrap = document.querySelector('.form-wrap');
-      if (wrap) window.scrollTo({ top: wrap.offsetTop - 20, behavior: 'smooth' });
+      if (wrap) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     botoes.forEach(function (btn, idx) {
-      btn.addEventListener('click', function () { irPara(idx); });
+      btn.addEventListener('click', function () { irPara(idx); rolarParaTopo(); });
     });
-    if (btnProximo) btnProximo.addEventListener('click', function () { irPara(atual + 1); });
-    if (btnVoltar)  btnVoltar.addEventListener('click', function () { irPara(atual - 1); });
+    if (btnProximo) btnProximo.addEventListener('click', function () { irPara(atual + 1); rolarParaTopo(); });
+    if (btnVoltar)  btnVoltar.addEventListener('click', function () { irPara(atual - 1); rolarParaTopo(); });
 
     irPara(0);
   }
