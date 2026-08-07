@@ -59,21 +59,59 @@
     });
   }
 
-  // O Safari no iOS escreve a data por extenso no idioma da página
-  // ("11 de dezembro de 1999"), que não cabe no campo em telas estreitas.
-  // Forçar o locale en-GB faz o próprio Safari desenhar num formato
-  // numérico compacto (dd/mm/aaaa) — só muda a exibição, o valor salvo
-  // continua no formato ISO normal (yyyy-mm-dd).
-  function compactarDatas() {
+  // O widget nativo de input[type=date] no WebKit (Safari e Chrome no
+  // iOS usam o mesmo motor) às vezes ignora a largura definida em CSS e
+  // desenha mais largo que a caixa, estourando o card — nenhuma
+  // combinação de width/min-width/overflow no próprio input resolve de
+  // forma confiável (testado). A solução definitiva é parar de depender
+  // do desenho nativo: o input real continua no DOM (mesmo id/name,
+  // recebe toque e abre o calendário normalmente), mas fica invisível;
+  // quem aparece é um <div> comum por cima mostrando o valor formatado —
+  // um <div> sempre respeita a largura do container, sem exceções.
+  function blindarDatas() {
     document.querySelectorAll('input[type="date"]').forEach(function (input) {
-      input.setAttribute('lang', 'en-GB');
+      if (input.dataset.blindado) return;
+      input.dataset.blindado = '1';
+
+      var wrap = document.createElement('div');
+      wrap.className = 'data-wrap';
+      input.parentNode.insertBefore(wrap, input);
+      wrap.appendChild(input);
+
+      var visor = document.createElement('div');
+      visor.className = 'data-visor';
+      wrap.appendChild(visor);
+
+      function formatar(iso) {
+        var p = (iso || '').split('-');
+        return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '';
+      }
+      function atualizar() {
+        var f = formatar(input.value);
+        visor.textContent = f || 'dd/mm/aaaa';
+        visor.classList.toggle('vazio', !f);
+      }
+
+      // Além dos eventos normais, intercepta "input.value = ..." feito por
+      // outros scripts do formulário (ex: preenchimento automático de
+      // data ao mudar o status), pra o visor nunca ficar dessincronizado.
+      var descNativo = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      Object.defineProperty(input, 'value', {
+        configurable: true,
+        get: function () { return descNativo.get.call(this); },
+        set: function (v) { descNativo.set.call(this, v); atualizar(); },
+      });
+
+      input.addEventListener('input', atualizar);
+      input.addEventListener('change', atualizar);
+      atualizar();
     });
   }
 
   function iniciar() {
     initTabs();
     initFormGuard();
-    compactarDatas();
+    blindarDatas();
   }
 
   if (document.readyState === 'loading') {

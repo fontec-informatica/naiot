@@ -338,12 +338,28 @@ select,textarea{
   font-family:inherit;
   transition:border-color var(--ease),box-shadow var(--ease),background var(--ease);
 }
-/* iOS Safari renderiza o valor de input[type=date] por extenso e às vezes
-   ignora a largura definida em CSS, estourando o card. overflow:hidden no
-   próprio input não é suficiente (o widget nativo ignora); precisa cortar
-   no container, que é uma caixa comum e sempre respeita overflow. */
-input[type=date]{max-width:100%}
-.form-group:has(input[type=date]){overflow:hidden}
+/* O widget nativo de input[type=date] no WebKit pode ignorar a largura
+   definida em CSS e desenhar mais largo que o card (bug conhecido, sem
+   solução confiável só com CSS no próprio input). camjc-form.js troca a
+   exibição por um <div> comum (.data-visor) por cima do input real, que
+   fica invisível mas continua clicável — abre o calendário normalmente. */
+.data-wrap{position:relative;overflow:hidden}
+.data-wrap input[type=date]{
+  position:absolute;inset:0;width:100%;height:100%;
+  opacity:0;border:none;padding:0;background:none;
+}
+.data-visor{
+  padding:8px 12px;
+  border:1.5px solid var(--border);border-radius:var(--r);
+  font-size:.88rem;color:var(--text);background:var(--off);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  pointer-events:none;
+}
+.data-visor.vazio{color:var(--muted)}
+.data-wrap:focus-within .data-visor{
+  border-color:var(--green);background:#fff;
+  box-shadow:0 0 0 3px rgba(30,107,53,.1);
+}
 input:focus,select:focus,textarea:focus{
   border-color:var(--green);background:#fff;
   box-shadow:0 0 0 3px rgba(30,107,53,.1);
