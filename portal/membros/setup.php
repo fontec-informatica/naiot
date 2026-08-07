@@ -114,5 +114,8 @@ try {
 try {
     $pdo->exec("ALTER TABLE membros ADD UNIQUE KEY uq_cpf (cpf)");
 } catch (PDOException $e) { /* já existe, ou há duplicata cadastrada */ }
+try {
+    $pdo->exec("ALTER TABLE membros ADD COLUMN cep VARCHAR(9) NULL DEFAULT NULL AFTER cidade");
+} catch (PDOException $e) { /* coluna já existe */ }
 
 echo '<p style="font-family:sans-serif;padding:20px;color:green">✓ Tabelas criadas/verificadas com sucesso. <a href="/portal/membros/">Ir para Membros</a></p>';

@@ -30,6 +30,7 @@ $dados = [
     'endereco'    => $m['endereco'],
     'bairro'      => $m['bairro'],
     'cidade'      => $m['cidade'],
+    'cep'         => $m['cep'] ?? '',
 ];
 
 $grupos      = db()->query("SELECT * FROM membros_grupos    ORDER BY nome")->fetchAll();
@@ -72,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['data_nasc'] = trim($_POST['data_nasc'] ?? '');
     $dados['endereco']  = trim($_POST['endereco']  ?? '');
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
+    $dados['cep']       = trim($_POST['cep']       ?? '');
     $dados['cidade']       = trim($_POST['cidade']       ?? '');
     $dados['estado_civil'] = trim($_POST['estado_civil'] ?? '');
     $dados['sexo']         = trim($_POST['sexo']         ?? '');
@@ -126,8 +128,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if ($m['foto']) @unlink($dir_fotos . $m['foto']);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $nova_foto);
         }
-        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,telefone=?,estado_civil=?,sexo=?,cpf=? WHERE id=?")
-           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $dados['cpf'] ?: null, $id]);
+        db()->prepare("UPDATE membros SET nome=?,foto=?,data_nasc=?,endereco=?,bairro=?,cidade=?,cep=?,telefone=?,estado_civil=?,sexo=?,cpf=? WHERE id=?")
+           ->execute([$dados['nome'], $nova_foto, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['cep'] ?: null, $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $dados['cpf'] ?: null, $id]);
 
         db()->prepare("DELETE FROM membros_grupo_rel WHERE membro_id=?")->execute([$id]);
         foreach ($grupos_sel as $gid) {
@@ -218,6 +220,12 @@ include dirname(__DIR__) . '/_layout.php';
           <label>Telefone / WhatsApp</label>
           <input type="tel" name="telefone" value="<?= htmlspecialchars($dados['telefone']) ?>" maxlength="30" placeholder="(00) 90000-0000">
         </div>
+      </div>
+
+      <div class="form-group">
+        <label>CEP</label>
+        <input type="text" name="cep" id="cep-input" value="<?= htmlspecialchars($dados['cep']) ?>" maxlength="9" placeholder="00000-000" inputmode="numeric">
+        <span class="form-hint">Preenche endereço, bairro e cidade automaticamente.</span>
       </div>
 
       <div class="form-group">
@@ -459,6 +467,36 @@ foreach ($modais_inline as $tipo => $cfg): ?>
   document.addEventListener('DOMContentLoaded',function(){
     try{var s=sessionStorage.getItem(KEY);if(s)cache=JSON.parse(s);}catch(_){}
     document.querySelectorAll('[data-cidade-ac]').forEach(function(el){init(el);});
+  });
+})();
+
+/* ── Preenche endereço/bairro/cidade a partir do CEP (ViaCEP) — redundância
+   ao preenchimento manual/autocomplete de cidade ── */
+(function(){
+  var cepInput = document.getElementById('cep-input');
+  if (!cepInput) return;
+  var enderecoInput = document.querySelector('[name="endereco"]');
+  var bairroInput   = document.querySelector('[name="bairro"]');
+  var cidadeInput   = document.querySelector('[name="cidade"]');
+  var ultimoCep = '';
+
+  function buscar(){
+    var cep = cepInput.value.replace(/\D/g,'');
+    if (cep.length !== 8 || cep === ultimoCep) return;
+    ultimoCep = cep;
+    fetch('/portal/membros/cep_lookup.php?cep=' + cep)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.erro) return;
+        if (enderecoInput && d.logradouro) enderecoInput.value = d.logradouro;
+        if (bairroInput   && d.bairro)     bairroInput.value   = d.bairro;
+        if (cidadeInput   && d.localidade) cidadeInput.value   = d.localidade;
+      })
+      .catch(function(){});
+  }
+  cepInput.addEventListener('blur', buscar);
+  cepInput.addEventListener('input', function(){
+    if (this.value.replace(/\D/g,'').length === 8) buscar();
   });
 })();
 

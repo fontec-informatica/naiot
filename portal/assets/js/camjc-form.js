@@ -126,7 +126,7 @@
       if (cep.length !== 8 || cep === ultimoCep) return;
       ultimoCep = cep;
 
-      fetch('/portal/camjc/cep_lookup.php?cep=' + cep)
+      fetch('/portal/membros/cep_lookup.php?cep=' + cep)
         .then(function (r) { return r.json(); })
         .then(function (d) {
           if (d.erro) return;

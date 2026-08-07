@@ -16,7 +16,7 @@ $cargo_id      = (int)($_GET['cargo']      ?? 0);
 $habilidade_id = (int)($_GET['habilidade'] ?? 0);
 $pastoreio_id  = (int)($_GET['pastoreio']  ?? 0);
 $erros        = [];
-$dados        = ['cpf'=>'','nome'=>'','telefone'=>'','data_nasc'=>'','estado_civil'=>'','sexo'=>'','endereco'=>'','bairro'=>'','cidade'=>''];
+$dados        = ['cpf'=>'','nome'=>'','telefone'=>'','data_nasc'=>'','estado_civil'=>'','sexo'=>'','endereco'=>'','bairro'=>'','cidade'=>'','cep'=>''];
 
 $grupos      = db()->query("SELECT * FROM membros_grupos    ORDER BY nome")->fetchAll();
 $cargos      = db()->query("SELECT * FROM membros_cargos    ORDER BY nome")->fetchAll();
@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['data_nasc'] = trim($_POST['data_nasc'] ?? '');
     $dados['endereco']  = trim($_POST['endereco']  ?? '');
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
+    $dados['cep']       = trim($_POST['cep']       ?? '');
     $dados['cidade']       = trim($_POST['cidade']       ?? '');
     $dados['estado_civil'] = trim($_POST['estado_civil'] ?? '');
     $dados['sexo']         = trim($_POST['sexo']         ?? '');
@@ -85,8 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $foto_nome);
         }
-        $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,bairro,cidade,telefone,estado_civil,sexo,cpf) VALUES (?,?,?,?,?,?,?,?,?,?)");
-        $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $dados['cpf'] ?: null]);
+        $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,bairro,cidade,cep,telefone,estado_civil,sexo,cpf) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+        $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['cep'] ?: null, $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $dados['cpf'] ?: null]);
         $novo_id = (int)db()->lastInsertId();
 
         foreach ($grupos_sel as $gid) {
@@ -176,6 +177,13 @@ include dirname(__DIR__) . '/_layout.php';
           <label>Telefone / WhatsApp</label>
           <input type="tel" name="telefone" value="<?= htmlspecialchars($dados['telefone']) ?>" maxlength="30" placeholder="(00) 90000-0000">
         </div>
+      </div>
+
+      <!-- CEP -->
+      <div class="form-group">
+        <label>CEP</label>
+        <input type="text" name="cep" id="cep-input" value="<?= htmlspecialchars($dados['cep']) ?>" maxlength="9" placeholder="00000-000" inputmode="numeric">
+        <span class="form-hint">Preenche endereço, bairro e cidade automaticamente.</span>
       </div>
 
       <!-- Endereço -->
@@ -408,6 +416,36 @@ foreach ($modais_inline as $tipo => $cfg): ?>
   document.addEventListener('DOMContentLoaded',function(){
     try{var s=sessionStorage.getItem(KEY);if(s)cache=JSON.parse(s);}catch(_){}
     document.querySelectorAll('[data-cidade-ac]').forEach(function(el){init(el);});
+  });
+})();
+
+/* ── Preenche endereço/bairro/cidade a partir do CEP (ViaCEP) — redundância
+   ao preenchimento manual/autocomplete de cidade ── */
+(function(){
+  var cepInput = document.getElementById('cep-input');
+  if (!cepInput) return;
+  var enderecoInput = document.querySelector('[name="endereco"]');
+  var bairroInput   = document.querySelector('[name="bairro"]');
+  var cidadeInput   = document.querySelector('[name="cidade"]');
+  var ultimoCep = '';
+
+  function buscar(){
+    var cep = cepInput.value.replace(/\D/g,'');
+    if (cep.length !== 8 || cep === ultimoCep) return;
+    ultimoCep = cep;
+    fetch('/portal/membros/cep_lookup.php?cep=' + cep)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.erro) return;
+        if (enderecoInput && d.logradouro) enderecoInput.value = d.logradouro;
+        if (bairroInput   && d.bairro)     bairroInput.value   = d.bairro;
+        if (cidadeInput   && d.localidade) cidadeInput.value   = d.localidade;
+      })
+      .catch(function(){});
+  }
+  cepInput.addEventListener('blur', buscar);
+  cepInput.addEventListener('input', function(){
+    if (this.value.replace(/\D/g,'').length === 8) buscar();
   });
 })();
 

@@ -253,7 +253,7 @@ include dirname(__DIR__) . '/_layout.php';
                 $endereco_completo = implode(', ', array_filter([$m['endereco'], $m['bairro'], $m['cidade']]));
               ?>
               <?php if ($endereco_completo): ?>
-                <?= htmlspecialchars($endereco_completo) ?>
+                <?= htmlspecialchars($endereco_completo) ?><?= !empty($m['cep']) ? ' — CEP ' . htmlspecialchars($m['cep']) : '' ?>
               <?php else: ?>
                 <span class="ver-campo-vazio">Não informado</span>
               <?php endif; ?>
