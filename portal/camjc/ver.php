@@ -215,6 +215,7 @@ include dirname(__DIR__) . '/_layout.php';
 ?>
 <style>
 .cj-ver-grid{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start}
+.cj-ver-grid>div{min-width:0}
 @media(max-width:860px){.cj-ver-grid{grid-template-columns:1fr}}
 .cj-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh-sm)}
 .cj-card-head{padding:14px 20px;background:var(--off);border-bottom:1px solid var(--border)}
@@ -222,7 +223,7 @@ include dirname(__DIR__) . '/_layout.php';
 .cj-campo{display:flex;flex-direction:column;gap:2px;padding:11px 20px;border-bottom:1px solid var(--border)}
 .cj-campo:last-child{border-bottom:none}
 .cj-campo-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.cj-campo-val{font-size:.88rem;color:var(--txt);white-space:pre-line}
+.cj-campo-val{font-size:.88rem;color:var(--txt);white-space:pre-line;overflow-wrap:anywhere}
 .cj-campo-vazio{color:var(--muted);font-style:italic;font-size:.82rem}
 .cj-triagem-block{margin-bottom:18px}
 .anx-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--off);border-radius:8px;border:1px solid var(--border);margin-bottom:8px}

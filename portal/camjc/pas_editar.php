@@ -109,6 +109,10 @@ include dirname(__DIR__) . '/_layout.php';
 .percepcao-block:last-child{border-bottom:none}
 .slider-wrap{display:flex;align-items:center;gap:12px}
 .slider-wrap input[type=range]{flex:1}
+@media(max-width:860px){
+  .esc-grid{grid-template-columns:1fr;gap:6px}
+  .ativ-row{grid-template-columns:1fr;gap:6px}
+}
 </style>
 
 <div class="form-wrap">

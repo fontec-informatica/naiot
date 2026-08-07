@@ -100,6 +100,10 @@ include dirname(__DIR__) . '/_layout.php';
 .encam-check{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--off);border:1.5px solid var(--border);border-radius:8px;font-size:.82rem;cursor:pointer}
 .percepcao-block{border-bottom:1px solid var(--border);padding:14px 0}
 .percepcao-block:last-child{border-bottom:none}
+@media(max-width:860px){
+  .esc-grid{grid-template-columns:1fr;gap:6px}
+  .ativ-row{grid-template-columns:1fr;gap:6px}
+}
 .slider-wrap{display:flex;align-items:center;gap:12px}
 .slider-wrap input[type=range]{flex:1}
 .slider-val{font-family:'Cinzel',serif;font-weight:700;color:var(--green-dk);min-width:24px;text-align:center}
