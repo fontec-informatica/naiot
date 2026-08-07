@@ -62,7 +62,7 @@ include dirname(__DIR__) . '/_layout.php';
 .cj-search:focus{border-color:var(--green);background:#fff;box-shadow:0 0 0 3px rgba(30,107,53,.1)}
 
 .cj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
-.cj-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;transition:transform var(--ease),box-shadow var(--ease);display:flex;flex-direction:column}
+.cj-card{background:#fff;border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;transition:transform var(--ease),box-shadow var(--ease);display:flex;flex-direction:column;min-width:0}
 .cj-card:hover{transform:translateY(-3px);box-shadow:var(--sh)}
 .cj-card-body{padding:16px 16px 12px}
 .cj-card-nome{font-size:.92rem;font-weight:700;color:var(--green-dk);line-height:1.3;margin-bottom:6px}
@@ -74,7 +74,7 @@ include dirname(__DIR__) . '/_layout.php';
 .cj-empty svg{width:48px;height:48px;stroke:var(--border);margin:0 auto 16px}
 
 @media(max-width:860px){
-  .cj-layout{grid-template-columns:1fr;gap:16px}
+  .cj-layout{grid-template-columns:1fr;gap:16px;min-height:unset}
   .cj-sidebar{position:static}
   .cj-status-list{display:flex;overflow-x:auto;padding:6px;gap:6px;-webkit-overflow-scrolling:touch}
   .cj-status-list li a{white-space:nowrap;border-left:none;border-radius:20px;padding:5px 13px;background:var(--off);border:1px solid var(--border)}
