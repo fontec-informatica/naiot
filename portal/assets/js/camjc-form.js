@@ -108,10 +108,47 @@
     });
   }
 
+  // Preenche endereço/bairro/cidade/estado a partir do CEP (ViaCEP, via
+  // proxy do servidor) — funciona como redundância ao preenchimento
+  // manual/autocomplete de cidade: digitou o CEP certo, o resto vem junto.
+  function autoPreencherPorCep() {
+    var cepInput = document.getElementById('cep');
+    if (!cepInput) return;
+
+    var enderecoInput = document.getElementById('endereco');
+    var bairroInput   = document.getElementById('bairro');
+    var cidadeInput   = document.getElementById('cidade');
+    var estadoSelect  = document.getElementById('estado');
+    var ultimoCep     = '';
+
+    function buscar() {
+      var cep = cepInput.value.replace(/\D/g, '');
+      if (cep.length !== 8 || cep === ultimoCep) return;
+      ultimoCep = cep;
+
+      fetch('/portal/camjc/cep_lookup.php?cep=' + cep)
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.erro) return;
+          if (enderecoInput && d.logradouro) enderecoInput.value = d.logradouro;
+          if (bairroInput   && d.bairro)     bairroInput.value   = d.bairro;
+          if (cidadeInput   && d.localidade) cidadeInput.value   = d.localidade;
+          if (estadoSelect  && d.uf)         estadoSelect.value  = d.uf;
+        })
+        .catch(function () {});
+    }
+
+    cepInput.addEventListener('blur', buscar);
+    cepInput.addEventListener('input', function () {
+      if (this.value.replace(/\D/g, '').length === 8) buscar();
+    });
+  }
+
   function iniciar() {
     initTabs();
     initFormGuard();
     blindarDatas();
+    autoPreencherPorCep();
   }
 
   if (document.readyState === 'loading') {
