@@ -338,6 +338,9 @@ select,textarea{
   font-family:inherit;
   transition:border-color var(--ease),box-shadow var(--ease),background var(--ease);
 }
+/* iOS Safari renderiza o valor de input[type=date] por extenso e às vezes
+   ignora a largura definida em CSS, estourando o card — força o corte. */
+input[type=date]{max-width:100%;overflow:hidden}
 input:focus,select:focus,textarea:focus{
   border-color:var(--green);background:#fff;
   box-shadow:0 0 0 3px rgba(30,107,53,.1);
