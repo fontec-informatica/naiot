@@ -12,6 +12,8 @@ if (!$campanha) { header('Location: /portal/ingressos/'); exit; }
 
 $titulo       = 'Posição de Ingressos — ' . $campanha['nome'];
 $pagina_ativa = 'ingressos';
+$ing_secao    = 'posicao';
+$ing_campanha = $campanha;
 
 $sql = "
     SELECT
@@ -67,10 +69,7 @@ $tot_apagar_val   = array_sum(array_column($posicoes, 'valor_a_pagar'));
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div style="margin-bottom:16px">
-  <h2 style="font-size:1rem;font-weight:600"><?= htmlspecialchars($campanha['nome']) ?> — Posição por servo</h2>
-  <a href="/portal/ingressos/gerenciar.php?id=<?= $campanha_id ?>" style="font-size:.82rem;color:var(--cinza3)">← Voltar aos ingressos</a>
-</div>
+<?php include __DIR__ . '/_subnav.php'; ?>
 
 <div class="cards" style="margin-bottom:24px">
   <div class="card-stat"><h3>Distribuídos</h3><div class="val"><?= (int)$tot_distribuido ?></div></div>

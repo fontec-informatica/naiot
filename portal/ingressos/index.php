@@ -4,6 +4,7 @@ requer_perfil(['admin', 'secretaria']);
 
 $titulo       = 'Controle de Ingressos';
 $pagina_ativa = 'ingressos';
+$ing_secao    = 'campanhas';
 $erro         = '';
 
 function ing_valor_post(string $campo): float {
@@ -74,6 +75,8 @@ foreach ($campanhas as $c) {
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
+
+<?php include __DIR__ . '/_subnav.php'; ?>
 
 <?php if (($_GET['ok'] ?? '') === 'criado'): ?><div class="alerta alerta-ok" style="margin-bottom:16px">✓ Campanha criada com sucesso.</div><?php endif; ?>
 

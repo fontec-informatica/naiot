@@ -13,6 +13,8 @@ if (!$campanha) { header('Location: /portal/ingressos/'); exit; }
 
 $titulo       = 'Acerto — ' . $servo;
 $pagina_ativa = 'ingressos';
+$ing_secao    = 'ingressos';
+$ing_campanha = $campanha;
 $erro         = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
@@ -77,6 +79,8 @@ $status_info = [
 
 include dirname(__DIR__) . '/_layout.php';
 ?>
+
+<?php include __DIR__ . '/_subnav.php'; ?>
 
 <div style="margin-bottom:16px">
   <h2 style="font-size:1rem;font-weight:600">Acerto com <?= htmlspecialchars($servo) ?></h2>

@@ -12,6 +12,8 @@ if (!$campanha) { header('Location: /portal/ingressos/'); exit; }
 
 $titulo       = 'Ingressos — ' . $campanha['nome'];
 $pagina_ativa = 'ingressos';
+$ing_secao    = 'ingressos';
+$ing_campanha = $campanha;
 $erro         = '';
 
 function ing_valor_post(string $campo): float {
@@ -156,12 +158,7 @@ $status_info = [
 include dirname(__DIR__) . '/_layout.php';
 ?>
 
-<div style="margin-bottom:16px">
-  <h2 style="font-size:1rem;font-weight:600"><?= htmlspecialchars($campanha['nome']) ?></h2>
-  <a href="/portal/ingressos/" style="font-size:.82rem;color:var(--cinza3)">← Voltar ao Controle de Ingressos</a>
-  ·
-  <a href="/portal/ingressos/posicao.php?id=<?= $campanha_id ?>" style="font-size:.82rem;color:var(--cinza3)">Ver posição por servo →</a>
-</div>
+<?php include __DIR__ . '/_subnav.php'; ?>
 
 <?php if (($_GET['ok'] ?? '') === 'criado'): ?><div class="alerta alerta-ok" style="margin-bottom:16px">✓ Campanha criada. Gere a primeira faixa de ingressos ao lado.</div><?php endif; ?>
 <?php if (($_GET['ok'] ?? '') === 'gerado'): ?><div class="alerta alerta-ok" style="margin-bottom:16px">✓ Ingressos gerados com sucesso.</div><?php endif; ?>
