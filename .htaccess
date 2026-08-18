@@ -15,6 +15,14 @@
     RewriteRule ^links$ links.php [L]
 </IfModule>
 
+# ── /almoco-caipira sem barra no final (arquivo, sem diretório envolvido) ─
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/almoco-caipira/$
+    RewriteRule ^ /almoco-caipira [R=301,L]
+
+    RewriteRule ^almoco-caipira$ almoco-caipira.php [L]
+</IfModule>
+
 # ── Desabilitar listagem de diretórios ────────────────────────────────────
 Options -Indexes
 
