@@ -226,6 +226,19 @@ include dirname(__DIR__) . '/_layout.php';
 
   <hr style="margin:20px 0;border:none;border-top:1px solid var(--cinza2)">
 
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div>
+      <strong style="font-size:.95rem">Ingressos físicos</strong>
+      <p style="color:var(--cinza3);font-size:.85rem;margin-top:3px">Numeração, distribuição aos servos e controle de pagamentos (PIX, transferência, depósito, dinheiro).</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a href="/portal/eventos/ingressos-posicao.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Posição</a>
+      <a href="/portal/eventos/ingressos.php?id=<?= $id ?>" class="btn btn-ouro btn-sm">Gerenciar ingressos</a>
+    </div>
+  </div>
+
+  <hr style="margin:20px 0;border:none;border-top:1px solid var(--cinza2)">
+
   <div style="display:flex;gap:12px;flex-wrap:wrap">
     <a href="/portal/inscricoes/campos.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Campos do formulário</a>
     <a href="/portal/eventos/pagina.php?id=<?= $id ?>" class="btn btn-ghost btn-sm">Página pública</a>
