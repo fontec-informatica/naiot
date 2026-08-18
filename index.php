@@ -1000,6 +1000,7 @@ class Carousel {
     this.n      = this.slides.length;
     this.cur    = 0;
     this.delay  = delay;
+    this.resumeDelay = 1000;
     this.timer  = null;
     this.paused = { hover: false, drag: false, focus: false };
 
@@ -1023,11 +1024,13 @@ class Carousel {
       if (!dragging) return;
       dragging = false;
       const dx = e.clientX - startX, dy = e.clientY - startY;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 44) {
-        dx < 0 ? this.go((this.cur + 1) % this.n) : this.go((this.cur - 1 + this.n) % this.n);
-      }
+      const moved = Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 44;
       this.paused.drag = false;
-      this.refresh();
+      if (moved) {
+        dx < 0 ? this.go((this.cur + 1) % this.n) : this.go((this.cur - 1 + this.n) % this.n);
+      } else {
+        this.resume();
+      }
     };
     vp.addEventListener('pointerup', endDrag);
     vp.addEventListener('pointercancel', endDrag);
@@ -1041,26 +1044,33 @@ class Carousel {
 
     /* Pause on hover (somente mouse de verdade — pointerType evita o bug do toque no mobile) / focus */
     outer.addEventListener('pointerenter', e => { if (e.pointerType !== 'mouse') return; this.paused.hover = true; this.stop(); });
-    outer.addEventListener('pointerleave', e => { if (e.pointerType !== 'mouse') return; this.paused.hover = false; this.refresh(); });
+    outer.addEventListener('pointerleave', e => { if (e.pointerType !== 'mouse') return; this.paused.hover = false; this.resume(); });
     outer.addEventListener('focusin',  () => { this.paused.focus = true; this.stop(); });
-    outer.addEventListener('focusout', () => { this.paused.focus = false; this.refresh(); });
+    outer.addEventListener('focusout', () => { this.paused.focus = false; this.resume(); });
 
-    this.start();
+    this.schedule(this.delay);
   }
 
   go(i) {
     this.cur = (i + this.n) % this.n;
     this.track.style.transform = `translateX(-${this.cur * 100}%)`;
     this.dots.forEach((d, j) => { d.classList.toggle('on', j === this.cur); });
-    this.stop(); this.refresh();
+    this.schedule(this.delay);
   }
 
-  refresh() {
-    if (!this.paused.hover && !this.paused.drag && !this.paused.focus) this.start();
+  /* Retoma rápido (1s) ao sair de uma pausa (hover / drag / foco) */
+  resume() {
+    if (this.paused.hover || this.paused.drag || this.paused.focus) return;
+    this.schedule(this.resumeDelay);
   }
 
-  start() { clearInterval(this.timer); if (this.n > 1) this.timer = setInterval(() => this.go(this.cur + 1), this.delay); }
-  stop()  { clearInterval(this.timer); }
+  schedule(delay) {
+    clearTimeout(this.timer);
+    if (this.n <= 1 || this.paused.hover || this.paused.drag || this.paused.focus) return;
+    this.timer = setTimeout(() => this.go(this.cur + 1), delay);
+  }
+
+  stop() { clearTimeout(this.timer); }
 }
 
 new Carousel('co', 'dots-co', 5500);
