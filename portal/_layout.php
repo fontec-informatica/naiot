@@ -20,6 +20,7 @@ $icons = [
   'van'        => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
   'estoque'    => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8L12 3 3 8m18 0v9a1 1 0 01-1 1H4a1 1 0 01-1-1V8m18 0l-9 5-9-5"/></svg>',
   'camjc'      => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>',
+  'ingressos'  => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 002-2V6a1 1 0 011-1h12a1 1 0 011 1v1a2 2 0 000 4v1a2 2 0 000 4v1a1 1 0 01-1 1H6a1 1 0 01-1-1v-1a2 2 0 00-2-2z"/><path d="M12 5v1M12 11v2M12 17v2"/></svg>',
 ];
 
 // Dashboard aponta para a home correta de cada perfil
@@ -46,6 +47,7 @@ $menu = [
   'oracoes'    => ['icon' => $icons['oracoes'],    'label' => 'Orações',       'href' => '/portal/oracoes/',    'modulo' => 'oracoes'],
   'estoque'    => ['icon' => $icons['estoque'],    'label' => 'Livraria',      'href' => '/portal/estoque/',    'modulo' => 'estoque'],
   'camjc'      => ['icon' => $icons['camjc'],      'label' => 'Casa das Mulheres', 'href' => '/portal/camjc/',  'modulo' => 'camjc'],
+  'ingressos'  => ['icon' => $icons['ingressos'],  'label' => 'Controle de Ingressos', 'href' => '/portal/ingressos/', 'modulo' => 'ingressos'],
   'usuarios'   => ['icon' => $icons['usuarios'],   'label' => 'Usuários',      'href' => '/portal/usuarios/',   'modulo' => 'usuarios'],
 ];
 ?>

@@ -41,11 +41,12 @@ const MODULOS_PORTAL = [
     'oracoes'    => 'Orações & Testemunhos',
     'estoque'    => 'Livraria',
     'camjc'      => 'Casa das Mulheres',
+    'ingressos'  => 'Controle de Ingressos',
     'usuarios'   => 'Usuários',
 ];
 
 const PERFIL_LEGADO = [
-    'secretaria' => ['dashboard', 'eventos', 'inscricoes', 'membros', 'van'],
+    'secretaria' => ['dashboard', 'eventos', 'inscricoes', 'membros', 'van', 'ingressos'],
     'financeiro' => ['dashboard', 'financeiro'],
 ];
 
