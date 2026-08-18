@@ -398,6 +398,13 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
   background: var(--white);
   box-shadow: var(--sh-sm);
   touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.carousel-viewport img {
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 .carousel-track {
   display: flex;
@@ -711,7 +718,7 @@ footer {
             <div class="carousel-slide evt-slide">
               <div class="evt-inner">
                 <img src="/assets/img/eventos/<?= htmlspecialchars($ev['imagem']) ?>"
-                     alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy">
+                     alt="<?= htmlspecialchars($ev['titulo']) ?>" loading="lazy" draggable="false">
                 <?php if ($ev['titulo'] || $ev['data_evento'] || $ev['descricao']): ?>
                 <div class="evt-caption">
                   <div class="evt-info">
@@ -994,6 +1001,7 @@ class Carousel {
     this.cur    = 0;
     this.delay  = delay;
     this.timer  = null;
+    this.paused = { hover: false, drag: false, focus: false };
 
     /* Dots */
     this.dots.forEach((d, i) => d.addEventListener('click', () => this.go(i)));
@@ -1003,19 +1011,26 @@ class Carousel {
     outer.querySelector('.c-prev')?.addEventListener('click', () => this.go((this.cur - 1 + this.n) % this.n));
     outer.querySelector('.c-next')?.addEventListener('click', () => this.go((this.cur + 1) % this.n));
 
-    /* Touch / pointer swipe */
+    /* Touch / pointer swipe — pausa durante o gesto e sempre retoma ao soltar */
     let startX = 0, startY = 0, dragging = false;
     const vp = this.track.closest('.carousel-viewport');
-    vp.addEventListener('pointerdown', e => { startX = e.clientX; startY = e.clientY; dragging = true; });
+    vp.addEventListener('pointerdown', e => {
+      startX = e.clientX; startY = e.clientY; dragging = true;
+      this.paused.drag = true; this.stop();
+    });
     vp.addEventListener('pointermove', e => { if (!dragging) return; e.preventDefault(); }, { passive: false });
-    vp.addEventListener('pointerup',   e => {
-      if (!dragging) return; dragging = false;
+    const endDrag = e => {
+      if (!dragging) return;
+      dragging = false;
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 44) {
         dx < 0 ? this.go((this.cur + 1) % this.n) : this.go((this.cur - 1 + this.n) % this.n);
       }
-    });
-    vp.addEventListener('pointercancel', () => { dragging = false; });
+      this.paused.drag = false;
+      this.refresh();
+    };
+    vp.addEventListener('pointerup', endDrag);
+    vp.addEventListener('pointercancel', endDrag);
 
     /* Keyboard */
     outer.setAttribute('tabindex', '0');
@@ -1024,11 +1039,11 @@ class Carousel {
       if (e.key === 'ArrowRight') this.go((this.cur + 1) % this.n);
     });
 
-    /* Pause on hover / focus */
-    outer.addEventListener('mouseenter', () => this.stop());
-    outer.addEventListener('mouseleave', () => this.start());
-    outer.addEventListener('focusin',    () => this.stop());
-    outer.addEventListener('focusout',   () => this.start());
+    /* Pause on hover (somente mouse de verdade — pointerType evita o bug do toque no mobile) / focus */
+    outer.addEventListener('pointerenter', e => { if (e.pointerType !== 'mouse') return; this.paused.hover = true; this.stop(); });
+    outer.addEventListener('pointerleave', e => { if (e.pointerType !== 'mouse') return; this.paused.hover = false; this.refresh(); });
+    outer.addEventListener('focusin',  () => { this.paused.focus = true; this.stop(); });
+    outer.addEventListener('focusout', () => { this.paused.focus = false; this.refresh(); });
 
     this.start();
   }
@@ -1037,10 +1052,14 @@ class Carousel {
     this.cur = (i + this.n) % this.n;
     this.track.style.transform = `translateX(-${this.cur * 100}%)`;
     this.dots.forEach((d, j) => { d.classList.toggle('on', j === this.cur); });
-    this.stop(); this.start();
+    this.stop(); this.refresh();
   }
 
-  start() { if (this.n > 1) this.timer = setInterval(() => this.go(this.cur + 1), this.delay); }
+  refresh() {
+    if (!this.paused.hover && !this.paused.drag && !this.paused.focus) this.start();
+  }
+
+  start() { clearInterval(this.timer); if (this.n > 1) this.timer = setInterval(() => this.go(this.cur + 1), this.delay); }
   stop()  { clearInterval(this.timer); }
 }
 
