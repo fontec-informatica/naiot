@@ -401,6 +401,7 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  transition: height .35s ease;
 }
 .carousel-viewport img {
   -webkit-user-drag: none;
@@ -408,6 +409,7 @@ nav a:hover { color: var(--green); background: var(--green-pale); }
 }
 .carousel-track {
   display: flex;
+  align-items: flex-start;
   transition: transform .65s cubic-bezier(.4,0,.2,1);
   will-change: transform;
 }
@@ -1004,6 +1006,13 @@ class Carousel {
     this.timer  = null;
     this.paused = { hover: false, drag: false, focus: false };
 
+    /* Recalcula altura quando a imagem do slide ativo terminar de carregar (lazy) */
+    this.slides.forEach(s => {
+      s.querySelectorAll('img').forEach(img => {
+        if (!img.complete) img.addEventListener('load', () => { if (this.slides[this.cur] === s) this.syncHeight(); });
+      });
+    });
+
     /* Dots */
     this.dots.forEach((d, i) => d.addEventListener('click', () => this.go(i)));
 
@@ -1014,7 +1023,7 @@ class Carousel {
 
     /* Touch / pointer swipe — pausa durante o gesto e sempre retoma ao soltar */
     let startX = 0, startY = 0, dragging = false;
-    const vp = this.track.closest('.carousel-viewport');
+    const vp = this.vp = this.track.closest('.carousel-viewport');
     vp.addEventListener('pointerdown', e => {
       startX = e.clientX; startY = e.clientY; dragging = true;
       this.paused.drag = true; this.stop();
@@ -1048,6 +1057,10 @@ class Carousel {
     outer.addEventListener('focusin',  () => { this.paused.focus = true; this.stop(); });
     outer.addEventListener('focusout', () => { this.paused.focus = false; this.resume(); });
 
+    /* Altura do viewport acompanha o slide ativo — sem sobra em branco */
+    window.addEventListener('resize', () => this.syncHeight());
+    this.syncHeight();
+
     this.schedule(this.delay);
   }
 
@@ -1055,7 +1068,14 @@ class Carousel {
     this.cur = (i + this.n) % this.n;
     this.track.style.transform = `translateX(-${this.cur * 100}%)`;
     this.dots.forEach((d, j) => { d.classList.toggle('on', j === this.cur); });
+    this.syncHeight();
     this.schedule(this.delay);
+  }
+
+  syncHeight() {
+    const active = this.slides[this.cur];
+    if (!active || !this.vp) return;
+    this.vp.style.height = active.offsetHeight + 'px';
   }
 
   /* Retoma rápido (1s) ao sair de uma pausa (hover / drag / foco) */
