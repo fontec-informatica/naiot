@@ -21,6 +21,8 @@ if (!function_exists('tem_modulo') || !tem_modulo('ingressos')) {
     <a href="/portal/ingressos/" class="<?= ($ing_secao ?? '') === 'campanhas' ? 'ativo' : '' ?>">Campanhas</a>
     <?php if (isset($ing_campanha)): ?>
     <a href="/portal/ingressos/gerenciar.php?id=<?= $ing_campanha['id'] ?>" class="<?= ($ing_secao ?? '') === 'ingressos' ? 'ativo' : '' ?>">Ingressos</a>
+    <a href="/portal/ingressos/gerar.php?id=<?= $ing_campanha['id'] ?>" class="<?= ($ing_secao ?? '') === 'gerar' ? 'ativo' : '' ?>">Gerar</a>
+    <a href="/portal/ingressos/distribuir.php?id=<?= $ing_campanha['id'] ?>" class="<?= ($ing_secao ?? '') === 'distribuir' ? 'ativo' : '' ?>">Distribuir</a>
     <a href="/portal/ingressos/posicao.php?id=<?= $ing_campanha['id'] ?>" class="<?= ($ing_secao ?? '') === 'posicao' ? 'ativo' : '' ?>">Posição</a>
     <?php endif; ?>
   </nav>
