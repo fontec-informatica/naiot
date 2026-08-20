@@ -29,11 +29,15 @@ VALUES (
 );
 
 -- Tabela para controle de tentativas de login (rate limiting / brute force)
+-- login: normalizado (lowercase/trim) do e-mail/usuário tentado — permite
+-- bloquear por conta além de por IP (evita brute force distribuído por IPs)
 CREATE TABLE IF NOT EXISTS login_tentativas (
-    id  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    ip  VARCHAR(45) NOT NULL,
-    em  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ip    VARCHAR(45)  NOT NULL,
+    login VARCHAR(190) NULL DEFAULT NULL,
+    em    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_ip (ip),
+    INDEX idx_login (login),
     INDEX idx_em (em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

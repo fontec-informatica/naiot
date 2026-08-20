@@ -19,7 +19,10 @@ $janela    = 15;
 
 $login_csrf = csrf_token();
 
-// Rate limiting
+// Normaliza o login tentado (usado no rate limit por conta, além do rate limit por IP)
+$login_tentado = strtolower(trim($_POST['login'] ?? $_GET['login'] ?? ''));
+
+// Rate limiting por IP
 try {
     db()->prepare("DELETE FROM login_tentativas WHERE em < DATE_SUB(NOW(), INTERVAL {$janela} MINUTE)")->execute();
     $st = db()->prepare("SELECT COUNT(*) FROM login_tentativas WHERE ip = ? AND em > DATE_SUB(NOW(), INTERVAL {$janela} MINUTE)");
@@ -29,6 +32,19 @@ try {
         $erro = "Muitas tentativas. Aguarde {$janela} minutos e tente novamente.";
     }
 } catch (Exception $e) {}
+
+// Rate limiting por conta (protege contra brute force distribuído por vários IPs
+// contra o mesmo usuário/e-mail)
+if (!$bloqueado && $login_tentado !== '') {
+    try {
+        $st = db()->prepare("SELECT COUNT(*) FROM login_tentativas WHERE login = ? AND em > DATE_SUB(NOW(), INTERVAL {$janela} MINUTE)");
+        $st->execute([$login_tentado]);
+        if ((int)$st->fetchColumn() >= $limite) {
+            $bloqueado = true;
+            $erro = "Muitas tentativas para esta conta. Aguarde {$janela} minutos e tente novamente.";
+        }
+    } catch (Exception $e) {}
+}
 
 // Verificação do reCAPTCHA v3
 function verificar_recaptcha(string $token): bool {
@@ -48,7 +64,7 @@ if (!$bloqueado && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $erro = 'Token inválido. Recarregue a página.';
     } elseif (!verificar_recaptcha($_POST['g-recaptcha-response'] ?? '')) {
         $erro = 'Verificação de segurança falhou. Tente novamente.';
-        try { db()->prepare("INSERT INTO login_tentativas (ip) VALUES (?)")->execute([$ip]); } catch (Exception $e) {}
+        try { db()->prepare("INSERT INTO login_tentativas (ip, login) VALUES (?, ?)")->execute([$ip, $login_tentado ?: null]); } catch (Exception $e) {}
     } else {
         $login = trim($_POST['login'] ?? '');
         $senha = $_POST['senha'] ?? '';
@@ -91,7 +107,7 @@ if (!$bloqueado && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        try { db()->prepare("INSERT INTO login_tentativas (ip) VALUES (?)")->execute([$ip]); } catch (Exception $e) {}
+        try { db()->prepare("INSERT INTO login_tentativas (ip, login) VALUES (?, ?)")->execute([$ip, $login_tentado ?: null]); } catch (Exception $e) {}
         $erro = 'Usuário/e-mail ou senha incorretos.';
     }
 }
