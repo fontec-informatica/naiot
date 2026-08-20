@@ -95,7 +95,7 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
       nascida em <?= $a['data_nasc'] ? date('d/m/Y', strtotime($a['data_nasc'])) : '____/____/____' ?>,
       portadora do RG nº <?= htmlspecialchars($a['rg'] ?? '________________') ?> e
       CPF nº <?= htmlspecialchars($a['cpf'] ?? '________________') ?>,
-      residente e domiciliada no endereço: <?= htmlspecialchars(implode(', ', array_filter([$a['endereco'], $a['bairro'], $a['cidade'], $a['estado']])) ?: '________________________________') ?>,
+      residente e domiciliada no endereço: <?= htmlspecialchars(implode(', ', array_filter([$a['endereco'], $a['complemento'] ?? '', $a['bairro'], $a['cidade'], $a['estado']])) ?: '________________________________') ?>,
       fone: <?= htmlspecialchars($a['telefone'] ?? $a['celular'] ?? '________________') ?>,
       neste ato assistida por meu(s) responsável(is)
       <b><?= htmlspecialchars($a['responsavel_nome'] ?? '________________________________') ?></b>,
@@ -126,7 +126,7 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
       estado civil <?= htmlspecialchars($a['estado_civil'] ?? '_______________') ?>,
       portadora da Cédula de Identidade RG nº <?= htmlspecialchars($a['rg'] ?? '________________') ?>,
       inscrita no CPF/MF sob nº <?= htmlspecialchars($a['cpf'] ?? '________________') ?>,
-      residente à <?= htmlspecialchars($a['endereco'] ?? '________________________________') ?>,
+      residente à <?= htmlspecialchars(implode(', ', array_filter([$a['endereco'], $a['complemento'] ?? '']))  ?: '________________________________') ?>,
       município de <?= htmlspecialchars($a['cidade'] ?? '________________') ?>/<?= htmlspecialchars($a['estado'] ?? 'GO') ?>,
       declaro para os devidos fins que autorizo a utilização de minha imagem, em caráter gratuito, pela
       Comunidade Católica Senhor Jesus – Casa de Retiros Naiot, associação civil privada sem fins lucrativos

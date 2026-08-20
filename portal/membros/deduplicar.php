@@ -38,7 +38,7 @@ function detectar_grupos(array $todos): array {
 // Pontuação de completude: quanto mais campos preenchidos, mais alto
 function pontuar(array $m): int {
     $s = 0;
-    foreach (['telefone','data_nasc','endereco','bairro','cidade','estado_civil','sexo'] as $f) {
+    foreach (['telefone','data_nasc','endereco','complemento','bairro','cidade','estado_civil','sexo'] as $f) {
         if (!empty($m[$f])) $s++;
     }
     if (!empty($m['grupos'])) $s += 2;
@@ -66,6 +66,7 @@ function mesclar_e_remover(PDO $pdo, int $manter_id, int $remover_id): void {
               m.telefone    = IF(m.telefone    IS NULL OR m.telefone='',    dup.telefone,    m.telefone),
               m.data_nasc   = IF(m.data_nasc   IS NULL,                     dup.data_nasc,   m.data_nasc),
               m.endereco    = IF(m.endereco    IS NULL OR m.endereco='',    dup.endereco,    m.endereco),
+              m.complemento = IF(m.complemento IS NULL OR m.complemento='', dup.complemento, m.complemento),
               m.bairro      = IF(m.bairro      IS NULL OR m.bairro='',      dup.bairro,      m.bairro),
               m.cidade      = IF(m.cidade      IS NULL OR m.cidade='',      dup.cidade,      m.cidade),
               m.estado_civil= IF(m.estado_civil IS NULL OR m.estado_civil='',dup.estado_civil,m.estado_civil),
@@ -86,7 +87,7 @@ function mesclar_e_remover(PDO $pdo, int $manter_id, int $remover_id): void {
 
 function buscar_membros(PDO $pdo): array {
     return $pdo->query("
-        SELECT m.id, m.nome, m.telefone, m.data_nasc, m.endereco, m.bairro, m.cidade,
+        SELECT m.id, m.nome, m.telefone, m.data_nasc, m.endereco, m.complemento, m.bairro, m.cidade,
                m.estado_civil, m.sexo, m.criado_em,
                GROUP_CONCAT(DISTINCT g.nome ORDER BY g.nome SEPARATOR ', ') AS grupos,
                GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') AS cargos

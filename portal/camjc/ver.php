@@ -320,7 +320,7 @@ include dirname(__DIR__) . '/_layout.php';
       <?php if ($idade): ?><div class="cj-campo"><div class="cj-campo-label">Idade</div><div class="cj-campo-val"><?= $idade ?> <span style="color:var(--muted);font-size:.78rem">(<?= date('d/m/Y', strtotime($a['data_nasc'])) ?>)</span></div></div><?php endif; ?>
       <?php if ($a['estado_civil']): ?><div class="cj-campo"><div class="cj-campo-label">Estado civil</div><div class="cj-campo-val"><?= htmlspecialchars($a['estado_civil']) ?></div></div><?php endif; ?>
       <?php if ($a['rg'] || $a['cpf']): ?><div class="cj-campo"><div class="cj-campo-label">RG / CPF</div><div class="cj-campo-val"><?= htmlspecialchars($a['rg'] ?? '—') ?> / <?= htmlspecialchars($a['cpf'] ?? '—') ?></div></div><?php endif; ?>
-      <?php $end = implode(', ', array_filter([$a['endereco'], $a['bairro'], $a['cidade'], $a['estado']])); ?>
+      <?php $end = implode(', ', array_filter([$a['endereco'], $a['complemento'] ?? '', $a['bairro'], $a['cidade'], $a['estado']])); ?>
       <?php if ($end): ?><div class="cj-campo"><div class="cj-campo-label">Endereço</div><div class="cj-campo-val"><?= htmlspecialchars($end) ?><?= $a['cep'] ? ' — CEP ' . htmlspecialchars($a['cep']) : '' ?></div></div><?php endif; ?>
       <?php if ($a['telefone'] || $a['celular']): ?><div class="cj-campo"><div class="cj-campo-label">Contato</div><div class="cj-campo-val"><?= htmlspecialchars(implode(' / ', array_filter([$a['telefone'], $a['celular']]))) ?></div></div><?php endif; ?>
       <?php if ($a['data_acolhimento']): ?><div class="cj-campo"><div class="cj-campo-label">Data de acolhimento</div><div class="cj-campo-val"><?= date('d/m/Y', strtotime($a['data_acolhimento'])) ?></div></div><?php endif; ?>
@@ -342,7 +342,10 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="cj-campo"><div class="cj-campo-label">Nome</div><div class="cj-campo-val"><?= htmlspecialchars($a['responsavel_nome']) ?></div></div>
       <?php if ($a['responsavel_telefone']): ?><div class="cj-campo"><div class="cj-campo-label">Telefone</div><div class="cj-campo-val"><?= htmlspecialchars($a['responsavel_telefone']) ?></div></div><?php endif; ?>
       <?php if ($a['responsavel_rg'] || $a['responsavel_cpf']): ?><div class="cj-campo"><div class="cj-campo-label">RG / CPF</div><div class="cj-campo-val"><?= htmlspecialchars($a['responsavel_rg'] ?? '—') ?> / <?= htmlspecialchars($a['responsavel_cpf'] ?? '—') ?></div></div><?php endif; ?>
-      <?php if ($a['responsavel_endereco']): ?><div class="cj-campo"><div class="cj-campo-label">Endereço</div><div class="cj-campo-val"><?= htmlspecialchars($a['responsavel_endereco']) ?></div></div><?php endif; ?>
+      <?php
+        $resp_end = implode(', ', array_filter([$a['responsavel_endereco'], $a['responsavel_complemento'] ?? '']));
+      ?>
+      <?php if ($resp_end): ?><div class="cj-campo"><div class="cj-campo-label">Endereço</div><div class="cj-campo-val"><?= htmlspecialchars($resp_end) ?></div></div><?php endif; ?>
     </div>
     <?php endif; ?>
 

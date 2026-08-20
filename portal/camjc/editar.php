@@ -132,8 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $pdo->prepare("
                     UPDATE camjc_acolhidas SET
-                        nome=?, foto=?, data_nasc=?, estado_civil=?, rg=?, cpf=?, endereco=?, bairro=?, cep=?, cidade=?, estado=?,
-                        telefone=?, celular=?, responsavel_nome=?, responsavel_endereco=?, responsavel_rg=?, responsavel_cpf=?,
+                        nome=?, foto=?, data_nasc=?, estado_civil=?, rg=?, cpf=?, endereco=?, complemento=?, bairro=?, cep=?, cidade=?, estado=?,
+                        telefone=?, celular=?, responsavel_nome=?, responsavel_endereco=?, responsavel_complemento=?, responsavel_rg=?, responsavel_cpf=?,
                         responsavel_data_nasc=?, responsavel_telefone=?, status=?, data_acolhimento=?, data_saida=?, motivo_saida=?, atualizado_em=NOW()
                     WHERE id=?
                 ")->execute([
@@ -144,6 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     trim($_POST['rg'] ?? '') ?: null,
                     preg_replace('/\D/', '', $_POST['cpf'] ?? '') ?: null,
                     trim($_POST['endereco'] ?? '') ?: null,
+                    trim($_POST['complemento'] ?? '') ?: null,
                     trim($_POST['bairro'] ?? '') ?: null,
                     trim($_POST['cep'] ?? '') ?: null,
                     trim($_POST['cidade'] ?? '') ?: null,
@@ -152,6 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     trim($_POST['celular'] ?? '') ?: null,
                     trim($_POST['responsavel_nome'] ?? '') ?: null,
                     trim($_POST['responsavel_endereco'] ?? '') ?: null,
+                    trim($_POST['responsavel_complemento'] ?? '') ?: null,
                     trim($_POST['responsavel_rg'] ?? '') ?: null,
                     preg_replace('/\D/', '', $_POST['responsavel_cpf'] ?? '') ?: null,
                     $_POST['responsavel_data_nasc'] ?: null,
@@ -278,6 +280,10 @@ include dirname(__DIR__) . '/_layout.php';
         <label for="endereco">Endereço</label>
         <input type="text" id="endereco" name="endereco" value="<?= $v('endereco', $a['endereco']) ?>">
       </div>
+      <div class="form-group">
+        <label for="complemento">Complemento</label>
+        <input type="text" id="complemento" name="complemento" value="<?= $v('complemento', $a['complemento'] ?? '') ?>" placeholder="Apto, bloco, casa, ponto de referência…">
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label for="bairro">Bairro</label>
@@ -345,6 +351,10 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="form-group">
         <label for="responsavel_endereco">Endereço</label>
         <input type="text" id="responsavel_endereco" name="responsavel_endereco" value="<?= $v('responsavel_endereco', $a['responsavel_endereco']) ?>">
+      </div>
+      <div class="form-group">
+        <label for="responsavel_complemento">Complemento</label>
+        <input type="text" id="responsavel_complemento" name="responsavel_complemento" value="<?= $v('responsavel_complemento', $a['responsavel_complemento'] ?? '') ?>" placeholder="Apto, bloco, casa, ponto de referência…">
       </div>
       <div class="form-row">
         <div class="form-group">

@@ -138,6 +138,7 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
     <div class="campo-linha"><b>Doc. identidade:</b> <?= htmlspecialchars($r['rg'] ?? '') ?></div>
     <div class="campo-linha"><b>CPF:</b> <?= htmlspecialchars($r['cpf'] ?? '') ?></div>
     <div class="full campo-linha"><b>Endereço:</b> <?= htmlspecialchars($r['endereco'] ?? '') ?></div>
+    <div class="campo-linha"><b>Complemento:</b> <?= htmlspecialchars($r['complemento'] ?? '') ?></div>
     <div class="campo-linha"><b>Bairro:</b> <?= htmlspecialchars($r['bairro'] ?? '') ?></div>
     <div class="campo-linha"><b>CEP:</b> <?= htmlspecialchars($r['cep'] ?? '') ?></div>
     <div class="campo-linha"><b>Cidade atual:</b> <?= htmlspecialchars($r['cidade'] ?? '') ?></div>
@@ -146,6 +147,7 @@ body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #00
     <div class="campo-linha"><b>Celular:</b> <?= htmlspecialchars($r['celular'] ?? '') ?></div>
     <div class="full campo-linha"><b>Nome do responsável:</b> <?= htmlspecialchars($r['responsavel_nome'] ?? '') ?></div>
     <div class="full campo-linha"><b>Endereço do responsável:</b> <?= htmlspecialchars($r['responsavel_endereco'] ?? '') ?></div>
+    <div class="campo-linha"><b>Complemento:</b> <?= htmlspecialchars($r['responsavel_complemento'] ?? '') ?></div>
     <div class="campo-linha"><b>RG:</b> <?= htmlspecialchars($r['responsavel_rg'] ?? '') ?></div>
     <div class="campo-linha"><b>CPF:</b> <?= htmlspecialchars($r['responsavel_cpf'] ?? '') ?></div>
     <div class="campo-linha"><b>Data nasc.:</b> <?= $r['responsavel_data_nasc'] ? date('d/m/Y', strtotime($r['responsavel_data_nasc'])) : '' ?></div>

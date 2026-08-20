@@ -53,6 +53,7 @@ if (!$erro && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $rg             = trim($_POST['rg'] ?? '') ?: null;
             $cpf            = preg_replace('/\D/', '', $_POST['cpf'] ?? '') ?: null;
             $endereco       = trim($_POST['endereco'] ?? '') ?: null;
+            $complemento    = trim($_POST['complemento'] ?? '') ?: null;
             $bairro         = trim($_POST['bairro'] ?? '') ?: null;
             $cep            = trim($_POST['cep'] ?? '') ?: null;
             $cidade         = trim($_POST['cidade'] ?? '') ?: null;
@@ -62,6 +63,7 @@ if (!$erro && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $resp_nome      = trim($_POST['responsavel_nome'] ?? '') ?: null;
             $resp_endereco  = trim($_POST['responsavel_endereco'] ?? '') ?: null;
+            $resp_complemento = trim($_POST['responsavel_complemento'] ?? '') ?: null;
             $resp_rg        = trim($_POST['responsavel_rg'] ?? '') ?: null;
             $resp_cpf       = preg_replace('/\D/', '', $_POST['responsavel_cpf'] ?? '') ?: null;
             $resp_data_nasc = $_POST['responsavel_data_nasc'] ?: null;
@@ -97,13 +99,13 @@ if (!$erro && $_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $pdo->prepare("
                     INSERT INTO camjc_acolhidas
-                        (unidade_id, nome, data_nasc, estado_civil, rg, cpf, endereco, bairro, cep, cidade, estado,
-                         telefone, celular, responsavel_nome, responsavel_endereco, responsavel_rg, responsavel_cpf,
+                        (unidade_id, nome, data_nasc, estado_civil, rg, cpf, endereco, complemento, bairro, cep, cidade, estado,
+                         telefone, celular, responsavel_nome, responsavel_endereco, responsavel_complemento, responsavel_rg, responsavel_cpf,
                          responsavel_data_nasc, responsavel_telefone, status, data_acolhimento, data_saida, motivo_saida, criado_por)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ")->execute([
-                    $unidade['id'], $nome, $data_nasc, $estado_civil, $rg, $cpf, $endereco, $bairro, $cep, $cidade, $estado,
-                    $telefone, $celular, $resp_nome, $resp_endereco, $resp_rg, $resp_cpf,
+                    $unidade['id'], $nome, $data_nasc, $estado_civil, $rg, $cpf, $endereco, $complemento, $bairro, $cep, $cidade, $estado,
+                    $telefone, $celular, $resp_nome, $resp_endereco, $resp_complemento, $resp_rg, $resp_cpf,
                     $resp_data_nasc, $resp_telefone, $status, $data_acolhimento, $data_saida, $motivo_saida, $_SESSION['usuario_id'] ?? null,
                 ]);
                 $acolhida_id = (int)$pdo->lastInsertId();
@@ -193,6 +195,10 @@ include dirname(__DIR__) . '/_layout.php';
         <label for="endereco">Endereço</label>
         <input type="text" id="endereco" name="endereco" value="<?= htmlspecialchars($_POST['endereco'] ?? '') ?>">
       </div>
+      <div class="form-group">
+        <label for="complemento">Complemento</label>
+        <input type="text" id="complemento" name="complemento" value="<?= htmlspecialchars($_POST['complemento'] ?? '') ?>" placeholder="Apto, bloco, casa, ponto de referência…">
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label for="bairro">Bairro</label>
@@ -261,6 +267,10 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="form-group">
         <label for="responsavel_endereco">Endereço</label>
         <input type="text" id="responsavel_endereco" name="responsavel_endereco" value="<?= htmlspecialchars($_POST['responsavel_endereco'] ?? '') ?>">
+      </div>
+      <div class="form-group">
+        <label for="responsavel_complemento">Complemento</label>
+        <input type="text" id="responsavel_complemento" name="responsavel_complemento" value="<?= htmlspecialchars($_POST['responsavel_complemento'] ?? '') ?>" placeholder="Apto, bloco, casa, ponto de referência…">
       </div>
       <div class="form-row">
         <div class="form-group">

@@ -16,7 +16,7 @@ $cargo_id      = (int)($_GET['cargo']      ?? 0);
 $habilidade_id = (int)($_GET['habilidade'] ?? 0);
 $pastoreio_id  = (int)($_GET['pastoreio']  ?? 0);
 $erros        = [];
-$dados        = ['cpf'=>'','nome'=>'','telefone'=>'','data_nasc'=>'','estado_civil'=>'','sexo'=>'','endereco'=>'','bairro'=>'','cidade'=>'','cep'=>''];
+$dados        = ['cpf'=>'','nome'=>'','telefone'=>'','data_nasc'=>'','estado_civil'=>'','sexo'=>'','endereco'=>'','complemento'=>'','bairro'=>'','cidade'=>'','cep'=>''];
 
 $grupos      = db()->query("SELECT * FROM membros_grupos    ORDER BY nome")->fetchAll();
 $cargos      = db()->query("SELECT * FROM membros_cargos    ORDER BY nome")->fetchAll();
@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
     $dados['telefone']  = trim($_POST['telefone']  ?? '');
     $dados['data_nasc'] = trim($_POST['data_nasc'] ?? '');
     $dados['endereco']  = trim($_POST['endereco']  ?? '');
+    $dados['complemento'] = trim($_POST['complemento'] ?? '');
     $dados['bairro']    = trim($_POST['bairro']    ?? '');
     $dados['cep']       = trim($_POST['cep']       ?? '');
     $dados['cidade']       = trim($_POST['cidade']       ?? '');
@@ -86,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
             if (!is_dir($dir_fotos)) mkdir($dir_fotos, 0755, true);
             move_uploaded_file($_FILES['foto']['tmp_name'], $dir_fotos . $foto_nome);
         }
-        $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,bairro,cidade,cep,telefone,estado_civil,sexo,cpf) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-        $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['bairro'], $dados['cidade'], $dados['cep'] ?: null, $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $dados['cpf'] ?: null]);
+        $st = db()->prepare("INSERT INTO membros (nome,foto,data_nasc,endereco,complemento,bairro,cidade,cep,telefone,estado_civil,sexo,cpf) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+        $st->execute([$dados['nome'], $foto_nome, $dados['data_nasc'] ?: null, $dados['endereco'], $dados['complemento'] ?: null, $dados['bairro'], $dados['cidade'], $dados['cep'] ?: null, $dados['telefone'], $dados['estado_civil'] ?: null, $dados['sexo'] ?: null, $dados['cpf'] ?: null]);
         $novo_id = (int)db()->lastInsertId();
 
         foreach ($grupos_sel as $gid) {
@@ -190,6 +191,11 @@ include dirname(__DIR__) . '/_layout.php';
       <div class="form-group">
         <label>Endereço</label>
         <input type="text" name="endereco" value="<?= htmlspecialchars($dados['endereco']) ?>" maxlength="255" placeholder="Rua, número…">
+      </div>
+
+      <div class="form-group">
+        <label>Complemento</label>
+        <input type="text" name="complemento" value="<?= htmlspecialchars($dados['complemento']) ?>" maxlength="100" placeholder="Apto, bloco, casa, ponto de referência…">
       </div>
 
       <div class="form-group">
@@ -424,9 +430,10 @@ foreach ($modais_inline as $tipo => $cfg): ?>
 (function(){
   var cepInput = document.getElementById('cep-input');
   if (!cepInput) return;
-  var enderecoInput = document.querySelector('[name="endereco"]');
-  var bairroInput   = document.querySelector('[name="bairro"]');
-  var cidadeInput   = document.querySelector('[name="cidade"]');
+  var enderecoInput    = document.querySelector('[name="endereco"]');
+  var complementoInput = document.querySelector('[name="complemento"]');
+  var bairroInput      = document.querySelector('[name="bairro"]');
+  var cidadeInput      = document.querySelector('[name="cidade"]');
   var ultimoCep = '';
 
   function buscar(){
@@ -437,9 +444,10 @@ foreach ($modais_inline as $tipo => $cfg): ?>
       .then(function(r){ return r.json(); })
       .then(function(d){
         if (d.erro) return;
-        if (enderecoInput && d.logradouro) enderecoInput.value = d.logradouro;
-        if (bairroInput   && d.bairro)     bairroInput.value   = d.bairro;
-        if (cidadeInput   && d.localidade) cidadeInput.value   = d.localidade;
+        if (enderecoInput    && d.logradouro)  enderecoInput.value    = d.logradouro;
+        if (complementoInput && d.complemento && !complementoInput.value) complementoInput.value = d.complemento;
+        if (bairroInput      && d.bairro)      bairroInput.value      = d.bairro;
+        if (cidadeInput      && d.localidade)  cidadeInput.value      = d.localidade;
       })
       .catch(function(){});
   }

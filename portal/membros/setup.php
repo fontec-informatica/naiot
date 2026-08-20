@@ -117,5 +117,8 @@ try {
 try {
     $pdo->exec("ALTER TABLE membros ADD COLUMN cep VARCHAR(9) NULL DEFAULT NULL AFTER cidade");
 } catch (PDOException $e) { /* coluna já existe */ }
+try {
+    $pdo->exec("ALTER TABLE membros ADD COLUMN complemento VARCHAR(100) NULL DEFAULT NULL AFTER endereco");
+} catch (PDOException $e) { /* coluna já existe */ }
 
 echo '<p style="font-family:sans-serif;padding:20px;color:green">✓ Tabelas criadas/verificadas com sucesso. <a href="/portal/membros/">Ir para Membros</a></p>';

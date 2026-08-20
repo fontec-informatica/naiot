@@ -115,11 +115,12 @@
     var cepInput = document.getElementById('cep');
     if (!cepInput) return;
 
-    var enderecoInput = document.getElementById('endereco');
-    var bairroInput   = document.getElementById('bairro');
-    var cidadeInput   = document.getElementById('cidade');
-    var estadoSelect  = document.getElementById('estado');
-    var ultimoCep     = '';
+    var enderecoInput    = document.getElementById('endereco');
+    var complementoInput = document.getElementById('complemento');
+    var bairroInput      = document.getElementById('bairro');
+    var cidadeInput      = document.getElementById('cidade');
+    var estadoSelect     = document.getElementById('estado');
+    var ultimoCep        = '';
 
     function buscar() {
       var cep = cepInput.value.replace(/\D/g, '');
@@ -130,10 +131,11 @@
         .then(function (r) { return r.json(); })
         .then(function (d) {
           if (d.erro) return;
-          if (enderecoInput && d.logradouro) enderecoInput.value = d.logradouro;
-          if (bairroInput   && d.bairro)     bairroInput.value   = d.bairro;
-          if (cidadeInput   && d.localidade) cidadeInput.value   = d.localidade;
-          if (estadoSelect  && d.uf)         estadoSelect.value  = d.uf;
+          if (enderecoInput    && d.logradouro)  enderecoInput.value    = d.logradouro;
+          if (complementoInput && d.complemento && !complementoInput.value) complementoInput.value = d.complemento;
+          if (bairroInput      && d.bairro)      bairroInput.value      = d.bairro;
+          if (cidadeInput      && d.localidade)  cidadeInput.value      = d.localidade;
+          if (estadoSelect     && d.uf)          estadoSelect.value     = d.uf;
         })
         .catch(function () {});
     }

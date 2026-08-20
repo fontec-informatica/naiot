@@ -10,7 +10,7 @@ $hoje = new DateTime();
 
 // Membros com categorias concatenadas
 $membros = $pdo->query("
-    SELECT m.id, m.nome, m.sexo, m.estado_civil, m.telefone, m.data_nasc, m.endereco, m.bairro, m.cidade, m.ativo,
+    SELECT m.id, m.nome, m.sexo, m.estado_civil, m.telefone, m.data_nasc, m.endereco, m.complemento, m.bairro, m.cidade, m.ativo,
            GROUP_CONCAT(DISTINCT g.nome ORDER BY g.nome SEPARATOR ', ') AS grupos,
            GROUP_CONCAT(DISTINCT c.nome ORDER BY c.nome SEPARATOR ', ') AS cargos,
            GROUP_CONCAT(DISTINCT h.nome ORDER BY h.nome SEPARATOR ', ') AS habilidades,
@@ -195,11 +195,11 @@ if ($aniversariantes) {
 $mem = $xlsx->addSheet('Membros');
 $mem->setColWidth(1, 30)->setColWidth(2, 14)->setColWidth(3, 22)
     ->setColWidth(4, 18)->setColWidth(5, 16)->setColWidth(6, 30)
-    ->setColWidth(7, 20)->setColWidth(8, 20)->setColWidth(9, 28)
-    ->setColWidth(10, 28)->setColWidth(11, 28)->setColWidth(12, 28);
+    ->setColWidth(7, 24)->setColWidth(8, 20)->setColWidth(9, 20)
+    ->setColWidth(10, 28)->setColWidth(11, 28)->setColWidth(12, 28)->setColWidth(13, 28);
 
 $mem->writeRow(1, ['Nome', 'Sexo', 'Estado Civil', 'Telefone', 'Data Nasc.',
-                   'Endereço', 'Bairro', 'Cidade',
+                   'Endereço', 'Complemento', 'Bairro', 'Cidade',
                    'Grupos', 'Cargos', 'Habilidades', 'Pastoreio'], 2);
 
 $rowNum = 2;
@@ -217,6 +217,7 @@ foreach ($membros as $m) {
         $m['telefone']    ?? '',
         $dataNasc,
         $m['endereco']    ?? '',
+        $m['complemento'] ?? '',
         $m['bairro']      ?? '',
         $m['cidade']      ?? '',
         $m['grupos']      ?? '',

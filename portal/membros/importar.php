@@ -42,8 +42,8 @@ if (($_GET['modelo'] ?? '') === '1') {
     // ── Aba 2: Importar Membros ──────────────────────────────────────────
     $imp = $xlsx->addSheet('Importar Membros');
     $imp->setColWidth(1, 30)->setColWidth(2, 18)->setColWidth(3, 16)
-        ->setColWidth(4, 30)->setColWidth(5, 20)->setColWidth(6, 20)
-        ->setColWidth(7, 28)->setColWidth(8, 28)->setColWidth(9, 28)->setColWidth(10, 28);
+        ->setColWidth(4, 30)->setColWidth(5, 20)->setColWidth(6, 20)->setColWidth(7, 20)
+        ->setColWidth(8, 28)->setColWidth(9, 28)->setColWidth(10, 28)->setColWidth(11, 28);
 
     // Linha 1: Cabeçalho
     $imp->writeRow(1, [
@@ -51,6 +51,7 @@ if (($_GET['modelo'] ?? '') === '1') {
         'Telefone',
         'Data Nasc. (DD/MM/AAAA)',
         'Endereço',
+        'Complemento',
         'Bairro',
         'Cidade',
         'Grupos (separar por vírgula)',
@@ -65,6 +66,7 @@ if (($_GET['modelo'] ?? '') === '1') {
         '(11) 99999-0000',
         '15/03/1990',
         'Rua das Flores, 123',
+        'Apto 12, Bloco B',
         'Centro',
         'São Paulo',
         !empty($grupos) ? $grupos[0] : 'Grupo A',
@@ -76,7 +78,7 @@ if (($_GET['modelo'] ?? '') === '1') {
     // Linhas 3..52: Espaço em branco para preenchimento
     for ($i = 3; $i <= 52; $i++) {
         $style = ($i % 2 === 0) ? 6 : 9;
-        for ($c = 1; $c <= 10; $c++) {
+        for ($c = 1; $c <= 11; $c++) {
             $imp->writeCell($i, $c, '', $style);
         }
     }
@@ -179,41 +181,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valido()) {
                             }
                         }
 
-                        $telefone = trim($row[1] ?? '');
-                        $endereco = trim($row[3] ?? '');
-                        $bairro   = trim($row[4] ?? '');
-                        $cidade   = trim($row[5] ?? '');
+                        $telefone    = trim($row[1] ?? '');
+                        $endereco    = trim($row[3] ?? '');
+                        $complemento = trim($row[4] ?? '');
+                        $bairro      = trim($row[5] ?? '');
+                        $cidade      = trim($row[6] ?? '');
 
                         // Insere membro
                         $pdo->prepare("
-                            INSERT INTO membros (nome, telefone, data_nasc, endereco, bairro, cidade, ativo)
-                            VALUES (?, ?, ?, ?, ?, ?, 1)
-                        ")->execute([$nome_membro, $telefone ?: null, $data_nasc, $endereco ?: null, $bairro ?: null, $cidade ?: null]);
+                            INSERT INTO membros (nome, telefone, data_nasc, endereco, complemento, bairro, cidade, ativo)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+                        ")->execute([$nome_membro, $telefone ?: null, $data_nasc, $endereco ?: null, $complemento ?: null, $bairro ?: null, $cidade ?: null]);
                         $membro_id = (int)$pdo->lastInsertId();
 
                         // Grupos
-                        foreach (explode(',', $row[6] ?? '') as $g) {
+                        foreach (explode(',', $row[7] ?? '') as $g) {
                             $g = trim($g);
                             if (!$g) continue;
                             $gid = $fnGetOuCria('membros_grupos', 'nome', $g, $cacheGrupos);
                             if ($gid) $pdo->prepare("INSERT IGNORE INTO membros_grupo_rel (grupo_id,membro_id) VALUES (?,?)")->execute([$gid, $membro_id]);
                         }
                         // Cargos
-                        foreach (explode(',', $row[7] ?? '') as $c) {
+                        foreach (explode(',', $row[8] ?? '') as $c) {
                             $c = trim($c);
                             if (!$c) continue;
                             $cid = $fnGetOuCria('membros_cargos', 'nome', $c, $cacheCargos);
                             if ($cid) $pdo->prepare("INSERT IGNORE INTO membros_cargo_rel (cargo_id,membro_id) VALUES (?,?)")->execute([$cid, $membro_id]);
                         }
                         // Habilidades
-                        foreach (explode(',', $row[8] ?? '') as $h) {
+                        foreach (explode(',', $row[9] ?? '') as $h) {
                             $h = trim($h);
                             if (!$h) continue;
                             $hid = $fnGetOuCria('membros_habilidades', 'nome', $h, $cacheHabilidades);
                             if ($hid) $pdo->prepare("INSERT IGNORE INTO membros_habilidade_rel (habilidade_id,membro_id) VALUES (?,?)")->execute([$hid, $membro_id]);
                         }
                         // Pastoreio
-                        foreach (explode(',', $row[9] ?? '') as $p) {
+                        foreach (explode(',', $row[10] ?? '') as $p) {
                             $p = trim($p);
                             if (!$p) continue;
                             $pid = $fnGetOuCria('membros_pastoreio', 'nome', $p, $cachePastoreio);

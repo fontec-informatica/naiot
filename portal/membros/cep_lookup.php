@@ -39,9 +39,10 @@ if (!is_array($dados) || !empty($dados['erro'])) {
 }
 
 echo json_encode([
-    'erro'       => false,
-    'logradouro' => $dados['logradouro'] ?? '',
-    'bairro'     => $dados['bairro'] ?? '',
-    'localidade' => $dados['localidade'] ?? '',
-    'uf'         => $dados['uf'] ?? '',
+    'erro'        => false,
+    'logradouro'  => $dados['logradouro'] ?? '',
+    'complemento' => $dados['complemento'] ?? '',
+    'bairro'      => $dados['bairro'] ?? '',
+    'localidade'  => $dados['localidade'] ?? '',
+    'uf'          => $dados['uf'] ?? '',
 ], JSON_UNESCAPED_UNICODE);

@@ -33,6 +33,7 @@ try {
         rg                     VARCHAR(20) NULL,
         cpf                    VARCHAR(14) NULL,
         endereco               VARCHAR(200) NULL,
+        complemento            VARCHAR(100) NULL,
         bairro                 VARCHAR(100) NULL,
         cep                    VARCHAR(10) NULL,
         cidade                 VARCHAR(100) NULL,
@@ -41,6 +42,7 @@ try {
         celular                VARCHAR(20) NULL,
         responsavel_nome       VARCHAR(150) NULL,
         responsavel_endereco   VARCHAR(200) NULL,
+        responsavel_complemento VARCHAR(100) NULL,
         responsavel_rg         VARCHAR(20) NULL,
         responsavel_cpf        VARCHAR(14) NULL,
         responsavel_data_nasc  DATE NULL,
@@ -66,6 +68,24 @@ try {
     if (!$col) {
         $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN foto VARCHAR(255) NULL AFTER nome");
         $msgs[] = ['ok', 'Coluna foto adicionada em camjc_acolhidas'];
+    }
+
+    // Migração idempotente: complemento de endereço (acolhida e responsável)
+    $col = $db->query("
+        SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'camjc_acolhidas' AND COLUMN_NAME = 'complemento'
+    ")->fetchColumn();
+    if (!$col) {
+        $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN complemento VARCHAR(100) NULL AFTER endereco");
+        $msgs[] = ['ok', 'Coluna complemento adicionada em camjc_acolhidas'];
+    }
+    $col = $db->query("
+        SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'camjc_acolhidas' AND COLUMN_NAME = 'responsavel_complemento'
+    ")->fetchColumn();
+    if (!$col) {
+        $db->exec("ALTER TABLE camjc_acolhidas ADD COLUMN responsavel_complemento VARCHAR(100) NULL AFTER responsavel_endereco");
+        $msgs[] = ['ok', 'Coluna responsavel_complemento adicionada em camjc_acolhidas'];
     }
 
     // Migração idempotente: data e motivo de saída (alta/evasão/transferência/não admitida)
